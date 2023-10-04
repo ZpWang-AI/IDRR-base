@@ -162,6 +162,7 @@ class Args:
 
 if __name__ == '__main__':
     args = Args()
+    args.data_path = '/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv'
     
     set_seed(args.seed)
     train(args)

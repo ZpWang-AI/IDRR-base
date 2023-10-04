@@ -1,9 +1,43 @@
 import os
 import numpy as np
+import logging
 
+from pathlib import Path as path
 from typing import *
 from transformers import TrainerCallback, TrainerState, TrainerControl
 from sklearn.metrics import f1_score, accuracy_score
+
+
+def create_file_or_fold(file_or_fold_path):
+    file_or_fold_path = path(file_or_fold_path)
+    if file_or_fold_path.is_file():
+        file_or_fold_path.parent.mkdir(parents=True, exist_ok=True)
+        file_or_fold_path.touch()
+    else:
+        file_or_fold_path.mkdir(parents=True, exist_ok=True)
+
+
+def get_logger(log_file='custom_log.log', logger_name='custom_logger', print_output=False):
+    # 创建一个logger
+    logger = logging.getLogger(logger_name)
+
+    # 设置全局级别为DEBUG
+    logger.setLevel(logging.DEBUG)
+
+    # 创建一个handler，用于写入日志文件
+    fh = logging.FileHandler(log_file)
+    ch = logging.StreamHandler()
+
+    # 定义handler的输出格式
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    ch.setFormatter(formatter)
+
+    # 给logger添加handler
+    logger.addHandler(fh)
+    if print_output:
+        logger.addHandler(ch)
+    return logger
 
 
 class SaveBestModelCallback(TrainerCallback):
@@ -35,10 +69,6 @@ class SaveBestModelCallback(TrainerCallback):
                 best_model_path = os.path.join(args.output_dir, f"checkpoint-best-{metric_name.replace('eval', 'dev')}")
                 self.trainer.save_model(best_model_path)
                 print(f"New best model saved to {best_model_path}")
-    
-    def add_trainer(self, trainer):
-        self.trainer = trainer
-
 
 
 def compute_metrics(eval_pred):

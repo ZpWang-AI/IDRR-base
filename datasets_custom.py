@@ -4,7 +4,7 @@ from transformers import AutoTokenizer, DataCollatorWithPadding
 
 
 class CustomDatasets():
-    def __init__(self, file_path, data_name='pdtb2', model_name_or_path='roberta-base', logger=None) -> None:
+    def __init__(self, file_path, data_name='pdtb2', model_name_or_path='roberta-base', logger=None):
         assert data_name in ['pdtb2', 'pdtb3', 'conll']
         tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
         self.sep_t = tokenizer.sep_token

@@ -78,7 +78,6 @@ def evaluate(args:Args, dataset, metric_type):
 
     )
 
-
     model = BaselineModel(args.model_name_or_path)
     print(model.load_state_dict(torch.load(os.path.join(args.ckpt_fold, 'pytorch_model.bin')), strict=True))
 
@@ -97,9 +96,7 @@ def evaluate(args:Args, dataset, metric_type):
         if metric_type in k:
             print(f'{metric_type}: {v}')
             break
-
-
-
+        
 
 if __name__ == '__main__':
     args = Args()

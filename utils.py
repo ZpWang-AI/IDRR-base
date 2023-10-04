@@ -4,7 +4,7 @@ import logging
 
 from pathlib import Path as path
 from typing import *
-from transformers import TrainerCallback, TrainerState, TrainerControl
+from transformers import TrainerCallback, TrainerState, TrainerControl, Trainer
 from sklearn.metrics import f1_score, accuracy_score
 
 
@@ -41,10 +41,11 @@ def get_logger(log_file='custom_log.log', logger_name='custom_logger', print_out
 
 
 class SaveBestModelCallback(TrainerCallback):
-    def __init__(self):
+    def __init__(self, trainer:Trainer=None, logger:logging.Logger=None):
         super().__init__()
         
-        self.trainer = None
+        self.trainer = trainer
+        self.logger = logger
         self.best_metric = {
             'best_acc' : None,
             'best_macro_f1' : None,
@@ -63,35 +64,31 @@ class SaveBestModelCallback(TrainerCallback):
                 continue
             
             # 如果这次的评估结果好于历史最优结果，那么保存模型
-            if self.best_metric[best_metric_name] is None or self.best_metric[best_metric_name]:
+            if self.best_metric[best_metric_name] is None or metric_value > self.best_metric[best_metric_name]:
                 self.best_metric[best_metric_name] = metric_value
                 
-                best_model_path = os.path.join(args.output_dir, f"checkpoint-best-{metric_name.replace('eval', 'dev')}")
+                best_model_path = os.path.join(args.output_dir, f"ckpt-{best_metric_name}")
                 self.trainer.save_model(best_model_path)
-                print(f"New best model saved to {best_model_path}")
+                if self.logger:
+                    self.logger.info(f"New best model saved to {best_model_path}")
 
 
 def compute_metrics(eval_pred):
     predictions, labels = eval_pred
     # import pdb; pdb.set_trace()
     predictions = np.argmax(predictions, axis=1)
-    metrics = [None]*6
-    metrics[5] = accuracy_score(labels, predictions)
-    metrics[4] = f1_score(labels, predictions, average='macro')
     
-    for i in range(4):
+    res = {
+        'acc': accuracy_score(labels, predictions),
+        'macro_f1': f1_score(labels, predictions, average='macro'),
+    }
+    
+    for i, target_type in enumerate('tem com con exp'.split()):
         _preds = (predictions == i).astype(int)
         _labels = (labels == i).astype(int)
-        metrics[i] = f1_score(_labels, _preds)
-
-    return {
-        'acc': metrics[5],
-        'macro_f1': metrics[4],
-        'tem': metrics[0],
-        'com': metrics[1],
-        'con': metrics[2],
-        'exp': metrics[3]
-    }
+        res[target_type] = f1_score(_labels, _preds)
+    
+    return res
 
 
     

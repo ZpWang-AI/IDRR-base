@@ -57,10 +57,10 @@ def compute_metrics(eval_pred):
     return {
         'acc': metrics[5],
         'macro_f1': metrics[4],
-        'tem': metrics[3],
-        'com': metrics[2],
-        'con': metrics[1],
-        'exp': metrics[0]
+        'tem': metrics[0],
+        'com': metrics[1],
+        'con': metrics[2],
+        'exp': metrics[3]
     }
 
 

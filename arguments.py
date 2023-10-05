@@ -2,21 +2,21 @@ import argparse
 
 from pathlib import Path as path
 
-from utils import create_file_or_fold
-
 
 class Args:
     def __init__(self) -> None:
-        create_file_or_fold(self.log_path)
-        create_file_or_fold(self.output_dir)
-        assert not path(self.data_path).exists(), 'wrong data path'
-
         for attr_name in dir(self):
             if attr_name.startswith('__') and attr_name.endswith('__'):
                 continue
             attr_val = getattr(self, attr_name)
             if not callable(attr_val):
                 setattr(self, attr_name, attr_val)
+
+        path(self.log_path).parent.mkdir(parents=True, exist_ok=True)
+        path(self.log_path).touch()
+        path(self.output_dir).mkdir(parents=True, exist_ok=True)
+        assert not path(self.data_path).exists(), 'wrong data path'
+
     
     ############################ Args
     

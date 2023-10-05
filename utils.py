@@ -8,15 +8,6 @@ from transformers import TrainerCallback, TrainerState, TrainerControl, Trainer
 from sklearn.metrics import f1_score, accuracy_score
 
 
-def create_file_or_fold(file_or_fold_path):
-    file_or_fold_path = path(file_or_fold_path)
-    if file_or_fold_path.is_file():
-        file_or_fold_path.parent.mkdir(parents=True, exist_ok=True)
-        file_or_fold_path.touch()
-    else:
-        file_or_fold_path.mkdir(parents=True, exist_ok=True)
-
-
 def get_logger(log_file='custom_log.log', logger_name='custom_logger', print_output=False):
     # 创建一个logger
     logger = logging.getLogger(logger_name)

@@ -10,9 +10,9 @@ from utils import (get_logger,
                    compute_metrics, 
                    SaveBestModelCallback, 
                    )
-from datasets__ import CustomDatasets
-from model__ import BaselineModel, CustomModel
-from arguments__ import Args
+from datasets_customized import CustomDatasets
+from model_customized import BaselineModel, CustomModel
+from arguments_customized import Args
 
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 

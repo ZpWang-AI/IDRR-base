@@ -68,6 +68,8 @@ def compute_metrics(eval_pred):
     predictions, labels = eval_pred
     # import pdb; pdb.set_trace()
     predictions = np.argmax(predictions, axis=1)
+    if labels.ndim == 2:
+        labels = np.argmax(labels, axis=1)
     
     res = {
         'acc': accuracy_score(labels, predictions),

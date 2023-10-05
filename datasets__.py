@@ -1,6 +1,11 @@
+import os
 import pandas as pd
 
 from transformers import AutoTokenizer, DataCollatorWithPadding
+
+from utils import get_logger
+
+os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 
 class CustomDatasets():
@@ -17,7 +22,11 @@ class CustomDatasets():
             raise ValueError('wrong label_level')
         self.label_map = {label:p for p, label in enumerate(label_list)}
 
-        df = pd.read_csv(file_path, usecols=['Relation', 'Section', 'Arg1_RawText', 'Arg2_RawText', 'ConnHeadSemClass1', 'ConnHeadSemClass2'])
+        df = pd.read_csv(file_path, usecols=['Relation', 'Section', 
+                                             'Arg1_RawText', 'Arg2_RawText', 
+                                             'Conn1', 'Conn2',
+                                             'ConnHeadSemClass1', 'ConnHeadSemClass2',
+                                             'Conn2SemClass1', 'Conn2SemClass2'])
         df = df[df['Relation'] == 'Implicit']
 
         self.train_dataset = self.data_tokenize(df[~df['Section'].isin([0, 1, 21, 22, 23, 24])])
@@ -28,14 +37,20 @@ class CustomDatasets():
         
         if logger is not None:
             logger.info('-' * 30)
-            logger.info('Trainset Size: {}'.format(len(self.train_dataset)))
-            logger.info('Devset Size: {}'.format(len(self.dev_dataset)))
-            logger.info('Testset Size: {}'.format(len(self.test_dataset)))
+            logger.info(f'Trainset Size: {len(self.train_dataset)}')
+            logger.info(f'Devset Size: {len(self.dev_dataset)}')
+            logger.info(f'Testset Size: {len(self.test_dataset)}')
             logger.info('-' * 30)
 
-    def data_tokenize(self, examples):
+    def data_tokenize(self, df_):
         dataset = []
-        for arg1, arg2, sense in zip(examples['Arg1_RawText'], examples['Arg2_RawText'], examples['ConnHeadSemClass1']):
+        for row in df_.itertuples():
+            arg1 = row.Arg1_RawText
+            arg2 = row.Arg2_RawText
+            conn1sense1 = row.ConnHeadSemClass1
+            conn1sense2 = row.ConnHeadSemClass2
+            conn2sense1 = row.Conn2SemClass1
+            conn2sense2 = row.Conn2SemClass2
             model_inputs = self.tokenizer(
                 arg1, 
                 arg2, 
@@ -44,11 +59,24 @@ class CustomDatasets():
                 max_length=256,
             )
             
-            label_id = self.label_map[sense.split('.')[0]]
+            label_id = self.label_map[conn1sense1.split('.')[0]]
             label = [0]*len(self.label_map)
             label[label_id] = 1
             model_inputs['label'] = label
         
             dataset.append(model_inputs)
+            # print(label)
+            # break
 
         return dataset
+    
+    
+if __name__ == '__main__':
+    sample_dataset = CustomDatasets(r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\CorpusData\PDTB2\pdtb2.csv',
+                                    data_name='pdtb2',
+                                    label_level='level1',
+                                    model_name_or_path='roberta-base',
+                                    logger=get_logger())
+    for p in sample_dataset.train_dataset:
+        print(p)
+        break

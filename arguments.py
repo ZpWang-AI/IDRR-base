@@ -30,9 +30,10 @@ class Args:
     output_dir = './ckpt'
     ckpt_fold = './ckpt/ckpt-best_acc'
     
+    epochs = 4
     batch_size = 8
     eval_steps = 5
-    epochs = 4
+    log_steps = 5
     
     seed = 2023
     warmup_ratio = 0.05
@@ -40,6 +41,8 @@ class Args:
     learning_rate = 5e-6
         
     def get_from_argparse(self):
+
+        # set default values below
         parser = argparse.ArgumentParser("")
         parser.add_argument("--train_or_test", type=str, default='train+test', choices=['train', 'test', 'train+test'])
         parser.add_argument("--label_level", type=str, default='level1', choices=['level1', 'level2'])
@@ -52,9 +55,10 @@ class Args:
         parser.add_argument("--output_dir", type=str, default="./ckpt/")
         parser.add_argument("--ckpt_fold", type=str, default="./ckpt/ckpt-best_acc")
         
+        parser.add_argument("--epochs", type=int, default=4)
         parser.add_argument("--batch_size", type=int, default=8)
         parser.add_argument("--eval_steps", type=int, default=5)
-        parser.add_argument("--epochs", type=int, default=4)
+        parser.add_argument("--log_steps", type=int, default=5)
 
         parser.add_argument("--seed", type=int, default=2023)
         parser.add_argument("--warmup_ratio", type=float, default=0.05)

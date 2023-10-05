@@ -71,7 +71,7 @@ def main():
         evaluation_strategy = "steps", 
         eval_steps = args.eval_steps,
         logging_strategy='steps',
-        logging_steps=5,
+        logging_steps=args.log_steps,
         save_strategy = 'no',
         # optimizer  
         optim='adamw_torch',

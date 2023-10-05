@@ -55,7 +55,7 @@ class BaselineModel(nn.Module):
         cls_token_repre = model_outputs.pooler_output
         logits = self.classifer(cls_token_repre)
         
-        labels = torch.argmax(labels, dim=1)
+        # labels = torch.argmax(labels, dim=1)
         loss = self.loss_fn(logits, labels)
 
         return {

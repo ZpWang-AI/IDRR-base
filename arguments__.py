@@ -69,7 +69,7 @@ class Args:
         for k, v in args.__dict__.items():
             setattr(self, k, v)
     
-    def generate_script(self):
+    def __iter__(self):
         # keep the same order as the args shown in the file
         keys_order = {k:-1 for k in self.__dict__}
         with open('./arguments.py', 'r', encoding='utf8')as f:
@@ -87,9 +87,12 @@ class Args:
                             break
                     if cnt >= len(keys_order):
                         break
-                    
+        
+        return iter(sorted(self.__dict__.items(), key=lambda x:keys_order[x[0]]))
+        
+    def generate_script(self):
         script_string = ['python main.py']
-        for k, v in sorted(self.__dict__.items(), key=lambda x:keys_order[x[0]]):
+        for k, v in list(self):
             script_string.append(f'    --{k} {v}')
         script_string = ' \\\n'.join(script_string)
         print(script_string)

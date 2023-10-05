@@ -11,15 +11,13 @@ from utils import (get_logger,
                    SaveBestModelCallback, 
                    )
 from datasets__ import CustomDatasets
-from model__ import BaselineModel
-from arguments import Args
+from model__ import BaselineModel, CustomModel
+from arguments__ import Args
 
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 
-def train(args:Args, training_args:TrainingArguments, dataset, logger):
-    model = BaselineModel(args.model_name_or_path)
-    
+def train(args:Args, training_args:TrainingArguments, model, dataset, logger):
     save_callback = SaveBestModelCallback(logger=logger)
     trainer = Trainer(
         model=model, 
@@ -35,9 +33,7 @@ def train(args:Args, training_args:TrainingArguments, dataset, logger):
 
     trainer.train()
 
-def evaluate(args:Args, training_args:TrainingArguments, dataset, logger, metric_type=None):
-    model = BaselineModel(args.model_name_or_path)
-    
+def evaluate(args:Args, training_args:TrainingArguments, model, dataset, logger, metric_type=None):
     logger.info(model.load_state_dict(torch.load(os.path.join(args.ckpt_fold, 'pytorch_model.bin')), strict=True))
 
     trainer = Trainer(
@@ -60,9 +56,7 @@ def evaluate(args:Args, training_args:TrainingArguments, dataset, logger, metric
             logger.info(f'{k}: {v}')
 
 
-def main():
-    args = Args()
-    args.get_from_argparse()
+def main(args:Args):
     set_seed(args.seed)
     
     training_args = TrainingArguments(
@@ -84,7 +78,7 @@ def main():
         per_device_train_batch_size = args.batch_size,
         per_device_eval_batch_size = args.batch_size,
     )
-    
+
     logger = get_logger(
         log_file=args.log_path,
         print_output=True,
@@ -97,16 +91,32 @@ def main():
         model_name_or_path=args.model_name_or_path,
         logger=logger,
     )
+
+    model = CustomModel(
+        model_name_or_path=args.model_name_or_path,
+        num_labels=len(dataset.label_map),
+    )
     
-    if args.train_or_test == 'train':
-        train(args, training_args, dataset, logger)
-    elif args.train_or_test == 'test':
-        evaluate(args, training_args, dataset, logger)
-    else:
-        train(args, training_args, dataset, logger)
-        # evaluate(args, training_args, dataset, logger, metric_type='acc')
-        evaluate(args, training_args, dataset, logger)
+    if 'train' in args.train_or_test:
+        train(
+            args=args,
+            training_args=training_args,
+            model=model,
+            dataset=dataset,
+            logger=logger,
+        )
+    if 'test' in args.train_or_test:
+        evaluate(
+            args=args,
+            training_args=training_args,
+            model=model,
+            dataset=dataset,
+            logger=logger,
+            # metric_type='acc',
+        )
     
 
 if __name__ == '__main__':
-    main()
+    args = Args()
+    args.get_from_argparse()
+    main(args)

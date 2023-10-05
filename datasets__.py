@@ -1,11 +1,6 @@
-import os
 import pandas as pd
 
 from transformers import AutoTokenizer, DataCollatorWithPadding
-
-from utils import get_logger
-
-os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 
 class CustomDatasets():
@@ -72,6 +67,10 @@ class CustomDatasets():
     
     
 if __name__ == '__main__':
+    import os
+    from utils import get_logger
+    os.environ['TOKENIZERS_PARALLELISM'] = 'false'
+
     sample_dataset = CustomDatasets(r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\CorpusData\PDTB2\pdtb2.csv',
                                     data_name='pdtb2',
                                     label_level='level1',

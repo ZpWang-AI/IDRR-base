@@ -30,10 +30,10 @@ class CustomModel(nn.Module):
         
         self.loss_fn = CustomLoss()
     
-    def forward(self, input_ids, attention_mask, label_vectors):
+    def forward(self, input_ids, attention_mask, labels):
         model_outputs = self.model(input_ids=input_ids, attention_mask=attention_mask)
         logits = model_outputs.logits
-        loss = self.loss_fn(logits, label_vectors)
+        loss = self.loss_fn(logits, labels)
 
         return {
             'logits': logits,

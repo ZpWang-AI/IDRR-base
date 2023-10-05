@@ -1,36 +1,27 @@
+import os
 import argparse
 
 from pathlib import Path as path
+from datetime import datetime
 
 
 class Args:
-    def __init__(self) -> None:
-        for attr_name in dir(self):
-            if attr_name.startswith('__') and attr_name.endswith('__'):
-                continue
-            attr_val = getattr(self, attr_name)
-            if not callable(attr_val):
-                setattr(self, attr_name, attr_val)
-
-        path(self.log_path).parent.mkdir(parents=True, exist_ok=True)
-        path(self.log_path).touch()
-        path(self.output_dir).mkdir(parents=True, exist_ok=True)
-        assert not path(self.data_path).exists(), 'wrong data path'
-
     
-    ############################ Args
+    ############################ Args # Don't delete this line
+    
+    version = 'test'
     
     train_or_test = 'train+test'
     label_level = 'level1'
-    
     model_name_or_path = 'roberta-base'
     data_name = 'pdtb2'
     data_path = './CorpusData/PDTB-2.0/pdtb2.csv'
-    log_path = './custom_log.log'
     output_dir = './ckpt'
-    ckpt_fold = './ckpt/ckpt-best_acc'
+    log_path = 'log.out'
+    load_ckpt_dir = './ckpt/ckpt-best_acc'
     
     epochs = 4
+    max_steps = -1
     batch_size = 8
     eval_steps = 5
     log_steps = 5
@@ -39,23 +30,25 @@ class Args:
     warmup_ratio = 0.05
     weight_decay = 0.01
     learning_rate = 5e-6
+    
+    def __init__(self) -> None:
         
-    def get_from_argparse(self):
-
-        # set default values below
+        # === set default values below ===
         parser = argparse.ArgumentParser("")
+        parser.add_argument("--version", type=str, default='test')
+
         parser.add_argument("--train_or_test", type=str, default='train+test', choices=['train', 'test', 'train+test'])
         parser.add_argument("--label_level", type=str, default='level1', choices=['level1', 'level2'])
-
         parser.add_argument("--model_name_or_path", default='roberta-base')
         parser.add_argument("--data_name", type=str, default= "pdtb2" )
         parser.add_argument("--data_path", type=str, default='/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv')
-        parser.add_argument("--log_path", type=str, default='./custom_log.log')
+        parser.add_argument("--log_path", type=str, default='log.out')
         # parser.add_argument("--cache_dir", type=str, default='')
         parser.add_argument("--output_dir", type=str, default="./ckpt/")
-        parser.add_argument("--ckpt_fold", type=str, default="./ckpt/ckpt-best_acc")
+        parser.add_argument("--load_ckpt_dir", type=str, default="./ckpt/ckpt-best_acc")
         
         parser.add_argument("--epochs", type=int, default=4)
+        parser.add_argument("--max_steps", type=int, default=-1)
         parser.add_argument("--batch_size", type=int, default=8)
         parser.add_argument("--eval_steps", type=int, default=5)
         parser.add_argument("--log_steps", type=int, default=5)
@@ -68,6 +61,14 @@ class Args:
         args = parser.parse_args()
         for k, v in args.__dict__.items():
             setattr(self, k, v)
+            
+    def check_path(self):
+        assert not path(self.data_path).exists(), 'wrong data path'
+        cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        self.output_dir = os.path.join(self.output_dir, f'{cur_time}_{self.version}_{self.train_or_test}')
+        path(self.output_dir).mkdir(parents=True, exist_ok=True)
+        self.log_path = os.path.join(self.output_dir, self.log_path)
+        path(self.log_path).touch()
     
     def __iter__(self):
         # keep the same order as the args shown in the file
@@ -101,5 +102,4 @@ class Args:
 
 if __name__ == '__main__':
     sample_args = Args()
-    sample_args.get_from_argparse()
     sample_args.generate_script()

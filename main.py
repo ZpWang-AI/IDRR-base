@@ -34,7 +34,9 @@ def train(args:Args, training_args:TrainingArguments, model, dataset, logger):
     trainer.train()
 
 def evaluate(args:Args, training_args:TrainingArguments, model, dataset, logger, metric_type=None):
-    logger.info(model.load_state_dict(torch.load(os.path.join(args.ckpt_fold, 'pytorch_model.bin')), strict=True))
+    model_params_path = os.path.join(args.load_ckpt_dir, 'pytorch_model.bin')
+    model_params = torch.load(model_params_path)
+    logger.info(model.load_state_dict(model_params, strict=True))
 
     trainer = Trainer(
         model=model, 
@@ -57,6 +59,7 @@ def evaluate(args:Args, training_args:TrainingArguments, model, dataset, logger,
 
 
 def main(args:Args):
+    args.check_path()
     set_seed(args.seed)
     
     training_args = TrainingArguments(
@@ -75,6 +78,7 @@ def main(args:Args):
         warmup_ratio = args.warmup_ratio,
         # epochs and batches 
         num_train_epochs = args.epochs, 
+        max_steps=args.max_steps,
         per_device_train_batch_size = args.batch_size,
         per_device_eval_batch_size = args.batch_size,
     )
@@ -118,5 +122,4 @@ def main(args:Args):
 
 if __name__ == '__main__':
     args = Args()
-    args.get_from_argparse()
     main(args)

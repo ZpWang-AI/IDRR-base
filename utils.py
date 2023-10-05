@@ -20,7 +20,8 @@ def get_logger(log_file='custom_log.log', logger_name='custom_logger', print_out
     ch = logging.StreamHandler()
 
     # 定义handler的输出格式
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    # formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s - %(message)s')
     fh.setFormatter(formatter)
     ch.setFormatter(formatter)
 

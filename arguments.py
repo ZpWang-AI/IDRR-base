@@ -18,7 +18,7 @@ class Args:
     data_path = './CorpusData/PDTB-2.0/pdtb2.csv'
     output_dir = './ckpt'
     log_path = 'log.out'
-    load_ckpt_dir = './ckpt/ckpt-best_acc'
+    load_ckpt_dir = './ckpt/2023-10-05-21-04-47_test_train+test'
     
     epochs = 4
     max_steps = -1
@@ -45,7 +45,7 @@ class Args:
         parser.add_argument("--log_path", type=str, default='log.out')
         # parser.add_argument("--cache_dir", type=str, default='')
         parser.add_argument("--output_dir", type=str, default="./ckpt/")
-        parser.add_argument("--load_ckpt_dir", type=str, default="./ckpt/ckpt-best_acc")
+        parser.add_argument("--load_ckpt_dir", type=str, default="./ckpt/2023-10-05-21-04-47_test_train+test")
         
         parser.add_argument("--epochs", type=int, default=4)
         parser.add_argument("--max_steps", type=int, default=-1)
@@ -63,7 +63,7 @@ class Args:
             setattr(self, k, v)
             
     def check_path(self):
-        assert not path(self.data_path).exists(), 'wrong data path'
+        assert path(self.data_path).exists(), 'wrong data path'
         cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         self.output_dir = os.path.join(self.output_dir, f'{cur_time}_{self.version}_{self.train_or_test}')
         path(self.output_dir).mkdir(parents=True, exist_ok=True)

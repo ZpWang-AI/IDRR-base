@@ -20,8 +20,8 @@ os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 def train(args:Args, training_args:TrainingArguments, dataset, logger):
     model = BaselineModel(args.model_name_or_path)
     
-    save_callback = SaveBestModelCallback(trainer=trainer, logger=logger)
     
+    save_callback = SaveBestModelCallback(logger=logger)
     trainer = Trainer(
         model=model, 
         args=training_args, 
@@ -32,6 +32,7 @@ def train(args:Args, training_args:TrainingArguments, dataset, logger):
         compute_metrics=compute_metrics,
         callbacks=[save_callback],
     )
+    save_callback.trainer = trainer
 
     trainer.train()
 

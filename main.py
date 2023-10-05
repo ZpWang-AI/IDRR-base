@@ -11,8 +11,8 @@ from utils import (get_logger,
                    compute_metrics, 
                    SaveBestModelCallback, 
                    )
-from datasets_custom import CustomDatasets
-from model_custom import BaselineModel
+from datasets__ import CustomDatasets
+from model__ import BaselineModel
 from arguments import Args
 
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'

@@ -7,7 +7,6 @@ from pathlib import Path as path
 from transformers import TrainingArguments, Trainer, AutoTokenizer, DataCollatorWithPadding, set_seed
 
 from utils import (get_logger,
-                   create_file_or_fold,
                    compute_metrics, 
                    SaveBestModelCallback, 
                    )

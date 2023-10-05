@@ -62,6 +62,7 @@ def evaluate(args:Args, training_args:TrainingArguments, dataset, logger, metric
 
 def main():
     args = Args()
+    args.get_from_argparse()
     set_seed(args.seed)
     
     training_args = TrainingArguments(

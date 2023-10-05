@@ -18,29 +18,11 @@ from arguments import Args
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 
-def train(args:Args, dataset):
-    # import pdb; pdb.set_trace()
-    # Training arguments
-    training_args = TrainingArguments(
-        output_dir = args.output_dir, 
-        optim='adamw_torch',
-        evaluation_strategy = "steps", 
-        eval_steps = args.eval_steps,
-        learning_rate = args.learning_rate,
-        logging_strategy='steps',
-        logging_steps=1,
-        lr_scheduler_type = 'linear',
-        per_device_train_batch_size = args.batch_size,
-        per_device_eval_batch_size = args.batch_size,
-        num_train_epochs = args.epochs,
-        weight_decay = args.weight_decay,
-        warmup_ratio = args.warmup_ratio,
-        save_strategy = 'no',
-
-    )
-
+def train(args:Args, training_args:TrainingArguments, dataset, logger):
     model = BaselineModel(args.model_name_or_path)
-    save_callback = SaveBestModelCallback()
+    
+    save_callback = SaveBestModelCallback(trainer=trainer, logger=logger)
+    
     trainer = Trainer(
         model=model, 
         args=training_args, 
@@ -52,34 +34,12 @@ def train(args:Args, dataset):
         callbacks=[save_callback],
     )
 
-    save_callback.trainer = trainer
     trainer.train()
 
-    return dataset
-
-def evaluate(args:Args, dataset, metric_type):
-    # import pdb; pdb.set_trace()
-    # Training arguments
-    training_args = TrainingArguments(
-        output_dir = args.output_dir, 
-        optim='adamw_torch',
-        evaluation_strategy = "steps", 
-        eval_steps = args.eval_steps,
-        learning_rate = args.learning_rate,
-        logging_strategy='steps',
-        logging_steps=1,
-        lr_scheduler_type = 'linear',
-        per_device_train_batch_size = args.batch_size,
-        per_device_eval_batch_size = args.batch_size,
-        num_train_epochs = args.epochs,
-        weight_decay = args.weight_decay,
-        warmup_ratio = args.warmup_ratio,
-        save_strategy = 'no',
-
-    )
-
+def evaluate(args:Args, training_args:TrainingArguments, dataset, logger, metric_type=None):
     model = BaselineModel(args.model_name_or_path)
-    print(model.load_state_dict(torch.load(os.path.join(args.ckpt_fold, 'pytorch_model.bin')), strict=True))
+    
+    logger.info(model.load_state_dict(torch.load(os.path.join(args.ckpt_fold, 'pytorch_model.bin')), strict=True))
 
     trainer = Trainer(
         model=model, 
@@ -93,14 +53,37 @@ def evaluate(args:Args, dataset, metric_type):
 
     metric_res = trainer.evaluate(dataset.test_dataset)
     for k, v in metric_res.items():
-        if metric_type in k:
-            print(f'{metric_type}: {v}')
-            break
-        
+        if metric_type:
+            if metric_type in k:
+                logger.info(f'{metric_type}: {v}')
+                break
+        else:
+            logger.info(f'{k}: {v}')
 
-if __name__ == '__main__':
+
+def main():
     args = Args()
-    # args.generate_script()
+    set_seed(args.seed)
+    
+    training_args = TrainingArguments(
+        output_dir = args.output_dir,
+        # strategies of evaluation, logging, save
+        evaluation_strategy = "steps", 
+        eval_steps = args.eval_steps,
+        logging_strategy='steps',
+        logging_steps=5,
+        save_strategy = 'no',
+        # optimizer  
+        optim='adamw_torch',
+        lr_scheduler_type = 'linear',
+        learning_rate = args.learning_rate,
+        weight_decay = args.weight_decay,
+        warmup_ratio = args.warmup_ratio,
+        # epochs and batches 
+        num_train_epochs = args.epochs, 
+        per_device_train_batch_size = args.batch_size,
+        per_device_eval_batch_size = args.batch_size,
+    )
     
     logger = get_logger(
         log_file=args.log_path,
@@ -110,16 +93,20 @@ if __name__ == '__main__':
     dataset = CustomDatasets(
         file_path=args.data_path,
         data_name=args.data_name,
+        label_level=args.label_level,
         model_name_or_path=args.model_name_or_path,
         logger=logger,
     )
-    set_seed(args.seed)
     
     if args.train_or_test == 'train':
-        train(args, dataset, logger)
+        train(args, training_args, dataset, logger)
     elif args.train_or_test == 'test':
-        evaluate(args, dataset, metric_type='acc')
+        evaluate(args, training_args, dataset, logger)
     else:
         train(args)
-        evaluate(args, dataset, metric_type='acc')
-        
+        # evaluate(args, training_args, dataset, logger, metric_type='acc')
+        evaluate(args, training_args, dataset, logger)
+    
+
+if __name__ == '__main__':
+    main()

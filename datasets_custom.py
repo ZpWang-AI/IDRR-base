@@ -4,19 +4,18 @@ from transformers import AutoTokenizer, DataCollatorWithPadding
 
 
 class CustomDatasets():
-    def __init__(self, file_path, data_name='pdtb2', model_name_or_path='roberta-base', logger=None):
+    def __init__(self, file_path, data_name='pdtb2', label_level='level1', model_name_or_path='roberta-base', logger=None):
         assert data_name in ['pdtb2', 'pdtb3', 'conll']
         tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
         self.sep_t = tokenizer.sep_token
         self.cls_t = tokenizer.cls_token
         self.tokenizer = tokenizer 
         
-        self.label_map = {
-            'Temporal': 0, 
-            'Comparison': 1, 
-            'Contingency': 2,
-            'Expansion': 3,
-        }
+        if label_level == 'level1':
+            label_list = 'Temporal Comparison Contingency Expansion'.split()
+        else:
+            raise ValueError('wrong label_level')
+        self.label_map = {label:p for p, label in enumerate(label_list)}
 
         df = pd.read_csv(file_path, usecols=['Relation', 'Section', 'Arg1_RawText', 'Arg2_RawText', 'ConnHeadSemClass1', 'ConnHeadSemClass2'])
         df = df[df['Relation'] == 'Implicit']
@@ -42,10 +41,13 @@ class CustomDatasets():
                 arg2, 
                 add_special_tokens=True, 
                 truncation='longest_first', 
-                max_length=256
+                max_length=256,
             )
             
-            model_inputs['label'] = self.label_map[sense.split('.')[0]]
+            label_id = self.label_map[sense.split('.')[0]]
+            label = [0]*len(self.label_map)
+            label[label_id] = 1
+            model_inputs['label'] = label
         
             dataset.append(model_inputs)
 

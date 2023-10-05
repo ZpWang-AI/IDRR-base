@@ -21,6 +21,7 @@ class Args:
     ############################ Args
     
     train_or_test = 'train+test'
+    label_level = 'level1'
     
     model_name_or_path = 'roberta-base'
     data_name = 'pdtb2'
@@ -41,10 +42,12 @@ class Args:
     def get_from_argparse(self):
         parser = argparse.ArgumentParser("")
         parser.add_argument("--train_or_test", type=str, default='train+test', choices=['train', 'test', 'train+test'])
+        parser.add_argument("--label_level", type=str, default='level1', choices=['level1', 'level2'])
 
         parser.add_argument("--model_name_or_path", default='roberta-base')
         parser.add_argument("--data_name", type=str, default= "pdtb2" )
         parser.add_argument("--data_path", type=str, default='/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv')
+        # parser.add_argument("--cache_dir", type=str, default='')
         parser.add_argument("--output_dir", type=str, default="./ckpt/")
         parser.add_argument("--ckpt_fold", type=str, default="./ckpt/ckpt-best_acc")
         
@@ -85,5 +88,9 @@ class Args:
             script_string.append(f'    -- {k} {v}')
         script_string = ' \\\n'.join(script_string)
         print(script_string)
-        exit()
-    
+        # exit()
+
+
+if __name__ == '__main__':
+    sample_args = Args()
+    sample_args.generate_script()

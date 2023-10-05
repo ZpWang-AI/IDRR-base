@@ -47,6 +47,7 @@ class Args:
         parser.add_argument("--model_name_or_path", default='roberta-base')
         parser.add_argument("--data_name", type=str, default= "pdtb2" )
         parser.add_argument("--data_path", type=str, default='/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv')
+        parser.add_argument("--log_path", type=str, default='./custom_log.log')
         # parser.add_argument("--cache_dir", type=str, default='')
         parser.add_argument("--output_dir", type=str, default="./ckpt/")
         parser.add_argument("--ckpt_fold", type=str, default="./ckpt/ckpt-best_acc")
@@ -85,7 +86,7 @@ class Args:
                     
         script_string = ['python main.py']
         for k, v in sorted(self.__dict__.items(), key=lambda x:keys_order[x[0]]):
-            script_string.append(f'    -- {k} {v}')
+            script_string.append(f'    --{k} {v}')
         script_string = ' \\\n'.join(script_string)
         print(script_string)
         # exit()
@@ -93,4 +94,5 @@ class Args:
 
 if __name__ == '__main__':
     sample_args = Args()
+    sample_args.get_from_argparse()
     sample_args.generate_script()

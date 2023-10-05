@@ -103,7 +103,7 @@ def main():
     elif args.train_or_test == 'test':
         evaluate(args, training_args, dataset, logger)
     else:
-        train(args)
+        train(args, training_args, dataset, logger)
         # evaluate(args, training_args, dataset, logger, metric_type='acc')
         evaluate(args, training_args, dataset, logger)
     

@@ -39,11 +39,10 @@ class Args:
         
         # === set default values below ===
         parser = argparse.ArgumentParser('zp')
-        parser.add_argument("--version", type=str, default='local')
+        parser.add_argument("--version", type=str, default='colab')
 
-        parser.add_argument("--do_train", type=bool, default=True)
-        parser.add_argument("--do_eval", type=bool, default=False)
-        # parser.add_argument("--train_or_test", type=str, default='train', choices=['train', 'test', 'train+test'])
+        parser.add_argument("--do_train", type=lambda s:'t'in s.lower(), default='True')
+        parser.add_argument("--do_eval", type=lambda s:'t'in s.lower(), default='False')
         parser.add_argument("--label_level", type=str, default='level1', choices=['level1', 'level2'])
         parser.add_argument("--model_name_or_path", default='roberta-base')
         parser.add_argument("--data_name", type=str, default= "pdtb2" )
@@ -51,7 +50,7 @@ class Args:
         parser.add_argument("--data_path", type=str, default='/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv')
         parser.add_argument("--log_path", type=str, default='log.out')
         # parser.add_argument("--cache_dir", type=str, default='')
-        parser.add_argument("--output_dir", type=str, default="./ckpt/")
+        parser.add_argument("--output_dir", type=str, default="./output_space/")
         parser.add_argument("--load_ckpt_dir", type=str, default='./ckpt_fold')
         
         parser.add_argument("--epochs", type=int, default=4)

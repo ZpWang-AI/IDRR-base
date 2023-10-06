@@ -14,7 +14,7 @@ from callbacks import (
     SaveBestModelCallback,
     LogCallback,
 )
-from corpusDatasets import CustomDatasets
+from corpusDatasets import CustomCorpusDatasets
 from model import BaselineModel, CustomModel
 from arguments import Args
 
@@ -61,14 +61,18 @@ def evaluate(args:Args, training_args:TrainingArguments, model, dataset, logger,
     )
 
     evaluate_output = trainer.evaluate(dataset.test_dataset)
-    print(evaluate_output)
-    for k, v in evaluate_output.items():
-        if metric_type:
+
+    evaluate_output_string = json.dumps(evaluate_output, ensure_ascii=False, indent=2)
+    with open(path(args.output_dir)/'evaluate_output.json', 'w', encoding='utf8')as f:
+        f.write(evaluate_output_string)
+        
+    if metric_type:
+        for k, v in evaluate_output.items():
             if metric_type in k:
                 logger.info(f'{metric_type}: {v}')
                 break
-        else:
-            logger.info(f'{k}: {v}')
+    else:
+        logger.info('\n'+evaluate_output_string)
 
 
 def main(args:Args):
@@ -103,7 +107,7 @@ def main(args:Args):
         print_output=True,
     )
     
-    dataset = CustomDatasets(
+    dataset = CustomCorpusDatasets(
         file_path=args.data_path,
         data_name=args.data_name,
         label_level=args.label_level,

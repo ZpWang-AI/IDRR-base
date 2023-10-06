@@ -36,7 +36,7 @@ class SaveBestModelCallback(TrainerCallback):
             if metric_value > self.best_metrics[best_metric_name]:
                 self.best_metrics[best_metric_name] = metric_value
                 
-                best_model_path = os.path.join(args.output_dir, f"ckpt-{best_metric_name}")
+                best_model_path = path(args.output_dir)/'checkpoint'/best_metric_name
                 self.trainer.save_model(best_model_path)
                 if self.logger:
                     self.logger.info(f'{best_metric_name}: {metric_value}')

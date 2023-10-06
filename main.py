@@ -52,8 +52,6 @@ def evaluate(args:Args, training_args:TrainingArguments, model, dataset, logger,
     trainer = Trainer(
         model=model, 
         args=training_args, 
-        train_dataset=dataset.train_dataset,
-        eval_dataset=dataset.dev_dataset, 
         tokenizer=dataset.tokenizer, 
         data_collator=dataset.data_collator,
         compute_metrics=compute_metrics,

@@ -8,8 +8,9 @@ def main_test():
 
     args.do_train = True
     args.do_eval = False
-    args.batch_size = 8
-    args.max_steps = 200
+    args.train_batch_size = 8
+    args.eval_batch_size = 8
+    args.max_steps = 20
     args.epochs = 2
     args.eval_steps = 50
     args.log_steps = 10

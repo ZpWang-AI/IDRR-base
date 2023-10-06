@@ -24,7 +24,8 @@ class Args:
     
     epochs = 4
     max_steps = -1
-    batch_size = 8
+    train_batch_size = 8
+    eval_batch_size = 32
     eval_steps = 5
     log_steps = 5
     gradient_accumulation_steps = 1
@@ -51,11 +52,12 @@ class Args:
         parser.add_argument("--log_path", type=str, default='log.out')
         # parser.add_argument("--cache_dir", type=str, default='')
         parser.add_argument("--output_dir", type=str, default="./ckpt/")
-        parser.add_argument("--load_ckpt_dir", type=str, default=r"D:\0--data\projects\04.01-IDRR数据\IDRR-base\ckpt\2023-10-06-09-44-33_test_train\ckpt-best_acc")
+        parser.add_argument("--load_ckpt_dir", type=str, default='./ckpt_fold')
         
         parser.add_argument("--epochs", type=int, default=4)
         parser.add_argument("--max_steps", type=int, default=-1)
-        parser.add_argument("--batch_size", type=int, default=8)
+        parser.add_argument("--train_batch_size", type=int, default=8)
+        parser.add_argument("--eval_batch_size", type=int, default=32)
         parser.add_argument("--eval_steps", type=int, default=100)
         parser.add_argument("--log_steps", type=int, default=10)
         parser.add_argument("--gradient_accumulation_steps", type=int, default=1)

@@ -89,8 +89,8 @@ def main(args:Args):
         # epochs and batches 
         num_train_epochs = args.epochs, 
         max_steps=args.max_steps,
-        per_device_train_batch_size = args.batch_size,
-        per_device_eval_batch_size = args.batch_size,
+        per_device_train_batch_size = args.train_batch_size,
+        per_device_eval_batch_size = args.eval_batch_size,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
     )
 

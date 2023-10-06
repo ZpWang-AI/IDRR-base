@@ -15,6 +15,7 @@ class Args:
     label_level = 'level1'
     model_name_or_path = 'roberta-base'
     data_name = 'pdtb2'
+    
     data_path = './CorpusData/PDTB-2.0/pdtb2.csv'
     output_dir = './ckpt'
     log_path = 'log.out'
@@ -41,11 +42,12 @@ class Args:
         parser.add_argument("--label_level", type=str, default='level1', choices=['level1', 'level2'])
         parser.add_argument("--model_name_or_path", default='roberta-base')
         parser.add_argument("--data_name", type=str, default= "pdtb2" )
+        
         parser.add_argument("--data_path", type=str, default='/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv')
         parser.add_argument("--log_path", type=str, default='log.out')
         # parser.add_argument("--cache_dir", type=str, default='')
         parser.add_argument("--output_dir", type=str, default="./ckpt/")
-        parser.add_argument("--load_ckpt_dir", type=str, default="./ckpt/2023-10-05-21-04-47_test_train+test")
+        parser.add_argument("--load_ckpt_dir", type=str, default=r"D:\0--data\projects\04.01-IDRR数据\IDRR-base\ckpt\2023-10-06-09-44-33_test_train\ckpt-best_acc")
         
         parser.add_argument("--epochs", type=int, default=4)
         parser.add_argument("--max_steps", type=int, default=-1)

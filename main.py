@@ -65,23 +65,25 @@ def main(args:Args):
     
     training_args = TrainingArguments(
         output_dir = args.output_dir,
+        seed=args.seed,
         # strategies of evaluation, logging, save
         evaluation_strategy = "steps", 
         eval_steps = args.eval_steps,
         logging_strategy='steps',
         logging_steps=args.log_steps,
         save_strategy = 'no',
-        # optimizer  
+        # optimizer and lr_scheduler
         optim='adamw_torch',
-        lr_scheduler_type = 'linear',
         learning_rate = args.learning_rate,
         weight_decay = args.weight_decay,
+        lr_scheduler_type = 'linear',
         warmup_ratio = args.warmup_ratio,
         # epochs and batches 
         num_train_epochs = args.epochs, 
         max_steps=args.max_steps,
         per_device_train_batch_size = args.batch_size,
         per_device_eval_batch_size = args.batch_size,
+        gradient_accumulation_steps=1,
     )
 
     logger = get_logger(

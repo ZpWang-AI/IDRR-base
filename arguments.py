@@ -11,7 +11,8 @@ class Args:
     
     version = 'test'
     
-    train_or_test = 'train+test'
+    do_train = True
+    do_eval = True
     label_level = 'level1'
     model_name_or_path = 'roberta-base'
     data_name = 'pdtb2'
@@ -36,10 +37,12 @@ class Args:
     def __init__(self) -> None:
         
         # === set default values below ===
-        parser = argparse.ArgumentParser("")
+        parser = argparse.ArgumentParser('zp')
         parser.add_argument("--version", type=str, default='local')
 
-        parser.add_argument("--train_or_test", type=str, default='train', choices=['train', 'test', 'train+test'])
+        parser.add_argument("--do_train", type=bool, default=True)
+        parser.add_argument("--do_eval", type=bool, default=False)
+        # parser.add_argument("--train_or_test", type=str, default='train', choices=['train', 'test', 'train+test'])
         parser.add_argument("--label_level", type=str, default='level1', choices=['level1', 'level2'])
         parser.add_argument("--model_name_or_path", default='roberta-base')
         parser.add_argument("--data_name", type=str, default= "pdtb2" )
@@ -69,7 +72,8 @@ class Args:
     def check_path(self):
         assert path(self.data_path).exists(), 'wrong data path'
         cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        self.output_dir = os.path.join(self.output_dir, f'{cur_time}_{self.version}_{self.train_or_test}')
+        train_eval_string = '_train'*self.do_train + '_test'*self.do_eval
+        self.output_dir = os.path.join(self.output_dir, f'{cur_time}_{self.version}_{train_eval_string}')
         path(self.output_dir).mkdir(parents=True, exist_ok=True)
         self.log_path = os.path.join(self.output_dir, self.log_path)
         path(self.log_path).touch()

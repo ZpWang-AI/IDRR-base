@@ -112,7 +112,7 @@ def main(args:Args):
         num_labels=len(dataset.label_map),
     )
     
-    if 'train' in args.train_or_test:
+    if args.do_train:
         train(
             args=args,
             training_args=training_args,
@@ -120,7 +120,7 @@ def main(args:Args):
             dataset=dataset,
             logger=logger,
         )
-    if 'test' in args.train_or_test:
+    if args.do_eval:
         evaluate(
             args=args,
             training_args=training_args,

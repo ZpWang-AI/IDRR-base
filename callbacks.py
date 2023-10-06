@@ -46,9 +46,10 @@ class SaveBestModelCallback(TrainerCallback):
                     self.logger.info(f'{best_metric_name}: {metric_value}')
                     # self.logger.info(f"New best model saved to {best_model_path}")
 
-        metric_score
+        metric_score_string = json.dumps(self.best_metric, ensure_ascii=False, indent=2)
+        self.logger.info('\n'+metric_score_string)
         with open(self.save_metric_path, 'w', encoding='utf8')as f:
-            json.dump(self.best_metric, f, ensure_ascii=False, indent=2)
+            f.write(metric_score_string)
 
 
 class LogCallback(TrainerCallback):

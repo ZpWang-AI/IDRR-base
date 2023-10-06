@@ -56,7 +56,7 @@ class Args:
         
         parser.add_argument("--epochs", type=int, default=4)
         parser.add_argument("--max_steps", type=int, default=-1)
-        parser.add_argument("--train_batch_size", type=int, default=8)
+        parser.add_argument("--train_batch_size", type=int, default=32)
         parser.add_argument("--eval_batch_size", type=int, default=32)
         parser.add_argument("--eval_steps", type=int, default=100)
         parser.add_argument("--log_steps", type=int, default=10)

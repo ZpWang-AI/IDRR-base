@@ -1,7 +1,7 @@
 import os 
 import torch
 import pandas as pd 
-import argparse
+import json
 
 from pathlib import Path as path
 from transformers import TrainingArguments, Trainer, AutoTokenizer, DataCollatorWithPadding, set_seed
@@ -37,7 +37,10 @@ def train(args:Args, training_args:TrainingArguments, model, dataset, logger):
     )
     save_callback.trainer = trainer
 
-    trainer.train()
+    train_output = trainer.train().metrics
+    with open(path(args.output_dir)/'train_output.json', 'w', encoding='utf8')as f:
+        json.dump(train_output, f, ensure_ascii=False, indent=2)
+        
 
 def evaluate(args:Args, training_args:TrainingArguments, model, dataset, logger, metric_type=None):
     model_params_path = os.path.join(args.load_ckpt_dir, 'pytorch_model.bin')
@@ -57,8 +60,9 @@ def evaluate(args:Args, training_args:TrainingArguments, model, dataset, logger,
         callbacks=[log_callback],
     )
 
-    metric_res = trainer.evaluate(dataset.test_dataset)
-    for k, v in metric_res.items():
+    evaluate_output = trainer.evaluate(dataset.test_dataset)
+    print(evaluate_output)
+    for k, v in evaluate_output.items():
         if metric_type:
             if metric_type in k:
                 logger.info(f'{metric_type}: {v}')

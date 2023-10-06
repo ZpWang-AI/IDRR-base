@@ -6,10 +6,14 @@ import argparse
 from pathlib import Path as path
 from transformers import TrainingArguments, Trainer, AutoTokenizer, DataCollatorWithPadding, set_seed
 
-from utils import (get_logger,
-                   compute_metrics, 
-                   SaveBestModelCallback, 
-                   )
+from utils import (
+    get_logger,
+    compute_metrics, 
+)
+from callbacks import (
+    SaveBestModelCallback,
+    LogCallback,
+)
 from corpusDatasets import CustomDatasets
 from model import BaselineModel, CustomModel
 from arguments import Args
@@ -18,7 +22,8 @@ os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 
 def train(args:Args, training_args:TrainingArguments, model, dataset, logger):
-    save_callback = SaveBestModelCallback(logger=logger)
+    save_callback = SaveBestModelCallback(args=args, logger=logger)
+    log_callback = LogCallback(args=args, logger=logger)
     
     trainer = Trainer(
         model=model, 
@@ -28,7 +33,7 @@ def train(args:Args, training_args:TrainingArguments, model, dataset, logger):
         tokenizer=dataset.tokenizer, 
         data_collator=dataset.data_collator,
         compute_metrics=compute_metrics,
-        callbacks=[save_callback],
+        callbacks=[save_callback, log_callback],
     )
     save_callback.trainer = trainer
 
@@ -38,6 +43,8 @@ def evaluate(args:Args, training_args:TrainingArguments, model, dataset, logger,
     model_params_path = os.path.join(args.load_ckpt_dir, 'pytorch_model.bin')
     model_params = torch.load(model_params_path)
     logger.info(model.load_state_dict(model_params, strict=True))
+    
+    log_callback = LogCallback(args=args, logger=logger)
 
     trainer = Trainer(
         model=model, 
@@ -47,6 +54,7 @@ def evaluate(args:Args, training_args:TrainingArguments, model, dataset, logger,
         tokenizer=dataset.tokenizer, 
         data_collator=dataset.data_collator,
         compute_metrics=compute_metrics,
+        callbacks=[log_callback],
     )
 
     metric_res = trainer.evaluate(dataset.test_dataset)
@@ -83,7 +91,7 @@ def main(args:Args):
         max_steps=args.max_steps,
         per_device_train_batch_size = args.batch_size,
         per_device_eval_batch_size = args.batch_size,
-        gradient_accumulation_steps=1,
+        gradient_accumulation_steps=args.gradient_accumulation_steps,
     )
 
     logger = get_logger(

@@ -40,13 +40,11 @@ def train(args:Args, training_args:TrainingArguments, model, dataset, logger):
     train_output = trainer.train().metrics
     with open(path(args.output_dir)/'train_output.json', 'w', encoding='utf8')as f:
         json.dump(train_output, f, ensure_ascii=False, indent=2)
+    
+    return trainer
         
 
-def evaluate(args:Args, training_args:TrainingArguments, model, dataset, logger, metric_type=None):
-    model_params_path = os.path.join(args.load_ckpt_dir, 'pytorch_model.bin')
-    model_params = torch.load(model_params_path)
-    logger.info(model.load_state_dict(model_params, strict=True))
-    
+def evaluate(args:Args, training_args:TrainingArguments, model, dataset, logger, metric_type=None):    
     log_callback = LogCallback(args=args, logger=logger)
 
     trainer = Trainer(
@@ -71,9 +69,14 @@ def evaluate(args:Args, training_args:TrainingArguments, model, dataset, logger,
                 break
     else:
         logger.info('\n'+evaluate_output_string)
+        
+    return trainer
 
 
 def main(args:Args):
+    if not args.do_train and not args.do_eval:
+        raise Exception('neither do_train nor do_eval')
+    
     args.check_path()
     set_seed(args.seed)
     
@@ -122,14 +125,25 @@ def main(args:Args):
     )
     
     if args.do_train:
-        train(
+        trainer = train(
             args=args,
             training_args=training_args,
             model=model,
             dataset=dataset,
             logger=logger,
         )
+        
     if args.do_eval:
+        if path(args.load_ckpt_dir).exists():
+            model_params_path = os.path.join(args.load_ckpt_dir, 'pytorch_model.bin')
+            model_params = torch.load(model_params_path)
+            logger.info(model.load_state_dict(model_params, strict=True))
+        else:      
+            if args.do_train:
+                model = trainer.model
+            else:
+                raise Exception('no do_train and load_ckpt_dir not exists')  
+            
         evaluate(
             args=args,
             training_args=training_args,
@@ -138,6 +152,8 @@ def main(args:Args):
             logger=logger,
             # metric_type='acc',
         )
+            
+            
     
 
 if __name__ == '__main__':

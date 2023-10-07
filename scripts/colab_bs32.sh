@@ -1,5 +1,5 @@
 # %cd /content/IDRR-base/
-!python main.py \
+python main.py \
     --version colab-bs32 \
     --do_train True \
     --do_eval False \

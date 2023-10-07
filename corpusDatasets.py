@@ -82,8 +82,9 @@ class CustomCorpusDatasets():
         logger=None,
         
         label_level='level1',
-        label_expansion_positive=False,
-        label_expansion_negative=False,
+        label_expansion_positive=0,
+        label_expansion_negative=0,
+        data_augmentation=False,
     ):
         assert data_name in ['pdtb2', 'pdtb3', 'conll']
         tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
@@ -104,10 +105,20 @@ class CustomCorpusDatasets():
                                              'ConnHeadSemClass1', 'ConnHeadSemClass2',
                                              'Conn2SemClass1', 'Conn2SemClass2'])
         df = df[df['Relation'] == 'Implicit']
+        
+        train_df = df[~df['Section'].isin([0, 1, 21, 22, 23, 24])]
+        dev_df = df[df['Section'].isin([0, 1])]
+        test_df = df[df['Section'].isin([21, 22])]
+        if data_augmentation:
+            train_df, dev_df, test_df = map(self.data_augmentation_df, [
+                train_df, dev_df, test_df
+            ])
 
         self.label_level = label_level
         self.le_pos = label_expansion_positive
         self.le_neg = label_expansion_negative
+        self.data_augmentation = data_augmentation
+        
         dataset_kwargs = {
             'tokenizer': tokenizer,
             'label_map': self.label_map,
@@ -116,15 +127,15 @@ class CustomCorpusDatasets():
             'le_neg': label_expansion_negative,
         }
         self.train_dataset = CustomDataset(
-            df=df[~df['Section'].isin([0, 1, 21, 22, 23, 24])], 
+            df=train_df, 
             **dataset_kwargs,
         )
         self.dev_dataset = CustomDataset(
-            df=df[df['Section'].isin([0, 1])], 
+            df=dev_df, 
             **dataset_kwargs,
         )
         self.test_dataset = CustomDataset(
-            df=df[df['Section'].isin([21, 22])],
+            df=test_df,
             **dataset_kwargs,
         )
         
@@ -134,6 +145,16 @@ class CustomCorpusDatasets():
             logger.info(f'Devset Size: {len(self.dev_dataset)}')
             logger.info(f'Testset Size: {len(self.test_dataset)}')
             logger.info('-' * 30)
+            
+    def data_augmentation_df(self, df:pd.DataFrame):
+        # 'Relation', 'Section', 
+        # 'Arg1_RawText', 'Arg2_RawText', 
+        # 'Conn1', 'Conn2',
+        # 'ConnHeadSemClass1', 'ConnHeadSemClass2',
+        # 'Conn2SemClass1', 'Conn2SemClass2'
+        df2 = df.copy()
+        df2['Arg2_RawText'] = df['Conn1']+df['Arg2_RawText']
+        return pd.concat([df, df2], ignore_index=True)
     
     
 if __name__ == '__main__':

@@ -117,6 +117,7 @@ def main(args:Args):
         label_level=args.label_level,
         label_expansion_positive=args.label_expansion_positive,
         label_expansion_negative=args.label_expansion_negative,
+        data_augmentation=args.data_augmentation,
     )
 
     model = CustomModel(

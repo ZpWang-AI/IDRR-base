@@ -30,6 +30,7 @@ class Args:
     
     label_expansion_positive = 0.0
     label_expansion_negative = 0.0
+    data_augmentation = False
     
     epochs = 5
     max_steps = -1
@@ -58,6 +59,7 @@ class Args:
         
         parser.add_argument("--label_expansion_positive", type=float, default=0)
         parser.add_argument("--label_expansion_negative", type=float, default=0)
+        parser.add_argument("--data_augmentation", type=arg_bool, default='False')
         
         parser.add_argument("--data_path", type=str, default='/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv')
         parser.add_argument("--log_path", type=str, default='log.out')

@@ -10,7 +10,7 @@ python main.py \
     --log_path log.out \
     --load_ckpt_dir ./ckpt_fold \
     --label_expansion_positive 0.2 \
-    --label_expansion_negative 0.1 \
+    --label_expansion_negative 0 \
     --epochs 5 \
     --max_steps -1 \
     --train_batch_size 32 \

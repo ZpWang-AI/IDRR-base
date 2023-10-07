@@ -41,9 +41,9 @@ class CustomDataset(Dataset):
         if self.le_pos:
             for sense_ in sense_list[1:]:
                 if not pd.isna(sense_):
-                    label[self.label_to_id(sense_)] += 0.2
+                    label[self.label_to_id(sense_)] += self.le_pos
         if self.le_neg:
-            label -= 0.1
+            label -= self.le_neg
             
         return label
         

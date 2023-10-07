@@ -28,8 +28,8 @@ class Args:
     log_path = 'log.out'
     load_ckpt_dir = './ckpt/2023-10-05-21-04-47_test_train+test'
     
-    label_expansion_positive = False
-    label_expansion_negative = False
+    label_expansion_positive = 0.0
+    label_expansion_negative = 0.0
     
     epochs = 5
     max_steps = -1
@@ -56,8 +56,8 @@ class Args:
         parser.add_argument("--model_name_or_path", default='roberta-base')
         parser.add_argument("--data_name", type=str, default= "pdtb2" )
         
-        parser.add_argument("--label_expansion_positive", type=arg_bool, default='false')
-        parser.add_argument("--label_expansion_negative", type=arg_bool, default='false')
+        parser.add_argument("--label_expansion_positive", type=float, default=0)
+        parser.add_argument("--label_expansion_negative", type=float, default=0)
         
         parser.add_argument("--data_path", type=str, default='/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv')
         parser.add_argument("--log_path", type=str, default='log.out')
@@ -65,7 +65,7 @@ class Args:
         parser.add_argument("--output_dir", type=str, default="./output_space/")
         parser.add_argument("--load_ckpt_dir", type=str, default='./ckpt_fold')
         
-        parser.add_argument("--epochs", type=int, default=4)
+        parser.add_argument("--epochs", type=int, default=5)
         parser.add_argument("--max_steps", type=int, default=-1)
         parser.add_argument("--train_batch_size", type=int, default=32)
         parser.add_argument("--eval_batch_size", type=int, default=32)

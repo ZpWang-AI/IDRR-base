@@ -7,9 +7,9 @@ from typing import Any
 
 
 class arg_bool:
-    def __call__(self, input_s:str) -> bool:
+    def __new__(cls, input_s: str) -> bool:
         return 't' in input_s.lower()
-            
+       
 
 class Args:
     
@@ -31,7 +31,7 @@ class Args:
     label_expansion_positive = False
     label_expansion_negative = False
     
-    epochs = 4
+    epochs = 5
     max_steps = -1
     train_batch_size = 8
     eval_batch_size = 32

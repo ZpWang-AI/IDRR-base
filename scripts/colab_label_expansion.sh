@@ -1,5 +1,5 @@
 python main.py \
-    --version colab \
+    --version colab_le \
     --do_train True \
     --do_eval False \
     --label_level level1 \

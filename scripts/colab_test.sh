@@ -2,7 +2,7 @@
 python main.py \
     --version colab_test \
     --do_train True \
-    --do_eval False \
+    --do_eval True \
     --label_level level1 \
     --model_name_or_path roberta-base \
     --data_name pdtb2 \

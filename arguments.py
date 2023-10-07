@@ -3,7 +3,13 @@ import argparse
 
 from pathlib import Path as path
 from datetime import datetime
+from typing import Any
 
+
+class arg_bool:
+    def __call__(self, input_s:str) -> bool:
+        return 't' in input_s.lower()
+            
 
 class Args:
     
@@ -21,6 +27,9 @@ class Args:
     output_dir = './ckpt'
     log_path = 'log.out'
     load_ckpt_dir = './ckpt/2023-10-05-21-04-47_test_train+test'
+    
+    label_expansion_positive = False
+    label_expansion_negative = False
     
     epochs = 4
     max_steps = -1
@@ -41,11 +50,14 @@ class Args:
         parser = argparse.ArgumentParser('zp')
         parser.add_argument("--version", type=str, default='colab')
 
-        parser.add_argument("--do_train", type=lambda s:'t'in s.lower(), default='True')
-        parser.add_argument("--do_eval", type=lambda s:'t'in s.lower(), default='False')
+        parser.add_argument("--do_train", type=arg_bool, default='True')
+        parser.add_argument("--do_eval", type=arg_bool, default='False')
         parser.add_argument("--label_level", type=str, default='level1', choices=['level1', 'level2'])
         parser.add_argument("--model_name_or_path", default='roberta-base')
         parser.add_argument("--data_name", type=str, default= "pdtb2" )
+        
+        parser.add_argument("--label_expansion_positive", type=arg_bool, default='false')
+        parser.add_argument("--label_expansion_negative", type=arg_bool, default='false')
         
         parser.add_argument("--data_path", type=str, default='/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv')
         parser.add_argument("--log_path", type=str, default='log.out')

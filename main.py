@@ -109,9 +109,11 @@ def main(args:Args):
     dataset = CustomCorpusDatasets(
         file_path=args.data_path,
         data_name=args.data_name,
-        label_level=args.label_level,
         model_name_or_path=args.model_name_or_path,
         logger=logger,
+        label_level=args.label_level,
+        label_expansion_positive=args.label_expansion_positive,
+        label_expansion_negative=args.label_expansion_negative,
     )
 
     model = CustomModel(

@@ -82,8 +82,8 @@ class CustomCorpusDatasets():
         logger=None,
         
         label_level='level1',
-        label_expansion_positive=True,
-        label_expansion_negative=True,
+        label_expansion_positive=False,
+        label_expansion_negative=False,
     ):
         assert data_name in ['pdtb2', 'pdtb3', 'conll']
         tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)

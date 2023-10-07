@@ -1,7 +1,8 @@
 import os
-import numpy as np
+import time 
 import logging
 import json
+import numpy as np
 
 from pathlib import Path as path
 from typing import *
@@ -60,7 +61,7 @@ def format_dict_values(dct, k):
             formatted_value = value
         formatted_dict[key] = formatted_value
     return formatted_dict
-
+        
 
 if __name__ == '__main__':
     sample_dict = {

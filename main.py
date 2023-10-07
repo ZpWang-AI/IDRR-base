@@ -85,7 +85,8 @@ def main(args:Args):
         eval_steps = args.eval_steps,
         logging_strategy='steps',
         logging_steps=args.log_steps,
-        save_strategy = 'no',
+        save_strategy='epoch',
+        save_total_limit=1,
         # optimizer and lr_scheduler
         optim='adamw_torch',
         learning_rate = args.learning_rate,

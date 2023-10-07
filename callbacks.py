@@ -14,8 +14,8 @@ class SaveBestModelCallback(TrainerCallback):
     def __init__(self, args:Args, logger:logging.Logger=None):
         super().__init__()
         
-        self.args = args
         self.trainer = None
+        self.args = args
         self.logger = logger
         
         self.best_metrics_file = path(args.output_dir)/'best_metric_score.json'
@@ -36,7 +36,7 @@ class SaveBestModelCallback(TrainerCallback):
             if metric_value > self.best_metrics[best_metric_name]:
                 self.best_metrics[best_metric_name] = metric_value
                 
-                best_model_path = path(args.output_dir)/'checkpoint'/best_metric_name
+                best_model_path = path(args.output_dir)/f'checkpoint_{best_metric_name}'
                 self.trainer.save_model(best_model_path)
                 if self.logger:
                     self.logger.info(f'{best_metric_name}: {metric_value}')
@@ -62,6 +62,7 @@ class LogCallback(TrainerCallback):
     def __init__(self, args:Args, logger:logging.Logger=None) -> None:
         super().__init__()
         
+        self.trainer = None
         self.args = args
         self.logger = logger
     
@@ -73,9 +74,9 @@ class LogCallback(TrainerCallback):
         with open(hyper_file, 'w', encoding='utf8')as f:
             f.write(args_string)
             
-    # def on_train_end(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
-    #     print(state)
-    #     print(control)
+    # def on_epoch_end(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+    #     last_model_path = path(args.output_dir)/'checkpoint'/'last_epoch'
+    #     self.trainer.save_model(last_model_path)
     
     def on_log(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, logs, **kwargs):
         # self.logger.info(str(logs))

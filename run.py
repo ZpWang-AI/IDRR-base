@@ -22,6 +22,29 @@ def run_local_test():
 
     main.main(args)
     
+
+def run_cu12_test():
+    args = arguments.Args()
+    
+    args.version = 'cu12'
+    args.data_path = 'CorpusData/DRR_corpus/pdtb2.csv'
+    args.load_ckpt_dir = './ckpt_fold'
+    
+    args.label_expansion_positive = True
+    args.label_expansion_negative = True
+    
+    args.do_train = True
+    args.do_eval = True
+    args.train_batch_size = 8
+    args.eval_batch_size = 8
+    args.max_steps = 20
+    args.epochs = 2
+    args.eval_steps = 10
+    args.log_steps = 10
+
+    main.main(args)
+    
     
 if __name__ == '__main__':
-    run_local_test()
+    # run_local_test()
+    run_cu12_test()

@@ -22,11 +22,11 @@ class CustomLoss(nn.Module):
         
         
 class CustomModel(nn.Module):
-    def __init__(self, model_name_or_path, num_labels=4, *args, **kwargs) -> None:
+    def __init__(self, model_name_or_path, num_labels=4, cache_dir='', *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         
-        self.model = AutoModelForSequenceClassification.from_pretrained(model_name_or_path, num_labels=num_labels)
-        self.model_config = AutoConfig.from_pretrained(model_name_or_path, num_labels=num_labels)
+        self.model = AutoModelForSequenceClassification.from_pretrained(model_name_or_path, num_labels=num_labels, cache_dir=cache_dir)
+        self.model_config = AutoConfig.from_pretrained(model_name_or_path, num_labels=num_labels, cache_dir=cache_dir)
         
         self.loss_fn = CustomLoss()
     

@@ -2,6 +2,7 @@ import os
 import torch
 import pandas as pd 
 import json
+import shutil
 
 from pathlib import Path as path
 from transformers import TrainingArguments, Trainer, AutoTokenizer, DataCollatorWithPadding, set_seed
@@ -45,6 +46,19 @@ def train(
 
     train_output = trainer.train().metrics
     logger.log_json(train_output, 'train_output.json', log_info=True)
+    
+    if args.do_eval:
+        callback.evaluate_testdata = True
+        
+        eval_metrics = {}
+        for metric_ in compute_metrics.metric_names:
+            load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
+            if load_ckpt_dir.exists():
+                evaluate_output = trainer.evaluate(eval_dataset=dataset.test_dataset)
+                eval_metric_name = 'eval_'+metric_
+                eval_metrics[eval_metric_name] = evaluate_output[eval_metric_name]
+                
+        logger.log_json(eval_metrics, 'eval_metric_score.json', log_info=True)                
     
     return trainer
         
@@ -123,6 +137,7 @@ def main(args:CustomArgs):
         file_path=args.data_path,
         data_name=args.data_name,
         model_name_or_path=args.model_name_or_path,
+        cache_dir=args.cache_dir,
         logger=logger,
         label_level=args.label_level,
 
@@ -133,6 +148,7 @@ def main(args:CustomArgs):
 
     model = CustomModel(
         model_name_or_path=args.model_name_or_path,
+        cache_dir=args.cache_dir,
         num_labels=len(dataset.label_map),
     )
     
@@ -148,13 +164,8 @@ def main(args:CustomArgs):
     }
     
     if args.do_train:
-        train(**train_evaluate_kwargs)
-        
-        if args.do_eval:
-            pass
-        return
-        
-    if args.do_eval:
+        train(**train_evaluate_kwargs)        
+    elif args.do_eval:
         if path(args.load_ckpt_dir).exists():
             model_params_path = os.path.join(args.load_ckpt_dir, 'pytorch_model.bin')
             model_params = torch.load(model_params_path)
@@ -164,8 +175,15 @@ def main(args:CustomArgs):
             
         evaluate(**train_evaluate_kwargs)
             
-            
-    
+    # TODO: mv run/xxx/events log_dir/
+    for dirpath, dirnames, filenames in os.walk(args.output_dir):
+        if 'checkpoint' in dirpath:
+            continue
+        if 'runs' in dirpath:
+            for filename in filenames:
+                if 'events' in filename:
+                    cur_file = path(dirpath)/filename
+                    shutil.copy(cur_file, args.log_dir)
 
 if __name__ == '__main__':
     args = CustomArgs()

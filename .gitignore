@@ -1,0 +1,24 @@
+*.sh
+*.zip
+*.ipynb
+*.log
+_*
+*tmp*
+*test*
+
+__pycache__
+logs
+.vscode
+# .gitignore
+.git
+nohup.out
+
+# ==============================
+
+baseline
+CorpusData
+!scripts/*.sh
+output_space
+log_space
+!just_test.py
+plm_cache

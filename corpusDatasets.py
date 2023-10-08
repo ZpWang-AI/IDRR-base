@@ -79,6 +79,7 @@ class CustomCorpusDatasets():
         file_path,
         data_name='pdtb2',
         model_name_or_path='roberta-base',
+        cache_dir='',
         logger=None,
         
         label_level='level1',
@@ -87,7 +88,7 @@ class CustomCorpusDatasets():
         data_augmentation=False,
     ):
         assert data_name in ['pdtb2', 'pdtb3', 'conll']
-        tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+        tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, cache_dir=cache_dir)
         self.sep_t = tokenizer.sep_token
         self.cls_t = tokenizer.cls_token
         self.tokenizer = tokenizer 

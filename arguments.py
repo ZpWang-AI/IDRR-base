@@ -26,10 +26,10 @@ class CustomArgs:
     
     # path 
     data_path = './CorpusData/PDTB-2.0/pdtb2.csv'
-    cache_dir = ''
+    cache_dir = 'None'
     output_dir = './ckpt'
     log_dir = './log'
-    load_ckpt_dir = './ckpt/2023-10-05-21-04-47_test_train+test'
+    load_ckpt_dir = 'None'
     
     # improvement
     label_expansion_positive = 0.0
@@ -59,14 +59,14 @@ class CustomArgs:
 
         # base setting
         parser.add_argument("--do_train", type=arg_bool, default='True')
-        parser.add_argument("--do_eval", type=arg_bool, default='False')
+        parser.add_argument("--do_eval", type=arg_bool, default='True')
         parser.add_argument("--label_level", type=str, default='level1', choices=['level1', 'level2'])
         parser.add_argument("--model_name_or_path", default='roberta-base')
         parser.add_argument("--data_name", type=str, default= "pdtb2" )
         
         # path 
         parser.add_argument("--data_path", type=str, default='/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv')
-        parser.add_argument("--cache_dir", type=str, default='')
+        parser.add_argument("--cache_dir", type=str, default=None)
         parser.add_argument("--output_dir", type=str, default="./output_space/")
         parser.add_argument("--log_dir", type=str, default='./output_space/')
         parser.add_argument("--load_ckpt_dir", type=str, default='./ckpt_fold')
@@ -97,10 +97,16 @@ class CustomArgs:
             
     def check_path(self):
         assert path(self.data_path).exists(), 'wrong data path'
-        cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        
+        if str(self.cache_dir) == 'None':
+            self.cache_dir = None
+        else:
+            path(self.cache_dir).mkdir(parents=True, exist_ok=True)
+            
+        self.cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         train_eval_string = '_train'*self.do_train + '_eval'*self.do_eval
-        self.output_dir = os.path.join(self.output_dir, f'{cur_time}_{self.version}_{train_eval_string}')
-        self.log_dir = os.path.join(self.log_dir, f'{cur_time}_{self.version}_{train_eval_string}')
+        self.output_dir = os.path.join(self.output_dir, f'{self.cur_time}_{self.version}_{train_eval_string}')
+        self.log_dir = os.path.join(self.log_dir, f'{self.cur_time}_{self.version}_{train_eval_string}')
         path(self.output_dir).mkdir(parents=True, exist_ok=True)
         path(self.log_dir).mkdir(parents=True, exist_ok=True)
     

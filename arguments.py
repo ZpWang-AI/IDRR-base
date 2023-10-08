@@ -45,11 +45,16 @@ class CustomArgs:
     log_steps = 5
     gradient_accumulation_steps = 1
     
-    # additional setting
+    # seed, lr
     seed = 2023
     warmup_ratio = 0.05
     weight_decay = 0.01
     learning_rate = 5e-6
+    
+    # additional setting ( not shown in ArgumentParser )
+    trainset_size = -1
+    devset_size = -1
+    testset_size = -1
     
     def __init__(self) -> None:
         
@@ -68,7 +73,7 @@ class CustomArgs:
         parser.add_argument("--data_path", type=str, default='/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv')
         parser.add_argument("--cache_dir", type=str, default=None)
         parser.add_argument("--output_dir", type=str, default="./output_space/")
-        parser.add_argument("--log_dir", type=str, default='./output_space/')
+        parser.add_argument("--log_dir", type=str, default='/content/drive/MyDrive/IDRR/log_space')
         parser.add_argument("--load_ckpt_dir", type=str, default='./ckpt_fold')
 
         # improvement
@@ -103,12 +108,15 @@ class CustomArgs:
         else:
             path(self.cache_dir).mkdir(parents=True, exist_ok=True)
             
-        self.cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         train_eval_string = '_train'*self.do_train + '_eval'*self.do_eval
-        self.output_dir = os.path.join(self.output_dir, f'{self.cur_time}_{self.version}_{train_eval_string}')
-        self.log_dir = os.path.join(self.log_dir, f'{self.cur_time}_{self.version}_{train_eval_string}')
+        self.output_dir = os.path.join(self.output_dir, f'{cur_time}_{self.version}_{train_eval_string}')
+        self.log_dir = os.path.join(self.log_dir, f'{cur_time}_{self.version}_{train_eval_string}')
         path(self.output_dir).mkdir(parents=True, exist_ok=True)
         path(self.log_dir).mkdir(parents=True, exist_ok=True)
+        
+        if not self.do_train and self.do_eval and not path(self.load_ckpt_dir).exists():
+            raise Exception('no do_train and load_ckpt_dir does not exist')  
     
     def __iter__(self):
         # keep the same order as the args shown in the file
@@ -122,12 +130,10 @@ class CustomArgs:
                     continue
                 if sep_label:
                     for k in keys_order:
-                        if k in line:
+                        if k in line and keys_order[k] == -1:
                             keys_order[k] = cnt
                             cnt += 1
                             break
-                    if cnt >= len(keys_order):
-                        break
         
         return iter(sorted(self.__dict__.items(), key=lambda x:keys_order[x[0]]))
         
@@ -142,4 +148,6 @@ class CustomArgs:
 
 if __name__ == '__main__':
     sample_args = CustomArgs()
+    # print(list(sample_args))
+    # print(dict(sample_args))
     sample_args.generate_script()

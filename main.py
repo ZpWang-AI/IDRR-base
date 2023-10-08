@@ -145,6 +145,9 @@ def main(args:CustomArgs):
         label_expansion_negative=args.label_expansion_negative,
         data_augmentation=args.data_augmentation,
     )
+    args.trainset_size, args.devset_size, args.testset_size = map(len, [
+        dataset.train_dataset, dataset.dev_dataset, dataset.test_dataset
+    ])
 
     model = CustomModel(
         model_name_or_path=args.model_name_or_path,
@@ -166,16 +169,12 @@ def main(args:CustomArgs):
     if args.do_train:
         train(**train_evaluate_kwargs)        
     elif args.do_eval:
-        if path(args.load_ckpt_dir).exists():
-            model_params_path = os.path.join(args.load_ckpt_dir, 'pytorch_model.bin')
-            model_params = torch.load(model_params_path)
-            logger.info(model.load_state_dict(model_params, strict=True))
-        else:      
-            raise Exception('no do_train and load_ckpt_dir does not exist')  
-            
+        model_params_path = os.path.join(args.load_ckpt_dir, 'pytorch_model.bin')
+        model_params = torch.load(model_params_path)
+        logger.info( model.load_state_dict(model_params, strict=True) )
+
         evaluate(**train_evaluate_kwargs)
             
-    # TODO: mv run/xxx/events log_dir/
     for dirpath, dirnames, filenames in os.walk(args.output_dir):
         if 'checkpoint' in dirpath:
             continue

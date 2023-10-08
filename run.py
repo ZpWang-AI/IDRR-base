@@ -6,8 +6,9 @@ def local_test_args():
     args = CustomArgs()
     
     args.version = 'local_test'
+    
     args.data_path = r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\CorpusData\PDTB2\pdtb2.csv'
-    args.load_ckpt_dir = r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\output_space\2023-10-06-19-56-37_local__train\checkpoint\best_acc'
+    args.load_ckpt_dir = r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\output_space\2023-10-08-21-23-19_local_test__train_eval\checkpoint_best_Acc'
     args.cache_dir = './plm_cache/'
     args.output_dir = './output_space/'
     args.log_dir = './log_space/'
@@ -32,8 +33,12 @@ def cu12_test_args():
     args = local_test_args()
     
     args.version = 'cu12_test'
+    
     args.data_path = 'CorpusData/DRR_corpus/pdtb2.csv'
     args.load_ckpt_dir = './ckpt_fold'
+    args.cache_dir = './plm_cache/'
+    args.output_dir = './output_space/'
+    args.log_dir = './log_space/'
     
     return args
     

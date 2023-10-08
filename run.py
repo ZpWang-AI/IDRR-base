@@ -10,6 +10,7 @@ def run_local_test():
     
     args.label_expansion_positive = True
     args.label_expansion_negative = True
+    args.data_augmentation = True
     
     args.do_train = True
     args.do_eval = True

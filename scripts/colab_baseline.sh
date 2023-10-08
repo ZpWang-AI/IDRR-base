@@ -1,4 +1,3 @@
-# %cd /content/IDRR-base/
 python main.py \
     --version colab-baseline \
     --do_train True \
@@ -8,7 +7,7 @@ python main.py \
     --data_name pdtb2 \
     --data_path /content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv \
     --output_dir ./output_space/ \
-    --log_path log.out \
+    --log_dir /content/drive/MyDrive/IDRR/log_space \
     --load_ckpt_dir ./ckpt_fold \
     --epochs 5 \
     --max_steps -1 \

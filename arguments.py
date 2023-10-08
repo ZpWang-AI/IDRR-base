@@ -17,21 +17,26 @@ class Args:
     
     version = 'test'
     
+    # base setting
     do_train = True
     do_eval = True
     label_level = 'level1'
     model_name_or_path = 'roberta-base'
     data_name = 'pdtb2'
     
+    # path 
     data_path = './CorpusData/PDTB-2.0/pdtb2.csv'
+    cache_dir = ''
     output_dir = './ckpt'
-    log_path = 'log.out'
+    log_dir = './log'
     load_ckpt_dir = './ckpt/2023-10-05-21-04-47_test_train+test'
     
+    # improvement
     label_expansion_positive = 0.0
     label_expansion_negative = 0.0
     data_augmentation = False
     
+    # epoch, batch, step
     epochs = 5
     max_steps = -1
     train_batch_size = 8
@@ -40,6 +45,7 @@ class Args:
     log_steps = 5
     gradient_accumulation_steps = 1
     
+    # additional setting
     seed = 2023
     warmup_ratio = 0.05
     weight_decay = 0.01
@@ -51,22 +57,26 @@ class Args:
         parser = argparse.ArgumentParser('zp')
         parser.add_argument("--version", type=str, default='colab')
 
+        # base setting
         parser.add_argument("--do_train", type=arg_bool, default='True')
         parser.add_argument("--do_eval", type=arg_bool, default='False')
         parser.add_argument("--label_level", type=str, default='level1', choices=['level1', 'level2'])
         parser.add_argument("--model_name_or_path", default='roberta-base')
         parser.add_argument("--data_name", type=str, default= "pdtb2" )
         
+        # path 
+        parser.add_argument("--data_path", type=str, default='/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv')
+        parser.add_argument("--cache_dir", type=str, default='')
+        parser.add_argument("--output_dir", type=str, default="./output_space/")
+        parser.add_argument("--log_dir", type=str, default='./output_space/')
+        parser.add_argument("--load_ckpt_dir", type=str, default='./ckpt_fold')
+
+        # improvement
         parser.add_argument("--label_expansion_positive", type=float, default=0)
         parser.add_argument("--label_expansion_negative", type=float, default=0)
         parser.add_argument("--data_augmentation", type=arg_bool, default='False')
         
-        parser.add_argument("--data_path", type=str, default='/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv')
-        parser.add_argument("--log_path", type=str, default='log.out')
-        # parser.add_argument("--cache_dir", type=str, default='')
-        parser.add_argument("--output_dir", type=str, default="./output_space/")
-        parser.add_argument("--load_ckpt_dir", type=str, default='./ckpt_fold')
-        
+        # epoch, batch, step
         parser.add_argument("--epochs", type=int, default=5)
         parser.add_argument("--max_steps", type=int, default=-1)
         parser.add_argument("--train_batch_size", type=int, default=32)
@@ -75,6 +85,7 @@ class Args:
         parser.add_argument("--log_steps", type=int, default=10)
         parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
 
+        # additional setting
         parser.add_argument("--seed", type=int, default=2023)
         parser.add_argument("--warmup_ratio", type=float, default=0.05)
         parser.add_argument("--weight_decay", type=float, default=0.01)
@@ -89,9 +100,9 @@ class Args:
         cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         train_eval_string = '_train'*self.do_train + '_test'*self.do_eval
         self.output_dir = os.path.join(self.output_dir, f'{cur_time}_{self.version}_{train_eval_string}')
+        self.log_dir = os.path.join(self.log_dir, f'{cur_time}_{self.version}_{train_eval_string}')
         path(self.output_dir).mkdir(parents=True, exist_ok=True)
-        self.log_path = os.path.join(self.output_dir, self.log_path)
-        path(self.log_path).touch()
+        path(self.log_dir).mkdir(parents=True, exist_ok=True)
     
     def __iter__(self):
         # keep the same order as the args shown in the file

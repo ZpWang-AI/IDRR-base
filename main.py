@@ -105,7 +105,7 @@ def main(args:Args):
     )
 
     logger = get_logger(
-        log_file=args.log_path,
+        log_file=path(args.log_dir)/'log.out',
         print_output=True,
     )
     

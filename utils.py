@@ -9,7 +9,7 @@ from typing import *
 from sklearn.metrics import f1_score, accuracy_score
 
 
-def get_logger(log_file='custom_log.log', logger_name='custom_logger', print_output=False):
+def get_logger(log_file='custom_log.out', logger_name='custom_logger', print_output=False):
     # 创建一个logger
     logger = logging.getLogger(logger_name)
 

@@ -110,9 +110,7 @@ class CustomCorpusDatasets():
         dev_df = df[df['Section'].isin([0, 1])]
         test_df = df[df['Section'].isin([21, 22])]
         if data_augmentation:
-            train_df, dev_df, test_df = map(self.data_augmentation_df, [
-                train_df, dev_df, test_df
-            ])
+            train_df = self.data_augmentation_df(train_df)
 
         self.label_level = label_level
         self.le_pos = label_expansion_positive

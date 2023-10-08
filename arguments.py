@@ -11,7 +11,7 @@ class arg_bool:
         return 't' in input_s.lower()
        
 
-class Args:
+class CustomArgs:
     
     ############################ Args # Don't delete this line
     
@@ -98,7 +98,7 @@ class Args:
     def check_path(self):
         assert path(self.data_path).exists(), 'wrong data path'
         cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        train_eval_string = '_train'*self.do_train + '_test'*self.do_eval
+        train_eval_string = '_train'*self.do_train + '_eval'*self.do_eval
         self.output_dir = os.path.join(self.output_dir, f'{cur_time}_{self.version}_{train_eval_string}')
         self.log_dir = os.path.join(self.log_dir, f'{cur_time}_{self.version}_{train_eval_string}')
         path(self.output_dir).mkdir(parents=True, exist_ok=True)
@@ -135,5 +135,5 @@ class Args:
 
 
 if __name__ == '__main__':
-    sample_args = Args()
+    sample_args = CustomArgs()
     sample_args.generate_script()

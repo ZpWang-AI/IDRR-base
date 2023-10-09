@@ -26,8 +26,8 @@ class CustomCallback(TrainerCallback):
         self.best_metrics = {'best_'+m:-1 for m in self.metric_names}
         self.metric_map = {m:p for p, m in enumerate(self.metric_names)}
     
-    def on_init_end(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
-        self.logger.log_json(dict(self.args), 'hyperparams.json', log_info=True)
+    # def on_init_end(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+    #     self.logger.log_json(dict(self.args), 'hyperparams.json', log_info=False)
 
     def on_evaluate(self, args, state, control, metrics:Dict[str, float], **kwargs):
         if self.evaluate_testdata:

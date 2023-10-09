@@ -8,7 +8,7 @@ def local_test_args():
     args.version = 'local_test'
     
     args.data_path = r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\CorpusData\PDTB2\pdtb2.csv'
-    args.load_ckpt_dir = r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\output_space\2023-10-08-21-23-19_local_test__train_eval\checkpoint_best_Acc'
+    args.load_ckpt_dir = r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\output_space\2023-10-09-17-33-24_local_test__train_eval\training_iter_0\checkpoint_best_Acc'
     args.cache_dir = './plm_cache/'
     args.output_dir = './output_space/'
     args.log_dir = './log_space/'
@@ -20,6 +20,7 @@ def local_test_args():
     args.do_train = True
     args.do_eval = True
     args.training_iteration = 2
+    
     args.train_batch_size = 8
     args.eval_batch_size = 8
     args.max_steps = 8

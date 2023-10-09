@@ -25,10 +25,27 @@ class CustomModel(nn.Module):
     def __init__(self, model_name_or_path, num_labels=4, cache_dir='', *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         
-        self.model = AutoModelForSequenceClassification.from_pretrained(model_name_or_path, num_labels=num_labels, cache_dir=cache_dir)
-        self.model_config = AutoConfig.from_pretrained(model_name_or_path, num_labels=num_labels, cache_dir=cache_dir)
+        self.model_name_or_path = model_name_or_path
+        self.num_labels = num_labels
+        self.cache_dir = cache_dir
+        
+        self.model:nn.Module = None
+        self.model_config = None
+        self.initial_model()
         
         self.loss_fn = CustomLoss()
+    
+    def initial_model(self):
+        self.model = AutoModelForSequenceClassification.from_pretrained(
+            self.model_name_or_path, 
+            num_labels=self.num_labels,
+            cache_dir=self.cache_dir
+        )
+        self.model_config = AutoConfig.from_pretrained(
+            self.model_name_or_path, 
+            num_labels=self.num_labels,
+            cache_dir=self.cache_dir
+        )
     
     def forward(self, input_ids, attention_mask, labels):
         model_outputs = self.model(input_ids=input_ids, attention_mask=attention_mask)

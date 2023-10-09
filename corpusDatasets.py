@@ -158,7 +158,7 @@ class CustomCorpusDatasets():
     
 if __name__ == '__main__':
     import os
-    from utils import get_logger
+    from logger import CustomLogger
     os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
     sample_dataset = CustomCorpusDatasets(
@@ -166,7 +166,7 @@ if __name__ == '__main__':
         data_name='pdtb2',
         label_level='level1',
         model_name_or_path='roberta-base',
-        logger=get_logger(),
+        logger=CustomLogger('tmp', print_output=True),
         label_expansion_positive=True,
         label_expansion_negative=True,
     )

@@ -19,12 +19,13 @@ def local_test_args():
     
     args.do_train = True
     args.do_eval = True
+    args.training_iteration = 2
     args.train_batch_size = 8
     args.eval_batch_size = 8
-    args.max_steps = 20
+    args.max_steps = 8
     args.epochs = 2
-    args.eval_steps = 10
-    args.log_steps = 10
+    args.eval_steps = 4
+    args.log_steps = 4
 
     return args
     

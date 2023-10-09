@@ -20,6 +20,7 @@ class CustomArgs:
     # base setting
     do_train = True
     do_eval = True
+    training_iteration = 1
     label_level = 'level1'
     model_name_or_path = 'roberta-base'
     data_name = 'pdtb2'
@@ -65,6 +66,7 @@ class CustomArgs:
         # base setting
         parser.add_argument("--do_train", type=arg_bool, default='True')
         parser.add_argument("--do_eval", type=arg_bool, default='True')
+        parser.add_argument("--training_iteration", type=int, default=1)
         parser.add_argument("--label_level", type=str, default='level1', choices=['level1', 'level2'])
         parser.add_argument("--model_name_or_path", default='roberta-base')
         parser.add_argument("--data_name", type=str, default= "pdtb2" )
@@ -99,8 +101,21 @@ class CustomArgs:
         args = parser.parse_args()
         for k, v in args.__dict__.items():
             setattr(self, k, v)
-            
+    
+    def complete_path(self):
+        cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        train_eval_string = '_train'*self.do_train + '_eval'*self.do_eval
+        specific_fold_name = f'{cur_time}_{self.version}_{train_eval_string}'
+        self.output_dir = os.path.join(self.output_dir, specific_fold_name)
+        self.log_dir = os.path.join(self.log_dir, specific_fold_name) 
+        
     def check_path(self):
+        # self.data_path
+        # self.cache_dir
+        # self.output_dir
+        # self.log_dir
+        # self.load_ckpt_dir
+        
         assert path(self.data_path).exists(), 'wrong data path'
         
         if str(self.cache_dir) == 'None':
@@ -108,10 +123,6 @@ class CustomArgs:
         else:
             path(self.cache_dir).mkdir(parents=True, exist_ok=True)
             
-        cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        train_eval_string = '_train'*self.do_train + '_eval'*self.do_eval
-        self.output_dir = os.path.join(self.output_dir, f'{cur_time}_{self.version}_{train_eval_string}')
-        self.log_dir = os.path.join(self.log_dir, f'{cur_time}_{self.version}_{train_eval_string}')
         path(self.output_dir).mkdir(parents=True, exist_ok=True)
         path(self.log_dir).mkdir(parents=True, exist_ok=True)
         

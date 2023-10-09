@@ -38,7 +38,7 @@ class CustomLogger:
         if log_info:
             self.logger.info('\n'+content_string)
         
-        log_file = self.log_dir/log_file
+        log_file = path(self.log_dir)/log_file
         with open(log_file, 'w', encoding='utf8')as f:
             f.write(content_string)
             

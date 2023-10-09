@@ -17,6 +17,28 @@ from metrics import ComputeMetrics
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 
+def multi_training_iteration_decorator(main_func):
+    def new_main_func(args:CustomArgs):
+        args.complete_path()
+        
+        # if args.training_iteration == 1:
+        #     return main_func(args)
+        
+        init_output_dir = args.output_dir
+        init_log_dir = args.log_dir
+        
+        for training_iter_id in range(args.training_iteration):
+            args.seed += training_iter_id
+            train_fold_name = f'training_iteration_{training_iter_id}'
+            args.output_dir = os.path.join(init_output_dir, train_fold_name)
+            args.log_dir = os.path.join(init_log_dir, train_fold_name)
+            main_func(args)
+        
+        # TODO: calculate average
+            
+    return new_main_func
+
+
 def train(
     args:CustomArgs, 
     training_args:TrainingArguments, 
@@ -25,6 +47,10 @@ def train(
     compute_metrics:ComputeMetrics,
     logger:CustomLogger,
 ):
+    logger = CustomLogger(
+        log_dir=args.log_dir,
+        print_output=True,
+    )
     callback = CustomCallback(
         args=args, 
         logger=logger, 
@@ -60,7 +86,7 @@ def train(
                 
         logger.log_json(eval_metrics, 'eval_metric_score.json', log_info=True)                
     
-    return trainer
+    # return trainer
         
 
 def evaluate(
@@ -94,6 +120,7 @@ def evaluate(
     return trainer
 
 
+@multi_training_iteration_decorator
 def main(args:CustomArgs):
     if not args.do_train and not args.do_eval:
         raise Exception('neither do_train nor do_eval')
@@ -127,12 +154,12 @@ def main(args:CustomArgs):
         per_device_eval_batch_size = args.eval_batch_size,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
     )
-
+    
     logger = CustomLogger(
         log_dir=args.log_dir,
         print_output=True,
     )
-    
+
     dataset = CustomCorpusDatasets(
         file_path=args.data_path,
         data_name=args.data_name,
@@ -174,7 +201,8 @@ def main(args:CustomArgs):
         logger.info( model.load_state_dict(model_params, strict=True) )
 
         evaluate(**train_evaluate_kwargs)
-            
+    
+    # mv output_dir/run/xxx/events.xxx log_dir/
     for dirpath, dirnames, filenames in os.walk(args.output_dir):
         if 'checkpoint' in dirpath:
             continue

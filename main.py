@@ -225,6 +225,7 @@ def main(args:CustomArgs):
             train_func(**train_evaluate_kwargs)        
         
         # TODO: calculate average, delete ckpt
+        args.output_dir = init_output_dir
         logger.log_dir = init_log_dir
         for json_file_name in ['best_metric_score.json', 'eval_metric_score.json', 'train_output.json']:
             average_metrics = logger.average_metrics_json(init_log_dir, json_file_name)
@@ -237,15 +238,19 @@ def main(args:CustomArgs):
 
         evaluate_func(**train_evaluate_kwargs)
     
-    # mv output_dir/run/xxx/events.xxx log_dir/
-    for dirpath, dirnames, filenames in os.walk(args.output_dir):
-        if 'checkpoint' in dirpath:
-            continue
-        if 'runs' in dirpath:
-            for filename in filenames:
-                if 'events' in filename:
-                    cur_file = path(dirpath)/filename
-                    shutil.copy(cur_file, args.log_dir)
+    # # mv output_dir/run/xxx/events.xxx log_dir/
+    # for dirpath, dirnames, filenames in os.walk(args.output_dir):
+    #     if 'checkpoint' in dirpath:
+    #         continue
+    #     if 'runs' in dirpath:
+    #         for filename in filenames:
+    #             if 'events' in filename:
+    #                 cur_file = path(dirpath)/filename
+    #                 shutil.copy(cur_file, args.log_dir)
+    
+    if not args.save_ckpt:
+        shutil.rmtree(args.output_dir)
+
 
 if __name__ == '__main__':
     args = CustomArgs()

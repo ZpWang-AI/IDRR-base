@@ -9,7 +9,22 @@ from typing import *
 
 
 
+import os
+import shutil
+import argparse
 
+
+def move_folds(cur_dir, destination_dir):
+    os.chdir(cur_dir)
+    
+    for dirpath, dirnames, filenames in os.walk('.'):
+        if 'checkpoint' in dirpath:
+            continue
+        for filename in filenames:
+            file_path = os.path.join(dirpath, filename)
+            destination_path = os.path.join(destination_dir, os.path.dirname(file_path))
+            os.makedirs(destination_path, exist_ok=True)
+            shutil.copy(file_path, destination_path)
 
 
 def format_dict_values(dct, k):

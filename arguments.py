@@ -21,6 +21,7 @@ class CustomArgs:
     do_train = True
     do_eval = True
     training_iteration = 1
+    save_ckpt = True
     label_level = 'level1'
     model_name_or_path = 'roberta-base'
     data_name = 'pdtb2'
@@ -66,14 +67,15 @@ class CustomArgs:
         # base setting
         parser.add_argument("--do_train", type=arg_bool, default='True')
         parser.add_argument("--do_eval", type=arg_bool, default='True')
-        parser.add_argument("--training_iteration", type=int, default=1)
+        parser.add_argument("--training_iteration", type=int, default=3)
+        parser.add_argument("--save_ckpt", type=arg_bool, default='True')
         parser.add_argument("--label_level", type=str, default='level1', choices=['level1', 'level2'])
         parser.add_argument("--model_name_or_path", default='roberta-base')
         parser.add_argument("--data_name", type=str, default= "pdtb2" )
         
         # path 
         parser.add_argument("--data_path", type=str, default='/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv')
-        parser.add_argument("--cache_dir", type=str, default=None)
+        parser.add_argument("--cache_dir", type=str, default='/content/drive/MyDrive/IDRR/plm_cache')
         parser.add_argument("--output_dir", type=str, default="./output_space/")
         parser.add_argument("--log_dir", type=str, default='/content/drive/MyDrive/IDRR/log_space')
         parser.add_argument("--load_ckpt_dir", type=str, default='./ckpt_fold')
@@ -86,7 +88,7 @@ class CustomArgs:
         # epoch, batch, step
         parser.add_argument("--epochs", type=int, default=5)
         parser.add_argument("--max_steps", type=int, default=-1)
-        parser.add_argument("--train_batch_size", type=int, default=32)
+        parser.add_argument("--train_batch_size", type=int, default=8)
         parser.add_argument("--eval_batch_size", type=int, default=32)
         parser.add_argument("--eval_steps", type=int, default=100)
         parser.add_argument("--log_steps", type=int, default=10)

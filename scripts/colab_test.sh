@@ -2,19 +2,25 @@ python main.py \
     --version colab_test \
     --do_train True \
     --do_eval True \
+    --training_iteration 2 \
+    --save_ckpt True \
     --label_level level1 \
     --model_name_or_path roberta-base \
     --data_name pdtb2 \
     --data_path /content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv \
+    --cache_dir None \
     --output_dir ./output_space/ \
     --log_dir /content/drive/MyDrive/IDRR/log_space \
     --load_ckpt_dir ./ckpt_fold \
-    --epochs 4 \
-    --max_steps 20 \
+    --label_expansion_positive 0.1 \
+    --label_expansion_negative 0.1 \
+    --data_augmentation True \
+    --epochs 5 \
+    --max_steps 8 \
     --train_batch_size 8 \
-    --eval_batch_size 8 \
-    --eval_steps 10 \
-    --log_steps 10 \
+    --eval_batch_size 32 \
+    --eval_steps 4 \
+    --log_steps 4 \
     --gradient_accumulation_steps 1 \
     --seed 2023 \
     --warmup_ratio 0.05 \

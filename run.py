@@ -17,6 +17,10 @@ def local_test_args():
     
     args.label_expansion_positive = 0.2
     args.label_expansion_negative = 0.2
+    args.dynamic_positive = 0.1
+    args.dynamic_negative = 0.05
+    args.max_positive_limit = 5
+    args.max_negative_limit = 5
     args.data_augmentation = True
     
     args.do_train = True

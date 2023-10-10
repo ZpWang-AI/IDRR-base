@@ -34,21 +34,27 @@ class LabelManager:
     def __getitem__(self, index):
         return self.label_vectors[index]
     
+    def __len__(self):
+        return len(self.label_ids)
+    
     def initial_labels(self):
-        self.label_vectors = np.eye(self.num_labels)[label_ids]
+        self.label_vectors = np.eye(self.num_labels)[self.label_ids]
         
         if self.label_expansion_positive:
             if self.additional_label_ids is None:
                 raise Exception('miss additional_label_ids')
-            for p, label_ids in enumerate(self.additional_label_ids):
-                for label_id in label_ids:
-                    self.label_vectors[p][label_id] += self.label_expansion_positive
+            for p, add_ids in enumerate(self.additional_label_ids):
+                for add_id in add_ids:
+                    self.label_vectors[p][add_id] += self.label_expansion_positive
         
         if self.label_expansion_negative:
             self.label_vectors -= self.label_expansion_negative
         pass
         
     def update_labels(self, preds, labels):
+        if not self.dynamic_positive and not self.dynamic_negative:
+            return
+        
         preds = np.argmax(preds, axis=1)
         labels = np.argmax(labels, axis=1)
         correct = preds == labels
@@ -57,12 +63,16 @@ class LabelManager:
             pos_addition = (np.eye(self.num_labels)*self.dynamic_positive)[labels]
             pos_addition[correct] *= 0
             self.label_vectors += pos_addition
-            self.label_vectors = np.clip(self.label_vectors, a_max=self.max_positive_limit)
         if self.dynamic_negative:
             neg_addition = (np.eye(self.num_labels)*self.dynamic_negative)[preds]
             neg_addition[correct] *= 0
             self.label_vectors -= neg_addition
-            self.label_vectors = np.clip(self.label_vectors, a_min=-self.max_negative_limit)
+        
+        self.label_vectors = np.clip(
+            self.label_vectors,
+            a_min=-self.max_negative_limit, 
+            a_max=self.max_positive_limit
+        )
 
 
 class CustomDataset(Dataset):

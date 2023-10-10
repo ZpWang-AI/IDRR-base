@@ -8,6 +8,7 @@ from transformers import Trainer, TrainerCallback, TrainingArguments, TrainerSta
 
 from arguments import CustomArgs
 from logger import CustomLogger
+from corpusDatasets import CustomCorpusDatasets
 
 
 class CustomCallback(TrainerCallback):
@@ -15,6 +16,7 @@ class CustomCallback(TrainerCallback):
         super().__init__()
         
         self.trainer:Trainer = None
+        self.dataset:CustomCorpusDatasets = None
         self.args = args
         self.logger = logger
         self.evaluate_testdata = evaluate_testdata
@@ -49,6 +51,26 @@ class CustomCallback(TrainerCallback):
         self.logger.log_json(self.best_metrics, 'best_metric_score.json', log_info=False)
         self.logger.log_jsonl(dev_metrics, 'dev_metric_score.jsonl', log_info=True)
     
+    def on_train_begin(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        self.dataset.train_dataset.label_manager.initial_labels()
+
+        # print('=== train start labels ===')
+        # for i in range(len(self.dataset.train_dataset.label_manager)):
+        #     print(self.dataset.train_dataset.label_manager[i])
+        # print('=== train start labels ===')
+
+    def on_epoch_end(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        predictions = self.trainer.predict(self.dataset.train_dataset)
+        self.dataset.train_dataset.label_manager.update_labels(
+            preds=predictions.predictions,
+            labels=predictions.label_ids,
+        )
+        
+        # print('=== epoch end labels ===')
+        # for i in range(len(self.dataset.train_dataset.label_manager)):
+        #     print(self.dataset.train_dataset.label_manager[i])
+        # print('=== epoch end labels ===')
+        
     # def on_step_begin(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
     #     print('\n===== step begin =====\n')
     #     print(f'= args: \n{args}\n')

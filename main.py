@@ -44,6 +44,7 @@ def train_func(
         eval_dataset=dataset.dev_dataset, 
     )
     callback.trainer = trainer
+    callback.dataset = dataset
 
     train_output = trainer.train().metrics
     logger.log_json(train_output, 'train_output.json', log_info=True)

@@ -25,9 +25,6 @@ class CustomCallback(TrainerCallback):
         self.metric_names = metric_names
         self.best_metrics = {'best_'+m:-1 for m in self.metric_names}
         self.metric_map = {m:p for p, m in enumerate(self.metric_names)}
-    
-    # def on_init_end(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
-    #     self.logger.log_json(dict(self.args), 'hyperparams.json', log_info=False)
 
     def on_evaluate(self, args, state, control, metrics:Dict[str, float], **kwargs):
         if self.evaluate_testdata:
@@ -51,19 +48,23 @@ class CustomCallback(TrainerCallback):
 
         self.logger.log_json(self.best_metrics, 'best_metric_score.json', log_info=False)
         self.logger.log_jsonl(dev_metrics, 'dev_metric_score.jsonl', log_info=True)
-        # eval_metrics_string = json.dumps(dev_metrics, ensure_ascii=False, indent=2)
-        # self.logger.info('\n'+eval_metrics_string)
-        
-        # eval_metrics_list = sorted(dev_metrics.items(), key=lambda item:self.metric_map[item[0].replace('eval_', '')])
-        # with open(self.eval_metrics_file, 'a', encoding='utf8')as f:
-        #     f.write(','.join([str(v)for k,v in eval_metrics_list])+'\n')
     
-    # def on_train_begin(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
-    #     with open(self.eval_metrics_file, 'w', encoding='utf8')as f:
-    #         f.write(','.join(self.metric_names)+'\n')
+    # def on_step_begin(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+    #     print('\n===== step begin =====\n')
+    #     print(f'= args: \n{args}\n')
+    #     print(f'= state: \n{state}\n')
+    #     print(f'= control: \n{control}\n')
+    #     print(f'= kwargs: \n{kwargs}\n')
+    #     print('\n===== step begin =====\n')
+    #     return super().on_step_begin(args, state, control, **kwargs)
     
-    # def on_train_end(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
-    #     with open(self.best_metrics_file, 'w', encoding='utf8')as f:
-    #         json.dump(self.best_metrics, f, ensure_ascii=False, indent=2)
+    # def on_step_end(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+    #     print('\n===== step end =====\n')
+    #     print(f'= args: \n{args}\n')
+    #     print(f'= state: \n{state}\n')
+    #     print(f'= control: \n{control}\n')
+    #     print(f'= kwargs: \n{kwargs}\n')
+    #     print('\n===== step end =====\n')
+    #     return super().on_step_end(args, state, control, **kwargs)
             
     

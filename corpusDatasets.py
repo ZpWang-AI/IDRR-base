@@ -51,6 +51,8 @@ class CustomDataset(Dataset):
         row = self.df.iloc[index]
         arg1 = row.Arg1_RawText
         arg2 = row.Arg2_RawText
+        conn1 = row.Conn1
+        conn2 = row.Conn2
         conn1sense1 = row.ConnHeadSemClass1
         conn1sense2 = row.ConnHeadSemClass2
         conn2sense1 = row.Conn2SemClass1
@@ -153,7 +155,10 @@ class CustomCorpusDatasets():
         # 'Conn2SemClass1', 'Conn2SemClass2'
         df2 = df.copy()
         df2['Arg2_RawText'] = df['Conn1']+df['Arg2_RawText']
-        return pd.concat([df, df2], ignore_index=True)
+        df3 = df.copy()
+        df3.dropna(subset=['Conn2'], inplace=True)
+        df3['Arg2_RawText'] = df['Conn2']+df['Arg2_RawText']
+        return pd.concat([df, df2, df3], ignore_index=True)
     
     
 if __name__ == '__main__':
@@ -169,6 +174,7 @@ if __name__ == '__main__':
         logger=CustomLogger('tmp', print_output=True),
         label_expansion_positive=True,
         label_expansion_negative=True,
+        data_augmentation=True,
     )
     for p in sample_dataset.train_dataset:
         print(p)

@@ -1,8 +1,9 @@
 import os 
-import torch
-import pandas as pd 
 import json
 import shutil
+import torch
+import pandas as pd 
+import numpy as np
 
 from pathlib import Path as path
 from transformers import TrainingArguments, Trainer, AutoTokenizer, DataCollatorWithPadding, set_seed
@@ -15,41 +16,6 @@ from model import BaselineModel, CustomModel
 from metrics import ComputeMetrics
 
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
-
-
-def multi_training_iteration_decorator(main_func):
-    def new_main_func(args:CustomArgs):
-        args.complete_path()
-        args.check_path()
-        
-        if not args.do_train and args.do_eval:
-            return main_func(args)
-        # if args.training_iteration == 1:
-        #     return main_func(args)
-        
-        main_logger = CustomLogger(
-            log_dir=args.log_dir,
-            logger_name='main_logger',
-            print_output='True'
-        )
-        main_logger.log_json(dict(args), 'hyperparams.json', log_info=True)
-        
-        init_output_dir = args.output_dir
-        init_log_dir = args.log_dir
-        
-        for training_iter_id in range(args.training_iteration):
-            args.seed += training_iter_id
-            train_fold_name = f'training_iteration_{training_iter_id}'
-            args.output_dir = os.path.join(init_output_dir, train_fold_name)
-            args.log_dir = os.path.join(init_log_dir, train_fold_name)
-            main_func(args)
-        
-        # TODO: calculate average, delete ckpt
-        for json_file_name in ['best_metric_score.json', 'eval_metric_score.json', 'train_output.json']:
-            average_metrics = main_logger.average_metrics_json(init_log_dir, json_file_name)
-            main_logger.log_json(average_metrics, json_file_name, log_info=True)
-            
-    return new_main_func
 
 
 def train_func(
@@ -125,11 +91,19 @@ def evaluate_func(
     
     evaluate_output = trainer.evaluate(dataset.test_dataset)
     logger.log_json(evaluate_output, 'evaluate_output.json', log_info=True)
+    
+    # predict_output = trainer.predict(dataset.dev_dataset)
+    # predictions = predict_output.predictions
+    # label_ids = predict_output.label_ids
+    # predictions = np.argmax(predictions, axis=1)
+    # label_ids = np.argmax(label_ids, axis=1)
+    # wrong_pred = predictions != label_ids
+    # for p in range(len(wrong_pred)):
+        
         
     return trainer
 
 
-# @multi_training_iteration_decorator
 def main(args:CustomArgs):
     if not args.do_train and not args.do_eval:
         raise Exception('neither do_train nor do_eval')
@@ -247,7 +221,7 @@ def main(args:CustomArgs):
     #             if 'events' in filename:
     #                 cur_file = path(dirpath)/filename
     #                 shutil.copy(cur_file, args.log_dir)
-    
+
     if not args.save_ckpt:
         shutil.rmtree(args.output_dir)
 

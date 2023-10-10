@@ -8,7 +8,7 @@ python main.py \
     --model_name_or_path roberta-base \
     --data_name pdtb2 \
     --data_path /content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv \
-    --cache_dir None \
+    --cache_dir /content/drive/MyDrive/IDRR/plm_cache \
     --output_dir ./output_space/ \
     --log_dir ./tmp/log_space \
     --load_ckpt_dir ./ckpt_fold \

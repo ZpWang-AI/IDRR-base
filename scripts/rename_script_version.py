@@ -14,9 +14,9 @@ for dirpath, dirnames, filenames in os.walk('./scripts'):
                     if 'version' in line:
                         if version_name not in line:
                             print(f'rename script {file}')
+                            lines[p] = f'    --version {version_name} \\\n'
                             f.seek(0)
                             for line in lines:
                                 f.write(line)
-                            lines[p] = f'    --version {version_name} \\\n'
                         break
                 

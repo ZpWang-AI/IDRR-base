@@ -40,12 +40,12 @@ def format_dict_values(dct, k):
 
 if __name__ == '__main__':
     sample_dict = {
-        "best_acc": 0.6686390532544378,
-        "best_macro_f1": 0.5770237000192924,
-        "best_tem": 0.41237113402061853,
-        "best_com": 0.5945945945945947,
-        "best_con": 0.591044776119403,
-        "best_exp": 0.7608391608391608
+    "eval_Acc": 0.6720841300191204,
+    "eval_Macro-F1": 0.5813365675593336,
+    "eval_Temporal": 0.38755151913046654,
+    "eval_Comparison": 0.5987849573314485,
+    "eval_Contingency": 0.5773303437365938,
+    "eval_Expansion": 0.7616794500388254
     }
     sample_formatted_dict = format_dict_values(sample_dict, 4)
     for k, v in sample_formatted_dict.items():

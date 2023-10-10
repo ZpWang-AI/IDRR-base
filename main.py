@@ -153,6 +153,10 @@ def main(args:CustomArgs):
 
         label_expansion_positive=args.label_expansion_positive,
         label_expansion_negative=args.label_expansion_negative,
+        dynamic_positive=args.dynamic_positive,
+        dynamic_negative=args.dynamic_negative,
+        max_positive_limit=args.max_positive_limit,
+        max_negative_limit=args.max_negative_limit,
         data_augmentation=args.data_augmentation,
     )
     args.trainset_size, args.devset_size, args.testset_size = map(len, [

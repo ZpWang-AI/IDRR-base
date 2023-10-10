@@ -13,7 +13,7 @@ class arg_bool:
 
 class CustomArgs:
     
-    ############################ Args # Don't delete this line
+    ############################ Args # Don't modify this line
     
     version = 'test'
     
@@ -36,6 +36,10 @@ class CustomArgs:
     # improvement
     label_expansion_positive = 0.0
     label_expansion_negative = 0.0
+    dynamic_positive = 0.0
+    dynamic_negative = 0.0
+    max_positive_limit = 5.0
+    max_negative_limit = 5.0
     data_augmentation = False
     
     # epoch, batch, step
@@ -53,7 +57,7 @@ class CustomArgs:
     weight_decay = 0.01
     learning_rate = 5e-6
     
-    # additional setting ( not shown in ArgumentParser )
+    # additional setting ( not shown in ArgumentParser ) # Don't modify this line
     trainset_size = -1
     devset_size = -1
     testset_size = -1
@@ -83,6 +87,10 @@ class CustomArgs:
         # improvement
         parser.add_argument("--label_expansion_positive", type=float, default=0)
         parser.add_argument("--label_expansion_negative", type=float, default=0)
+        parser.add_argument("--dynamic_positive", type=float, default=0.0)
+        parser.add_argument("--dynamic_negative", type=float, default=0.0)
+        parser.add_argument("--max_positive_limit", type=float, default=5.0)
+        parser.add_argument("--max_negative_limit", type=float, default=5.0)
         parser.add_argument("--data_augmentation", type=arg_bool, default='False')
         
         # epoch, batch, step

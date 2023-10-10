@@ -10,7 +10,7 @@ python main.py \
     --data_path /content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv \
     --cache_dir None \
     --output_dir ./output_space/ \
-    --log_dir /content/drive/MyDrive/IDRR/log_space \
+    --log_dir ./tmp/log_space \
     --load_ckpt_dir ./ckpt_fold \
     --label_expansion_positive 0.1 \
     --label_expansion_negative 0.1 \

@@ -1,5 +1,6 @@
-python main.py \
+python main.py \     
     --version colab_test \
+    --mini_dataset True \
     --do_train True \
     --do_eval True \
     --training_iteration 2 \
@@ -14,13 +15,17 @@ python main.py \
     --load_ckpt_dir ./ckpt_fold \
     --label_expansion_positive 0.1 \
     --label_expansion_negative 0.1 \
+    --dynamic_positive 0.1 \
+    --dynamic_negative 0.1 \
+    --max_positive_limit 5.0 \
+    --max_negative_limit 5.0 \
     --data_augmentation True \
     --epochs 5 \
-    --max_steps 8 \
+    --max_steps -1 \
     --train_batch_size 8 \
     --eval_batch_size 32 \
-    --eval_steps 4 \
-    --log_steps 4 \
+    --eval_steps 2 \
+    --log_steps 2 \
     --gradient_accumulation_steps 1 \
     --seed 2023 \
     --warmup_ratio 0.05 \

@@ -94,6 +94,7 @@ class CustomCorpusDatasets():
         model_name_or_path='roberta-base',
         cache_dir='',
         logger=None,
+        mini_dataset=False,
         
         label_level='level1',
         label_expansion_positive=0.0,
@@ -128,6 +129,11 @@ class CustomCorpusDatasets():
         train_df = df[~df['Section'].isin([0, 1, 21, 22, 23, 24])]
         dev_df = df[df['Section'].isin([0, 1])]
         test_df = df[df['Section'].isin([21, 22])]
+        if mini_dataset:
+            train_df = train_df.iloc[:32]
+            dev_df = dev_df.iloc[:16]
+            test_df = test_df.iloc[:16]
+            
         if data_augmentation:
             train_df = self.data_augmentation_df(train_df)
 
@@ -221,10 +227,10 @@ class CustomCorpusDatasets():
         # 'ConnHeadSemClass1', 'ConnHeadSemClass2',
         # 'Conn2SemClass1', 'Conn2SemClass2'
         df2 = df.copy()
-        df2['Arg2_RawText'] = df['Conn1']+df['Arg2_RawText']
+        df2['Arg2_RawText'] = df2['Conn1']+df2['Arg2_RawText']
         df3 = df.copy()
         df3.dropna(subset=['Conn2'], inplace=True)
-        df3['Arg2_RawText'] = df['Conn2']+df['Arg2_RawText']
+        df3['Arg2_RawText'] = df3['Conn2']+df3['Arg2_RawText']
         return pd.concat([df, df2, df3], ignore_index=True)
     
     

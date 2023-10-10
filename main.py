@@ -149,8 +149,9 @@ def main(args:CustomArgs):
         model_name_or_path=args.model_name_or_path,
         cache_dir=args.cache_dir,
         logger=logger,
+        mini_dataset=args.mini_dataset,
+        
         label_level=args.label_level,
-
         label_expansion_positive=args.label_expansion_positive,
         label_expansion_negative=args.label_expansion_negative,
         dynamic_positive=args.dynamic_positive,

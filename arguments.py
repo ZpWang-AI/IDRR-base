@@ -18,6 +18,7 @@ class CustomArgs:
     version = 'test'
     
     # base setting
+    mini_dataset = False
     do_train = True
     do_eval = True
     training_iteration = 1
@@ -69,6 +70,7 @@ class CustomArgs:
         parser.add_argument("--version", type=str, default='colab')
 
         # base setting
+        parser.add_argument("--mini_dataset", type=arg_bool, default='False')
         parser.add_argument("--do_train", type=arg_bool, default='True')
         parser.add_argument("--do_eval", type=arg_bool, default='True')
         parser.add_argument("--training_iteration", type=int, default=3)

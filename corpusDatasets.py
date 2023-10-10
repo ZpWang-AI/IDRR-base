@@ -21,6 +21,7 @@ class LabelManager:
     ) -> None:
         self.label_ids = label_ids
         self.num_labels = num_labels
+        self.additional_label_ids = additional_label_ids
         self.label_expansion_positive = label_expansion_positive
         self.label_expansion_negative = label_expansion_negative
         self.dynamic_positive = dynamic_positive
@@ -28,20 +29,24 @@ class LabelManager:
         self.max_positive_limit = max_positive_limit
         self.max_negative_limit = max_negative_limit
 
-        self.label_vectors = np.eye(num_labels)[label_ids]
+        self.initial_labels()
+    
+    def __getitem__(self, index):
+        return self.label_vectors[index]
+    
+    def initial_labels(self):
+        self.label_vectors = np.eye(self.num_labels)[label_ids]
         
         if self.label_expansion_positive:
-            if additional_label_ids is None:
+            if self.additional_label_ids is None:
                 raise Exception('miss additional_label_ids')
-            for p, label_ids in enumerate(additional_label_ids):
+            for p, label_ids in enumerate(self.additional_label_ids):
                 for label_id in label_ids:
                     self.label_vectors[p][label_id] += self.label_expansion_positive
         
         if self.label_expansion_negative:
             self.label_vectors -= self.label_expansion_negative
-    
-    def __getitem__(self, index):
-        return self.label_vectors[index]
+        pass
         
     def update_labels(self, preds, labels):
         preds = np.argmax(preds, axis=1)

@@ -28,6 +28,7 @@ def local_test_args():
     args.training_iteration = 2
     args.save_ckpt = True
 
+    # args.max_steps = -1
     args.train_batch_size = 8
     args.eval_batch_size = 8
     args.epochs = 2

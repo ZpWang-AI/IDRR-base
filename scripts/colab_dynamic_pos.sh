@@ -1,5 +1,5 @@
 python main.py \
-    --version colab \
+    --version colab_dynamic_pos \
     --mini_dataset False \
     --do_train True \
     --do_eval True \

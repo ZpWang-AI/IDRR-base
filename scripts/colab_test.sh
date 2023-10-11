@@ -1,5 +1,5 @@
-python main.py \     
-    --version colab_test \
+python main.py \
+    --version  colab_test \
     --mini_dataset True \
     --do_train True \
     --do_eval True \
@@ -20,7 +20,7 @@ python main.py \
     --max_positive_limit 5.0 \
     --max_negative_limit 5.0 \
     --data_augmentation True \
-    --epochs 5 \
+    --epochs 2 \
     --max_steps -1 \
     --train_batch_size 8 \
     --eval_batch_size 32 \

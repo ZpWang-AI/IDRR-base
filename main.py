@@ -109,7 +109,6 @@ def main(args:CustomArgs):
     if not args.do_train and not args.do_eval:
         raise Exception('neither do_train nor do_eval')
     
-    args.complete_path()
     args.check_path()
     
     training_args = TrainingArguments(
@@ -182,8 +181,8 @@ def main(args:CustomArgs):
         'logger': logger,
     }
     
+    logger.log_json(dict(args), 'hyperparams.json', log_info=True)
     if args.do_train:
-        logger.log_json(dict(args), 'hyperparams.json', log_info=True)
         init_output_dir = args.output_dir
         init_log_dir = args.log_dir
         

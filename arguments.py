@@ -113,6 +113,8 @@ class CustomArgs:
         args = parser.parse_args()
         for k, v in args.__dict__.items():
             setattr(self, k, v)
+            
+        self.complete_path()
     
     def complete_path(self):
         cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")

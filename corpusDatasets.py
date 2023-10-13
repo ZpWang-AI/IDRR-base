@@ -134,11 +134,16 @@ class CustomCorpusDatasets():
         self.num_labels = len(self.label_list)
         self.label_map = {label:p for p, label in enumerate(self.label_list)}
 
-        df = pd.read_csv(file_path, usecols=['Relation', 'Section', 
-                                             'Arg1_RawText', 'Arg2_RawText', 
-                                             'Conn1', 'Conn2',
-                                             'ConnHeadSemClass1', 'ConnHeadSemClass2',
-                                             'Conn2SemClass1', 'Conn2SemClass2'])
+        df = pd.read_csv(
+            file_path, 
+            usecols=[
+                'Relation', 'Section', 
+                'Arg1_RawText', 'Arg2_RawText', 
+                'Conn1', 'Conn2',
+                'ConnHeadSemClass1', 'ConnHeadSemClass2',
+                'Conn2SemClass1', 'Conn2SemClass2'],
+            low_memory=False,
+            )
         df = df[df['Relation'] == 'Implicit']
         
         train_df = df[~df['Section'].isin([0, 1, 21, 22, 23, 24])]

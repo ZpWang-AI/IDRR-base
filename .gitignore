@@ -16,6 +16,7 @@ nohup.out
 # ==============================
 
 baseline
+!CorpusData/analyse.ipynb
 CorpusData
 !scripts/*.sh
 output_space

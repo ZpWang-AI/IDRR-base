@@ -32,17 +32,16 @@ class CustomDataset(Dataset):
         return len(self.arg1)
 
 
-class CustomCorpusDatasets():
+class CustomCorpusDataset():
     def __init__(
         self, 
         file_path,
         data_name='pdtb2',
         model_name_or_path='roberta-base',
         cache_dir='',
-        logger=None,
-        mini_dataset=False,
-        
         label_level='level1',
+        
+        mini_dataset=False,
         data_augmentation=False,
     ):
         assert data_name in ['pdtb2', 'pdtb3', 'conll']
@@ -68,19 +67,20 @@ class CustomCorpusDatasets():
                 'ConnHeadSemClass1', 'ConnHeadSemClass2',
                 'Conn2SemClass1', 'Conn2SemClass2'],
             low_memory=False,
-            )
+        )
         df = df[df['Relation'] == 'Implicit']
         
         train_df = df[~df['Section'].isin([0, 1, 21, 22, 23, 24])]
         dev_df = df[df['Section'].isin([0, 1])]
         test_df = df[df['Section'].isin([21, 22])]
+            
+        if data_augmentation:
+            train_df = self.data_augmentation_df(train_df)
+            
         if mini_dataset:
             train_df = train_df.iloc[:32]
             dev_df = dev_df.iloc[:16]
             test_df = test_df.iloc[:16]
-            
-        if data_augmentation:
-            train_df = self.data_augmentation_df(train_df)
 
         self.label_level = label_level
         self.data_augmentation = data_augmentation
@@ -88,13 +88,6 @@ class CustomCorpusDatasets():
         self.train_dataset = self.get_dataset(train_df, is_train=True)
         self.dev_dataset = self.get_dataset(dev_df, is_train=False)
         self.test_dataset = self.get_dataset(test_df, is_train=False)
-        
-        if logger is not None:
-            logger.info('-' * 30)
-            logger.info(f'Trainset Size: {len(self.train_dataset)}')
-            logger.info(f'Devset Size: {len(self.dev_dataset)}')
-            logger.info(f'Testset Size: {len(self.test_dataset)}')
-            logger.info('-' * 30)
     
     def label_to_id(self, sense):
         if self.label_level == 'level1':
@@ -113,17 +106,17 @@ class CustomCorpusDatasets():
             arg2 = row.Arg2_RawText
             conn1 = row.Conn1
             conn2 = row.Conn2
-            conn1sense1 = row.ConnHeadSemClass1
-            conn1sense2 = row.ConnHeadSemClass2
-            conn2sense1 = row.Conn2SemClass1
-            conn2sense2 = row.Conn2SemClass2
+            conn1sem1 = row.ConnHeadSemClass1
+            conn1sem2 = row.ConnHeadSemClass2
+            conn2sem1 = row.Conn2SemClass1
+            conn2sem2 = row.Conn2SemClass2
             
             arg1_list.append(arg1)
             arg2_list.append(arg2)
             
-            label_ids.append(self.label_to_id(conn1sense1))
+            label_ids.append(self.label_to_id(conn1sem1))
             cur_adds = [self.label_to_id(sense) 
-                        for sense in [conn1sense2, conn2sense1, conn2sense2]
+                        for sense in [conn1sem2, conn2sem1, conn2sem2]
                         if not pd.isna(sense)]
             additional_label_ids.append(cur_adds)
             
@@ -155,15 +148,15 @@ class CustomCorpusDatasets():
     
 if __name__ == '__main__':
     import os
-    from logger import CustomLogger
     os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
-    sample_dataset = CustomCorpusDatasets(
+    sample_dataset = CustomCorpusDataset(
         r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\CorpusData\PDTB2\pdtb2.csv',
         data_name='pdtb2',
-        label_level='level1',
         model_name_or_path='roberta-base',
-        logger=CustomLogger('tmp', print_output=True),
+        cache_dir='./plm_cache/',
+        mini_dataset=False,
+        label_level='level1',
         data_augmentation=True,
     )
     for p in sample_dataset.train_dataset:

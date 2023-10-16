@@ -8,7 +8,7 @@ Code and experiments about IDRR
 IDRR-base
 |-arguments.py
 |-callbacks.py
-|-corpusDatasets.py
+|-corpusDataset.py
 |-gpuManager.py
 |-logger.py
 |-main.py

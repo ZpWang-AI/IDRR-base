@@ -9,20 +9,23 @@ from transformers import (AutoConfig,
                           )
 
 
-class CustomLoss(nn.Module):
+class CELoss(nn.Module):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        
+    
     def forward(self, logits, labels):
         probs = torch.softmax(logits, dim=1)
-        zeros = torch.zeros_like(labels)
-        positive_labels = torch.max(labels, zeros)
-        negative_labels = torch.min(labels, zeros)
-        return torch.sum(-positive_labels*torch.log(probs)+negative_labels*torch.log(1-probs))/labels.shape[0]
-        
+        return -torch.sum(labels*torch.log(probs))/labels.shape[0]
+
         
 class CustomModel(nn.Module):
-    def __init__(self, model_name_or_path, num_labels=4, cache_dir='', *args, **kwargs) -> None:
+    def __init__(
+        self, 
+        model_name_or_path,
+        num_labels=4,
+        cache_dir='',
+        loss_type='CELoss',
+        *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         
         self.model_name_or_path = model_name_or_path
@@ -34,7 +37,10 @@ class CustomModel(nn.Module):
         self.initial_model()
         self.tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, cache_dir=cache_dir)
         
-        self.loss_fn = CustomLoss()
+        if loss_type.lower() == 'celoss':
+            self.loss_fn = CELoss()
+        else:
+            raise Exception('wrong loss_type')
     
     def initial_model(self):
         self.model = AutoModelForSequenceClassification.from_pretrained(

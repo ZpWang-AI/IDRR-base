@@ -34,6 +34,7 @@ class CustomArgs:
     load_ckpt_dir = 'None'
     
     # improvement
+    loss_type = 'CELoss'
     data_augmentation = False
     
     # epoch, batch, step
@@ -83,6 +84,7 @@ class CustomArgs:
         parser.add_argument("--load_ckpt_dir", type=str, default='./ckpt_fold')
 
         # improvement
+        parser.add_argument("--loss_type", type=str, default='CELoss')
         parser.add_argument("--data_augmentation", type=arg_bool, default='False')
         
         # epoch, batch, step

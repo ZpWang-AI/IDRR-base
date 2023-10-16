@@ -162,6 +162,7 @@ def main(args:CustomArgs):
         model_name_or_path=args.model_name_or_path,
         cache_dir=args.cache_dir,
         num_labels=dataset.num_labels,
+        loss_type=args.loss_type,
     )
     
     compute_metrics = ComputeMetrics(label_list=dataset.label_list)

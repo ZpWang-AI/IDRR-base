@@ -35,12 +35,6 @@ class CustomArgs:
     load_ckpt_dir = 'None'
     
     # improvement
-    label_expansion_positive = 0.0
-    label_expansion_negative = 0.0
-    dynamic_positive = 0.0
-    dynamic_negative = 0.0
-    max_positive_limit = 5.0
-    max_negative_limit = 5.0
     data_augmentation = False
     
     # epoch, batch, step
@@ -87,12 +81,6 @@ class CustomArgs:
         parser.add_argument("--load_ckpt_dir", type=str, default='./ckpt_fold')
 
         # improvement
-        parser.add_argument("--label_expansion_positive", type=float, default=0)
-        parser.add_argument("--label_expansion_negative", type=float, default=0)
-        parser.add_argument("--dynamic_positive", type=float, default=0.0)
-        parser.add_argument("--dynamic_negative", type=float, default=0.0)
-        parser.add_argument("--max_positive_limit", type=float, default=5.0)
-        parser.add_argument("--max_negative_limit", type=float, default=5.0)
         parser.add_argument("--data_augmentation", type=arg_bool, default='False')
         
         # epoch, batch, step

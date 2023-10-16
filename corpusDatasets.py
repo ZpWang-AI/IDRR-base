@@ -6,83 +6,14 @@ from transformers import AutoTokenizer, DataCollatorWithPadding
 from torch.utils.data import Dataset
 
 
-class LabelManager:
-    def __init__(
-        self,
-        label_ids:List[int],
-        num_labels:int,
-        additional_label_ids:Optional[List[List[int]]]=None,
-        label_expansion_positive=0.0,
-        label_expansion_negative=0.0,
-        dynamic_positive=0.0,
-        dynamic_negative=0.0,
-        max_positive_limit=5.0,
-        max_negative_limit=5.0,
-    ) -> None:
-        self.label_ids = label_ids
-        self.num_labels = num_labels
-        self.additional_label_ids = additional_label_ids
-        self.label_expansion_positive = label_expansion_positive
-        self.label_expansion_negative = label_expansion_negative
-        self.dynamic_positive = dynamic_positive
-        self.dynamic_negative = dynamic_negative
-        self.max_positive_limit = max_positive_limit
-        self.max_negative_limit = max_negative_limit
-
-        self.initial_labels()
-    
-    def __getitem__(self, index):
-        return self.label_vectors[index]
-    
-    def __len__(self):
-        return len(self.label_ids)
-    
-    def initial_labels(self):
-        self.label_vectors = np.eye(self.num_labels)[self.label_ids]
-        
-        if self.label_expansion_positive:
-            if self.additional_label_ids is None:
-                raise Exception('miss additional_label_ids')
-            for p, add_ids in enumerate(self.additional_label_ids):
-                for add_id in add_ids:
-                    self.label_vectors[p][add_id] += self.label_expansion_positive
-        
-        if self.label_expansion_negative:
-            self.label_vectors -= self.label_expansion_negative
-        pass
-        
-    def update_labels(self, preds, labels):
-        if not self.dynamic_positive and not self.dynamic_negative:
-            return
-        
-        preds = np.argmax(preds, axis=1)
-        labels = np.argmax(labels, axis=1)
-        correct = preds == labels
-
-        if self.dynamic_positive:
-            pos_addition = (np.eye(self.num_labels)*self.dynamic_positive)[labels]
-            pos_addition[correct] *= 0
-            self.label_vectors += pos_addition
-        if self.dynamic_negative:
-            neg_addition = (np.eye(self.num_labels)*self.dynamic_negative)[preds]
-            neg_addition[correct] *= 0
-            self.label_vectors -= neg_addition
-        
-        self.label_vectors = np.clip(
-            self.label_vectors,
-            a_min=-self.max_negative_limit, 
-            a_max=self.max_positive_limit
-        )
-
-
 class CustomDataset(Dataset):
-    def __init__(self, arg1, arg2, tokenizer, label_manager) -> None:
+    def __init__(self, arg1, arg2, tokenizer, label_vectors) -> None:
         super().__init__()
         
         self.arg1 = arg1
         self.arg2 = arg2
         self.tokenizer = tokenizer
-        self.label_manager = label_manager
+        self.label_vectors = label_vectors
         
     def __getitem__(self, index) -> Any:
         model_inputs = self.tokenizer(
@@ -93,7 +24,7 @@ class CustomDataset(Dataset):
             max_length=256,
         )
         
-        model_inputs['label'] = self.label_manager[index]
+        model_inputs['label'] = self.label_vectors[index]
     
         return model_inputs
     
@@ -112,12 +43,6 @@ class CustomCorpusDatasets():
         mini_dataset=False,
         
         label_level='level1',
-        label_expansion_positive=0.0,
-        label_expansion_negative=0.0,
-        dynamic_positive=0.0,
-        dynamic_negative=0.0,
-        max_positive_limit=5.0,
-        max_negative_limit=5.0,
         data_augmentation=False,
     ):
         assert data_name in ['pdtb2', 'pdtb3', 'conll']
@@ -158,12 +83,6 @@ class CustomCorpusDatasets():
             train_df = self.data_augmentation_df(train_df)
 
         self.label_level = label_level
-        self.label_expansion_positive = label_expansion_positive
-        self.label_expansion_negative = label_expansion_negative
-        self.dynamic_positive = dynamic_positive
-        self.dynamic_negative = dynamic_negative
-        self.max_positive_limit = max_positive_limit
-        self.max_negative_limit = max_negative_limit
         self.data_augmentation = data_augmentation
         
         self.train_dataset = self.get_dataset(train_df, is_train=True)
@@ -209,35 +128,15 @@ class CustomCorpusDatasets():
             additional_label_ids.append(cur_adds)
             
         if is_train:
-            label_manager = LabelManager(
-                label_ids=label_ids,
-                additional_label_ids=additional_label_ids,
-                num_labels=self.num_labels,
-                label_expansion_positive=self.label_expansion_positive,
-                label_expansion_negative=self.label_expansion_negative,
-                dynamic_positive=self.dynamic_positive,
-                dynamic_negative=self.dynamic_negative,
-                max_positive_limit=self.max_positive_limit,
-                max_negative_limit=self.max_negative_limit,
-            )
+            label_vectors = np.eye(self.num_labels)[label_ids]
         else:
-            label_manager = LabelManager(
-                label_ids=label_ids,
-                additional_label_ids=additional_label_ids,
-                num_labels=self.num_labels,
-                label_expansion_positive=0,
-                label_expansion_negative=0,
-                dynamic_positive=0,
-                dynamic_negative=0,
-                max_positive_limit=0,
-                max_negative_limit=0,
-            )
+            label_vectors = np.eye(self.num_labels)[label_ids]
         
         return CustomDataset(
             arg1=arg1_list,
             arg2=arg2_list,
             tokenizer=self.tokenizer,
-            label_manager=label_manager,
+            label_vectors=label_vectors,
         )
                         
     def data_augmentation_df(self, df:pd.DataFrame):
@@ -265,8 +164,6 @@ if __name__ == '__main__':
         label_level='level1',
         model_name_or_path='roberta-base',
         logger=CustomLogger('tmp', print_output=True),
-        label_expansion_positive=True,
-        label_expansion_negative=True,
         data_augmentation=True,
     )
     for p in sample_dataset.train_dataset:

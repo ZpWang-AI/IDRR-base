@@ -15,6 +15,7 @@ from corpusDataset import CustomCorpusDataset
 from model import CustomModel
 from metrics import ComputeMetrics
 from callbacks import CustomCallback
+from analyze import analyze_metrics_json
 
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
@@ -207,8 +208,8 @@ def main(args:CustomArgs):
         training_args.output_dir = init_output_dir
         logger.log_dir = init_log_dir
         for json_file_name in ['best_metric_score.json', 'eval_metric_score.json', 'train_output.json']:
-            average_metrics = logger.average_metrics_json(init_log_dir, json_file_name)
-            logger.log_json(average_metrics, json_file_name, log_info=True)
+            metric_analysis = analyze_metrics_json(init_log_dir, json_file_name, just_average=True)
+            logger.log_json(metric_analysis, json_file_name, log_info=True)
             
     elif args.do_eval:
         model_params_path = os.path.join(args.load_ckpt_dir, 'pytorch_model.bin')

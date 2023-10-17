@@ -17,7 +17,7 @@ def local_test_args():
     
     args.data_augmentation = True
     
-    args.do_train = False
+    args.do_train = True
     args.do_eval = True
     args.training_iteration = 2
     args.save_ckpt = True

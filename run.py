@@ -15,7 +15,7 @@ def local_test_args():
     args.output_dir = './output_space/'
     args.log_dir = './log_space/'
     
-    args.data_augmentation = True
+    args.data_augmentation = False
     
     args.do_train = True
     args.do_eval = True

@@ -1,6 +1,7 @@
 import os
 import json
 import numpy as np
+import pandas as pd
 
 from collections import defaultdict
 from pathlib import Path as path
@@ -17,6 +18,8 @@ def analyze_metrics_json(log_dir, file_name, just_average=False):
                     cur_metrics = json.load(f)
                 for k, v in cur_metrics.items():
                     total_metrics[k].append(v)
+    if not total_metrics:
+        return {}
     metric_analysis = {}
     for k, v in total_metrics.items():
         if just_average:
@@ -34,9 +37,40 @@ def analyze_metrics_json(log_dir, file_name, just_average=False):
     return metric_analysis
 
 
-def analyze_experiment_evaluations(target_log_folds, res_json=None, res_csv=None):
-    pass
-
+def analyze_experiment_evaluations(target_log_folds, to_json_file=None, to_csv_file=None):
+    results = []
+    hypers = []
+    for log_dir in target_log_folds:
+        analysis = analyze_metrics_json(log_dir, 'eval_metric_score.json', just_average=False)
+        
+        hyper_path = path(log_dir)/'hyperparams.json'
+        if hyper_path.exists():
+            with open(hyper_path, 'r', encoding='utf8')as f:
+                hyper = json.load(f)
+            hypers.append(hyper)
+        
+        results.append(analysis)
+    
+    df_results = pd.DataFrame(results)
+    df_hypers = pd.DataFrame(hypers)
+    
+    print(df_results)
+    print('='*20)
+    print(df_hypers)
+    
+    if to_json_file:
+        pass
+    
+    if to_csv_file:
+        df_results.to_csv(to_csv_file)
+    
 
 if __name__ == '__main__':
-    print(analyze_metrics_json('./log_space/2023-10-16-21-25-10_local_test__train_eval/', 'eval_metric_score.json'))
+    target_log_folds = [
+        r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\log_space\2023-10-16-20-51-27_local_test__train_eval',
+        r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\log_space\2023-10-16-20-53-04_local_test__train_eval',
+        r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\log_space\2023-10-16-20-54-30_local_test__train_eval',
+        r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\log_space\2023-10-16-20-56-42_local_test__train_eval',
+        r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\log_space\2023-10-16-21-02-02_local_test__train_eval',
+    ]
+    analyze_experiment_evaluations(target_log_folds, to_csv_file='./tmp/analysis.csv')

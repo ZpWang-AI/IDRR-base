@@ -53,17 +53,7 @@ class CustomLogger:
             json.dump(content, f, ensure_ascii=False)
             f.write('\n')
     
-    def average_metrics_json(self, root_dir, file_name):
-        total_metrics = defaultdict(list)
-        for dirpath, dirnames, filenames in os.walk(root_dir):
-            for cur_file in filenames:
-                if cur_file == file_name:
-                    with open(path(dirpath, cur_file), 'r', encoding='utf8')as f:
-                        cur_metrics = json.load(f)
-                    for k, v in cur_metrics.items():
-                        total_metrics[k].append(v)
-        average_metrics = {k:sum(v)/len(v) for k, v in total_metrics.items()}
-        return average_metrics
+
     
 
 if __name__ == '__main__':

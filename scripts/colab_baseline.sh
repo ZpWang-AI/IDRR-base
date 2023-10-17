@@ -12,8 +12,6 @@ python main.py \
     --output_dir ./output_space/ \
     --log_dir /content/drive/MyDrive/IDRR/log_space \
     --load_ckpt_dir ./ckpt_fold \
-    --label_expansion_positive 0 \
-    --label_expansion_negative 0 \
     --data_augmentation False \
     --epochs 5 \
     --max_steps -1 \

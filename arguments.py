@@ -3,7 +3,6 @@ import argparse
 
 from pathlib import Path as path
 from datetime import datetime
-from typing import Any
 
 
 class arg_bool:
@@ -35,12 +34,7 @@ class CustomArgs:
     load_ckpt_dir = 'None'
     
     # improvement
-    label_expansion_positive = 0.0
-    label_expansion_negative = 0.0
-    dynamic_positive = 0.0
-    dynamic_negative = 0.0
-    max_positive_limit = 5.0
-    max_negative_limit = 5.0
+    loss_type = 'CELoss'
     data_augmentation = False
     
     # epoch, batch, step
@@ -58,10 +52,13 @@ class CustomArgs:
     weight_decay = 0.01
     learning_rate = 5e-6
     
-    # additional setting ( not shown in ArgumentParser ) # Don't modify this line
+    # additional setting ( not shown in ArgumentParser ) 
     trainset_size = -1
     devset_size = -1
     testset_size = -1
+    cur_time = '2023-10-16-20-00-36'
+    
+    ############################ Args # Don't modify this line
     
     def __init__(self) -> None:
         
@@ -87,12 +84,7 @@ class CustomArgs:
         parser.add_argument("--load_ckpt_dir", type=str, default='./ckpt_fold')
 
         # improvement
-        parser.add_argument("--label_expansion_positive", type=float, default=0)
-        parser.add_argument("--label_expansion_negative", type=float, default=0)
-        parser.add_argument("--dynamic_positive", type=float, default=0.0)
-        parser.add_argument("--dynamic_negative", type=float, default=0.0)
-        parser.add_argument("--max_positive_limit", type=float, default=5.0)
-        parser.add_argument("--max_negative_limit", type=float, default=5.0)
+        parser.add_argument("--loss_type", type=str, default='CELoss')
         parser.add_argument("--data_augmentation", type=arg_bool, default='False')
         
         # epoch, batch, step
@@ -113,13 +105,11 @@ class CustomArgs:
         args = parser.parse_args()
         for k, v in args.__dict__.items():
             setattr(self, k, v)
-            
-        self.complete_path()
     
     def complete_path(self):
-        cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        self.cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         train_eval_string = '_train'*self.do_train + '_eval'*self.do_eval
-        specific_fold_name = f'{cur_time}_{self.version}_{train_eval_string}'
+        specific_fold_name = f'{self.cur_time}_{self.version}_{train_eval_string}'
         self.output_dir = os.path.join(self.output_dir, specific_fold_name)
         self.log_dir = os.path.join(self.log_dir, specific_fold_name) 
         
@@ -151,7 +141,10 @@ class CustomArgs:
             cnt = 0
             for line in f.readlines():
                 if line.count('#') > 3 and 'Args' in line:
-                    sep_label = 1
+                    if sep_label:
+                        break
+                    else:
+                        sep_label = 1
                     continue
                 if sep_label:
                     for k in keys_order:
@@ -165,6 +158,8 @@ class CustomArgs:
     def generate_script(self):
         script_string = ['python main.py']
         for k, v in list(self):
+            if k in ['cur_time']:
+                continue
             script_string.append(f'    --{k} {v}')
         script_string = ' \\\n'.join(script_string)
         print(script_string)

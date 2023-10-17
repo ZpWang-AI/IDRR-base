@@ -5,15 +5,17 @@ import torch
 import pandas as pd 
 import numpy as np
 
+from typing import *
 from pathlib import Path as path
-from transformers import TrainingArguments, Trainer, AutoTokenizer, DataCollatorWithPadding, set_seed
+from transformers import TrainingArguments, Trainer, DataCollatorWithPadding, set_seed
 
 from arguments import CustomArgs
 from logger import CustomLogger
-from callbacks import CustomCallback
-from corpusDatasets import CustomCorpusDatasets
-from model import BaselineModel, CustomModel
+from corpusDataset import CustomCorpusDataset
+from model import CustomModel
 from metrics import ComputeMetrics
+from callbacks import CustomCallback
+from analyze import analyze_metrics_json
 
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
@@ -21,10 +23,10 @@ os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 def train_func(
     args:CustomArgs, 
     training_args:TrainingArguments, 
-    dataset:CustomCorpusDatasets, 
+    logger:CustomLogger,
+    dataset:CustomCorpusDataset, 
     model:CustomModel, 
     compute_metrics:ComputeMetrics,
-    logger:CustomLogger,
 ):
     callback = CustomCallback(
         args=args, 
@@ -61,17 +63,17 @@ def train_func(
                 eval_metrics[eval_metric_name] = evaluate_output[eval_metric_name]
                 
         logger.log_json(eval_metrics, 'eval_metric_score.json', log_info=True)                
-    
-    # return trainer
-        
+
+    return trainer, callback
+
 
 def evaluate_func(
     args:CustomArgs,
     training_args:TrainingArguments,
-    dataset:CustomCorpusDatasets,
+    logger:CustomLogger,
+    dataset:CustomCorpusDataset,
     model:CustomModel,
     compute_metrics:ComputeMetrics,
-    logger:CustomLogger,
 ):
     callback = CustomCallback(
         args=args,
@@ -92,15 +94,6 @@ def evaluate_func(
     
     evaluate_output = trainer.evaluate(dataset.test_dataset)
     logger.log_json(evaluate_output, 'evaluate_output.json', log_info=True)
-    
-    # predict_output = trainer.predict(dataset.dev_dataset)
-    # predictions = predict_output.predictions
-    # label_ids = predict_output.label_ids
-    # predictions = np.argmax(predictions, axis=1)
-    # label_ids = np.argmax(label_ids, axis=1)
-    # wrong_pred = predictions != label_ids
-    # for p in range(len(wrong_pred)):
-        
         
     return trainer
 
@@ -109,6 +102,9 @@ def main(args:CustomArgs):
     if not args.do_train and not args.do_eval:
         raise Exception('neither do_train nor do_eval')
     
+    # === prepare === 
+    
+    args.complete_path()
     args.check_path()
     
     training_args = TrainingArguments(
@@ -143,34 +139,34 @@ def main(args:CustomArgs):
         print_output=True,
     )
 
-    dataset = CustomCorpusDatasets(
+    dataset = CustomCorpusDataset(
         file_path=args.data_path,
         data_name=args.data_name,
         model_name_or_path=args.model_name_or_path,
         cache_dir=args.cache_dir,
-        logger=logger,
         mini_dataset=args.mini_dataset,
         
         label_level=args.label_level,
-        label_expansion_positive=args.label_expansion_positive,
-        label_expansion_negative=args.label_expansion_negative,
-        dynamic_positive=args.dynamic_positive,
-        dynamic_negative=args.dynamic_negative,
-        max_positive_limit=args.max_positive_limit,
-        max_negative_limit=args.max_negative_limit,
         data_augmentation=args.data_augmentation,
     )
+    
     args.trainset_size, args.devset_size, args.testset_size = map(len, [
         dataset.train_dataset, dataset.dev_dataset, dataset.test_dataset
     ])
+    logger.info('-' * 30)
+    logger.info(f'Trainset Size: {args.trainset_size:7d}')
+    logger.info(f'Devset Size  : {args.devset_size:7d}')
+    logger.info(f'Testset Size : {args.testset_size:7d}')
+    logger.info('-' * 30)
 
     model = CustomModel(
         model_name_or_path=args.model_name_or_path,
         cache_dir=args.cache_dir,
-        num_labels=len(dataset.label_map),
+        num_labels=dataset.num_labels,
+        loss_type=args.loss_type,
     )
     
-    compute_metrics = ComputeMetrics(dataset.label_map)
+    compute_metrics = ComputeMetrics(label_list=dataset.label_list)
     
     train_evaluate_kwargs = {
         'args': args,
@@ -181,7 +177,10 @@ def main(args:CustomArgs):
         'logger': logger,
     }
     
+    # === train or evaluate ===
+    
     logger.log_json(dict(args), 'hyperparams.json', log_info=True)
+    
     if args.do_train:
         init_output_dir = args.output_dir
         init_log_dir = args.log_dir
@@ -201,14 +200,16 @@ def main(args:CustomArgs):
             # model
             model.initial_model()
             
-            train_func(**train_evaluate_kwargs)        
+            train_func(**train_evaluate_kwargs)  
         
-        # TODO: calculate average, delete ckpt
+        # calculate average
         args.output_dir = init_output_dir
+        args.log_dir = init_log_dir
+        training_args.output_dir = init_output_dir
         logger.log_dir = init_log_dir
         for json_file_name in ['best_metric_score.json', 'eval_metric_score.json', 'train_output.json']:
-            average_metrics = logger.average_metrics_json(init_log_dir, json_file_name)
-            logger.log_json(average_metrics, json_file_name, log_info=True)
+            metric_analysis = analyze_metrics_json(init_log_dir, json_file_name, just_average=True)
+            logger.log_json(metric_analysis, json_file_name, log_info=True)
             
     elif args.do_eval:
         model_params_path = os.path.join(args.load_ckpt_dir, 'pytorch_model.bin')
@@ -217,20 +218,28 @@ def main(args:CustomArgs):
 
         evaluate_func(**train_evaluate_kwargs)
     
-    # # mv output_dir/run/xxx/events.xxx log_dir/
-    # for dirpath, dirnames, filenames in os.walk(args.output_dir):
-    #     if 'checkpoint' in dirpath:
-    #         continue
-    #     if 'runs' in dirpath:
-    #         for filename in filenames:
-    #             if 'events' in filename:
-    #                 cur_file = path(dirpath)/filename
-    #                 shutil.copy(cur_file, args.log_dir)
+    # mv tensorboard ckpt to log_dir
+    cnt = 0
+    for dirpath, dirnames, filenames in os.walk(args.output_dir):
+        if 'checkpoint' in dirpath:
+            continue
+        if 'runs' in dirpath:
+            for filename in filenames:
+                if 'events' in filename:
+                    cur_file = path(dirpath)/filename
+                    tensorboard_dir = path(args.log_dir)/'tensorboard'/str(cnt)
+                    tensorboard_dir.mkdir(parents=True, exist_ok=True)
+                    shutil.copy(cur_file, tensorboard_dir)
+                    cnt += 1
 
     if not args.save_ckpt:
         shutil.rmtree(args.output_dir)
 
 
 if __name__ == '__main__':
-    args = CustomArgs()
+    from run import local_test_args
+    args = local_test_args()
     main(args)
+    
+    # args = CustomArgs()
+    # main(args)

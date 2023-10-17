@@ -57,6 +57,7 @@ class RankModel(nn.Module):
         self.classifier:nn.Module = None
         self.initial_model()
         
+        self.forward_fn = self.forward_fine_tune
         if loss_type.lower() == 'celoss':
             self.loss_fn = CELoss()
         else:
@@ -74,19 +75,22 @@ class RankModel(nn.Module):
             cache_dir=self.cache_dir
         )
         self.classifier = ClassificationHead(self.model_config)
-        
-    def hot_start(self):
-        pass
     
-    def forward(self, input_ids, attention_mask, labels):
-        model_outputs = self.model(input_ids=input_ids, attention_mask=attention_mask)
-        logits = model_outputs.logits
+    def forward_rank(self, input_ids, attention_mask, labels):
+        hidden_state = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
+    
+    def forward_fine_tune(self, input_ids, attention_mask, labels):
+        hidden_state = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
+        # last_hidden_state, pooler_output
+        logits = self.classifier(hidden_state.last_hidden_state)
         loss = self.loss_fn(logits, labels)
-
         return {
             'logits': logits,
             'loss': loss,
-        }        
+        }
+        
+    def forward(self, input_ids, attention_mask, labels):
+        return self.forward_fn(input_ids, attention_mask, labels)  
      
         
 class CustomModel(nn.Module):
@@ -137,7 +141,7 @@ class CustomModel(nn.Module):
 
 if __name__ == '__main__':
     cache_dir = './plm_cache/'
-    sample_model = CustomModel('roberta-base', num_labels=3, cache_dir=cache_dir)
+    sample_model = RankModel('roberta-base', num_labels=3, cache_dir=cache_dir)
     
     sample_tokenizer = AutoTokenizer.from_pretrained('roberta-base', cache_dir=cache_dir)
     sample_x = ['你好']*2+['hello world. Nice to see you']*2
@@ -150,3 +154,5 @@ if __name__ == '__main__':
     ])
     res = sample_model(sample_x_token['input_ids'], sample_x_token['attention_mask'], sample_y)
     print(res)
+    
+    

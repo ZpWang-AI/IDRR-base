@@ -35,7 +35,6 @@ class CustomModel(nn.Module):
         self.model:nn.Module = None
         self.model_config = None
         self.initial_model()
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, cache_dir=cache_dir)
         
         if loss_type.lower() == 'celoss':
             self.loss_fn = CELoss()

@@ -38,7 +38,6 @@ def train_func(
         model=model, 
         args=training_args, 
         tokenizer=dataset.tokenizer, 
-        data_collator=dataset.data_collator,
         compute_metrics=compute_metrics,
         callbacks=[callback],
         
@@ -86,7 +85,6 @@ def evaluate_func(
         model=model, 
         args=training_args, 
         tokenizer=dataset.tokenizer, 
-        data_collator=dataset.data_collator,
         compute_metrics=compute_metrics,
         callbacks=[callback],
     )

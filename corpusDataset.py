@@ -50,7 +50,6 @@ class CustomCorpusDataset():
         self.sep_t = tokenizer.sep_token
         self.cls_t = tokenizer.cls_token
         self.tokenizer = tokenizer 
-        self.data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
         
         if label_level == 'level1':
             self.label_list = 'Temporal Comparison Contingency Expansion'.split()
@@ -144,6 +143,9 @@ class CustomCorpusDataset():
         df3 = df.copy()
         df3.dropna(subset=['Conn2'], inplace=True)
         df3['Arg2_RawText'] = df3['Conn2']+df3['Arg2_RawText']
+        df3['ConnHeadSemClass1'], df3['ConnHeadSemClass2'], df3['Conn2SemClass1'], df3['Conn2SemClass2'] = (
+            df3['Conn2SemClass1'], df3['Conn2SemClass2'], df3['ConnHeadSemClass1'], df3['ConnHeadSemClass2']
+        )
         return pd.concat([df, df2, df3], ignore_index=True)
     
     

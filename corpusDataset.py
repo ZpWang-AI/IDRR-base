@@ -49,7 +49,6 @@ class CustomCorpusDataset():
         self.sep_t = tokenizer.sep_token
         self.cls_t = tokenizer.cls_token
         self.tokenizer = tokenizer 
-        self.data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
         
         if label_level == 'level1':
             self.label_list = 'Temporal Comparison Contingency Expansion'.split()

@@ -36,6 +36,7 @@ class CustomArgs:
     # improvement
     loss_type = 'CELoss'
     data_augmentation = False
+    rank_order_file = './rank_order/rank_order1.json'
     
     # epoch, batch, step
     epochs = 5
@@ -86,6 +87,7 @@ class CustomArgs:
         # improvement
         parser.add_argument("--loss_type", type=str, default='CELoss')
         parser.add_argument("--data_augmentation", type=arg_bool, default='False')
+        parser.add_argument("--rank_order_file", type=str, default='./rank_order/rank_order1.json')
         
         # epoch, batch, step
         parser.add_argument("--epochs", type=int, default=5)
@@ -132,7 +134,10 @@ class CustomArgs:
         
         if not self.do_train and self.do_eval and not path(self.load_ckpt_dir).exists():
             raise Exception('no do_train and load_ckpt_dir does not exist')  
-    
+        
+        if not path(self.rank_order_file).exists():
+            raise Exception('rank_order_file not exists')
+        
     def __iter__(self):
         # keep the same order as the args shown in the file
         keys_order = {k:-1 for k in self.__dict__}

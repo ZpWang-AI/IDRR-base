@@ -142,6 +142,9 @@ class CustomCorpusDataset():
         df3 = df.copy()
         df3.dropna(subset=['Conn2'], inplace=True)
         df3['Arg2_RawText'] = df3['Conn2']+df3['Arg2_RawText']
+        df3['ConnHeadSemClass1'], df3['ConnHeadSemClass2'], df3['Conn2SemClass1'], df3['Conn2SemClass2'] = (
+            df3['Conn2SemClass1'], df3['Conn2SemClass2'], df3['ConnHeadSemClass1'], df3['ConnHeadSemClass2']
+        )
         return pd.concat([df, df2, df3], ignore_index=True)
     
     

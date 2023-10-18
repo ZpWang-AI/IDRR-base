@@ -250,8 +250,6 @@ def main(args:CustomArgs):
             train_evaluate_kwargs['compute_metrics'] = rank_metrics
             model.forward_fn = model.forward_rank
             rank_func(**train_evaluate_kwargs)
-            
-            exit()
 
             #### prepare train
             training_args.num_train_epochs = args.epochs

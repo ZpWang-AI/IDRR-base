@@ -5,6 +5,8 @@ from typing import *
 from itertools import cycle
 from transformers import AutoTokenizer
 
+from corpusDataset import CustomCorpusDataset
+
 
 class CustomData:
     def __init__(self, arg1, arg2, tokenizer, labels) -> None:
@@ -49,12 +51,18 @@ class CustomDataCollator:
         self.rank_order = rank_order
         
         self.data = [train_data, dev_data, test_data]
-        self.id_iter = [[
-                cycle([p for p in range(len(data)) if data.labels[p] == label_id])
-                for label_id in range(num_labels)
-            ]for data in self.data
-        ]
-        
+        self.id_iter = []
+        for data_id, data in enumerate(self.data):
+            self.id_iter.append([])
+            for label_id in range(num_labels):
+                cur_iter = [p for p in range(len(data)) if data.labels[p] == label_id]
+                if not cur_iter:
+                    cur_iter.append(0)
+                    print(f'>> warning: not enough sample in dataset {data_id} about label {label_id}')
+                
+                np.random.shuffle(cur_iter)
+                self.id_iter[data_id].append(cycle(cur_iter))
+                
     def __call__(self, features):
         assert len(features) == 1, f'{len(features)}\n{features}'
         sample_id, data_id = features[0]
@@ -69,75 +77,31 @@ class CustomDataCollator:
 class RankingDataset():
     def __init__(
         self, 
-        file_path,
-        data_name='pdtb2',
-        model_name_or_path='roberta-base',
-        cache_dir='',
-        label_level='level1',
-        
-        rank_order=None,
-        mini_dataset=False,
-        data_augmentation=False,
+        corpus_dataset:CustomCorpusDataset,
+        rank_order_file:str,
     ):
-        assert data_name in ['pdtb2', 'pdtb3', 'conll']
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, cache_dir=cache_dir)
+        self.corpus_dataset = corpus_dataset
+        self.label_to_id = corpus_dataset.label_to_id
         
-        if label_level == 'level1':
-            self.label_list = 'Temporal Comparison Contingency Expansion'.split()
-        else:
-            raise ValueError('wrong label_level')
-        self.num_labels = len(self.label_list)
-        self.label_map = {label:p for p, label in enumerate(self.label_list)}
-        self.label_level = label_level
-
-        df = pd.read_csv(
-            file_path, 
-            usecols=[
-                'Relation', 'Section', 
-                'Arg1_RawText', 'Arg2_RawText', 
-                'Conn1', 'Conn2',
-                'ConnHeadSemClass1', 'ConnHeadSemClass2',
-                'Conn2SemClass1', 'Conn2SemClass2'],
-            low_memory=False,
-        )
-        df = df[df['Relation'] == 'Implicit']
-        train_df = df[~df['Section'].isin([0, 1, 21, 22, 23, 24])]
-        dev_df = df[df['Section'].isin([0, 1])]
-        test_df = df[df['Section'].isin([21, 22])]
-            
-        if data_augmentation:
-            train_df = self.data_augmentation_df(train_df)
-            
-        if mini_dataset:
-            train_df = train_df.iloc[:32]
-            dev_df = dev_df.iloc[:16]
-            test_df = test_df.iloc[:16]
-
+        with open(rank_order_file, 'r', encoding='utf8')as f:
+            rank_order_label = json.load(f)
         self.rank_order = {
-            self.label_to_id(k):list(map(self.label_to_id, rank_order[k]))
-            for k in rank_order
+            self.label_to_id(k):list(map(self.label_to_id, rank_order_label[k]))
+            for k in rank_order_label
         }
-        self.data_augmentation = data_augmentation
         
-        self.train_dataset = [(p, 0) for p in range(train_df.shape[0])]
-        self.dev_dataset = [(p, 1) for p in range(dev_df.shape[0])]
-        self.test_dataset = [(p, 2) for p in range(test_df.shape[0])]
+        self.train_dataset = [(p, 0) for p in range(corpus_dataset.train_df.shape[0])]
+        self.dev_dataset = [(p, 1) for p in range(corpus_dataset.dev_df.shape[0])]
+        self.test_dataset = [(p, 2) for p in range(corpus_dataset.test_df.shape[0])]
         
         self.data_collator = CustomDataCollator(
-            tokenizer=self.tokenizer,
-            num_labels=self.num_labels,
+            tokenizer=corpus_dataset.tokenizer,
+            num_labels=corpus_dataset.num_labels,
             rank_order=self.rank_order,
-            train_data=self.get_data(train_df),
-            dev_data=self.get_data(dev_df),
-            test_data=self.get_data(test_df),
+            train_data=self.get_data(corpus_dataset.train_df),
+            dev_data=self.get_data(corpus_dataset.dev_df),
+            test_data=self.get_data(corpus_dataset.test_df),
         )
-    
-    def label_to_id(self, sense):
-        if self.label_level == 'level1':
-            label_id = self.label_map[sense.split('.')[0]]
-        else:
-            raise ValueError('wrong label_level')
-        return label_id
     
     def get_data(self, df):
         # 'Relation', 'Section', 
@@ -163,30 +127,19 @@ class RankingDataset():
             arg2_list.append(arg2)
             
             label_ids.append(self.label_to_id(conn1sem1))
-            cur_adds = [self.label_to_id(sense) 
-                        for sense in [conn1sem2, conn2sem1, conn2sem2]
-                        if not pd.isna(sense)]
-            additional_label_ids.append(cur_adds)
+            # cur_adds = [self.label_to_id(sense) 
+            #             for sense in [conn1sem2, conn2sem1, conn2sem2]
+            #             if not pd.isna(sense)]
+            # additional_label_ids.append(cur_adds)
             
         labels = label_ids
         
         return CustomData(
             arg1=arg1_list,
             arg2=arg2_list,
-            tokenizer=self.tokenizer,
+            tokenizer=self.corpus_dataset.tokenizer,
             labels=labels,
         )
-                        
-    def data_augmentation_df(self, df:pd.DataFrame):
-        df2 = df.copy()
-        df2['Arg2_RawText'] = df2['Conn1']+df2['Arg2_RawText']
-        df3 = df.copy()
-        df3.dropna(subset=['Conn2'], inplace=True)
-        df3['Arg2_RawText'] = df3['Conn2']+df3['Arg2_RawText']
-        df3['ConnHeadSemClass1'], df3['ConnHeadSemClass2'], df3['Conn2SemClass1'], df3['Conn2SemClass2'] = (
-            df3['Conn2SemClass1'], df3['Conn2SemClass2'], df3['ConnHeadSemClass1'], df3['ConnHeadSemClass2']
-        )
-        return pd.concat([df, df2, df3], ignore_index=True)
     
     
 if __name__ == '__main__':
@@ -194,20 +147,20 @@ if __name__ == '__main__':
     import json
     os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
-    with open('./rank_order/rank_order1.json', 'r', encoding='utf8')as f:
-        rank_order = json.load(f)
-    sample_dataset = RankingDataset(
-        r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\CorpusData\PDTB2\pdtb2.csv',
-        data_name='pdtb2',
-        model_name_or_path='roberta-base',
+    sample_corpus_dataset = CustomCorpusDataset(
+        './CorpusData/PDTB2/pdtb2.csv',
         cache_dir='./plm_cache/',
-        label_level='level1',
-        rank_order=rank_order,
         mini_dataset=False,
-        data_augmentation=True,
+        data_augmentation=False,
     )
-    for p in sample_dataset.train_dataset:
-        sample_intput = sample_dataset.data_collator([p])
+    sample_rank_dataset = RankingDataset(
+        corpus_dataset=sample_corpus_dataset,
+        rank_order_file='./rank_order/rank_order1.json'
+    )
+    sample_ids = [next(sample_rank_dataset.data_collator.id_iter[0][0]) for _ in range(10)]
+    print(', '.join(map(str, sample_ids)))
+    for p in sample_rank_dataset.train_dataset:
+        sample_intput = sample_rank_dataset.data_collator([p])
         print(sample_intput)
         print(sample_intput['input_ids'].shape, sample_intput['attention_mask'].shape)
         break

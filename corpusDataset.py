@@ -81,6 +81,10 @@ class CustomCorpusDataset():
             train_df = train_df.iloc[:32]
             dev_df = dev_df.iloc[:16]
             test_df = test_df.iloc[:16]
+            
+        self.train_df = train_df
+        self.dev_df = dev_df
+        self.test_df = test_df
 
         self.label_level = label_level
         self.data_augmentation = data_augmentation

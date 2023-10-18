@@ -34,6 +34,8 @@ def rank_func(
         logger=logger, 
         metric_names=compute_metrics.metric_names,
     )
+    callback.best_metric_file_name = 'best_rank_metric_scores.json'
+    callback.dev_metric_file_name = 'dev_rank_metric_scores.jsonl'
     
     trainer = Trainer(
         model=model, 
@@ -47,7 +49,6 @@ def rank_func(
         eval_dataset=dataset.dev_dataset, 
     )
     callback.trainer = trainer
-    callback.dataset = dataset
 
     train_output = trainer.train().metrics
     logger.log_json(train_output, 'rank_output.json', log_info=True)
@@ -58,7 +59,7 @@ def train_func(
     training_args:TrainingArguments, 
     logger:CustomLogger,
     dataset:CustomCorpusDataset, 
-    model:CustomModel, 
+    model:RankModel, 
     compute_metrics:ComputeMetrics,
 ):
     callback = CustomCallback(
@@ -78,7 +79,6 @@ def train_func(
         eval_dataset=dataset.dev_dataset, 
     )
     callback.trainer = trainer
-    callback.dataset = dataset
 
     train_output = trainer.train().metrics
     logger.log_json(train_output, 'train_output.json', log_info=True)
@@ -180,6 +180,10 @@ def main(args:CustomArgs):
         label_level=args.label_level,
         data_augmentation=args.data_augmentation,
     )
+    rank_dataset = RankingDataset(
+        corpus_dataset=dataset,
+        rank_order_file=args.rank_order_file,
+    )
     
     args.trainset_size, args.devset_size, args.testset_size = map(len, [
         dataset.train_dataset, dataset.dev_dataset, dataset.test_dataset
@@ -190,14 +194,16 @@ def main(args:CustomArgs):
     logger.info(f'Testset Size : {args.testset_size:7d}')
     logger.info('-' * 30)
     
-    model = CustomModel(
+    model = RankModel(
         model_name_or_path=args.model_name_or_path,
+        label_list=dataset.label_list,
         cache_dir=args.cache_dir,
-        num_labels=dataset.num_labels,
         loss_type=args.loss_type,
+        rank_loss_type=args.rank_loss_type,
     )
     
     compute_metrics = ComputeMetrics(label_list=dataset.label_list)
+    rank_metrics = RankMetrics(num_labels=dataset.num_labels)
     
     train_evaluate_kwargs = {
         'args': args,
@@ -217,6 +223,7 @@ def main(args:CustomArgs):
         init_log_dir = args.log_dir
         
         for training_iter_id in range(args.training_iteration):
+            ##### prepare train iteration
             # seed
             args.seed += training_iter_id
             set_seed(args.seed)
@@ -231,6 +238,26 @@ def main(args:CustomArgs):
             # model
             model.initial_model()
             
+            ##### prepare rank
+            training_args.num_train_epochs = args.rank_epochs
+            training_args.eval_steps = args.rank_eval_steps
+            training_args.logging_steps = args.rank_log_steps
+            training_args.per_device_train_batch_size = 1
+            training_args.per_device_eval_batch_size = 1
+            training_args.gradient_accumulation_steps = args.train_batch_size*args.gradient_accumulation_steps
+            train_evaluate_kwargs['dataset'] = rank_dataset
+            train_evaluate_kwargs['compute_metrics'] = rank_metrics
+            rank_func(**train_evaluate_kwargs)
+
+            ##### prepare train
+            training_args.num_train_epochs = args.epochs
+            training_args.eval_steps = args.eval_steps
+            training_args.logging_steps = args.log_steps
+            training_args.per_device_train_batch_size = args.train_batch_size
+            training_args.per_device_eval_batch_size = args.eval_batch_size
+            training_args.gradient_accumulation_steps = args.gradient_accumulation_steps
+            train_evaluate_kwargs['dataset'] = dataset
+            train_evaluate_kwargs['compute_metrics'] = compute_metrics
             train_func(**train_evaluate_kwargs)  
         
         # calculate average

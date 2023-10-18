@@ -6,32 +6,32 @@ from datetime import datetime
 
 
 class arg_bool:
-    def __new__(cls, input_s: str) -> bool:
-        return 't' in input_s.lower()
+    def __new__(cls, input_s) -> bool:
+        return 't' in str(input_s).lower()
        
 
 class CustomArgs:
     
     ############################ Args # Don't modify this line
     
-    version = 'test'
+    version = 'colab'
     
     # base setting
     mini_dataset = False
     do_train = True
     do_eval = True
-    training_iteration = 1
+    training_iteration = 3
     save_ckpt = True
     label_level = 'level1'
     model_name_or_path = 'roberta-base'
     data_name = 'pdtb2'
     
     # path 
-    data_path = './CorpusData/PDTB-2.0/pdtb2.csv'
-    cache_dir = 'None'
-    output_dir = './ckpt'
-    log_dir = './log'
-    load_ckpt_dir = 'None'
+    data_path = '/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv'
+    cache_dir = '/content/drive/MyDrive/IDRR/plm_cache'
+    output_dir = './output_space/'
+    log_dir = '/content/drive/MyDrive/IDRR/log_space'
+    load_ckpt_dir = './ckpt_fold'
     
     # improvement
     loss_type = 'CELoss'
@@ -42,8 +42,8 @@ class CustomArgs:
     max_steps = -1
     train_batch_size = 8
     eval_batch_size = 32
-    eval_steps = 5
-    log_steps = 5
+    eval_steps = 100
+    log_steps = 10
     gradient_accumulation_steps = 1
     
     # seed, lr
@@ -52,7 +52,7 @@ class CustomArgs:
     weight_decay = 0.01
     learning_rate = 5e-6
     
-    # additional setting ( not shown in ArgumentParser ) 
+    # additional setting ( not shown in ArgumentParser ) # Don't modify this line
     trainset_size = -1
     devset_size = -1
     testset_size = -1
@@ -61,32 +61,31 @@ class CustomArgs:
     ############################ Args # Don't modify this line
     
     def __init__(self) -> None:
-        
-        # === set default values below ===
         parser = argparse.ArgumentParser('zp')
+
         parser.add_argument("--version", type=str, default='colab')
 
         # base setting
-        parser.add_argument("--mini_dataset", type=arg_bool, default='False')
-        parser.add_argument("--do_train", type=arg_bool, default='True')
-        parser.add_argument("--do_eval", type=arg_bool, default='True')
+        parser.add_argument("--mini_dataset", type=arg_bool, default=False)
+        parser.add_argument("--do_train", type=arg_bool, default=True)
+        parser.add_argument("--do_eval", type=arg_bool, default=True)
         parser.add_argument("--training_iteration", type=int, default=3)
-        parser.add_argument("--save_ckpt", type=arg_bool, default='True')
-        parser.add_argument("--label_level", type=str, default='level1', choices=['level1', 'level2'])
-        parser.add_argument("--model_name_or_path", default='roberta-base')
-        parser.add_argument("--data_name", type=str, default= "pdtb2" )
-        
-        # path 
+        parser.add_argument("--save_ckpt", type=arg_bool, default=True)
+        parser.add_argument("--label_level", type=str, default='level1')
+        parser.add_argument("--model_name_or_path", type=str, default='roberta-base')
+        parser.add_argument("--data_name", type=str, default='pdtb2')
+
+        # path
         parser.add_argument("--data_path", type=str, default='/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv')
         parser.add_argument("--cache_dir", type=str, default='/content/drive/MyDrive/IDRR/plm_cache')
-        parser.add_argument("--output_dir", type=str, default="./output_space/")
+        parser.add_argument("--output_dir", type=str, default='./output_space/')
         parser.add_argument("--log_dir", type=str, default='/content/drive/MyDrive/IDRR/log_space')
         parser.add_argument("--load_ckpt_dir", type=str, default='./ckpt_fold')
 
         # improvement
         parser.add_argument("--loss_type", type=str, default='CELoss')
-        parser.add_argument("--data_augmentation", type=arg_bool, default='False')
-        
+        parser.add_argument("--data_augmentation", type=arg_bool, default=False)
+
         # epoch, batch, step
         parser.add_argument("--epochs", type=int, default=5)
         parser.add_argument("--max_steps", type=int, default=-1)
@@ -96,12 +95,12 @@ class CustomArgs:
         parser.add_argument("--log_steps", type=int, default=10)
         parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
 
-        # additional setting
+        # seed, lr
         parser.add_argument("--seed", type=int, default=2023)
         parser.add_argument("--warmup_ratio", type=float, default=0.05)
         parser.add_argument("--weight_decay", type=float, default=0.01)
         parser.add_argument("--learning_rate", type=float, default=5e-6)
-        
+
         args = parser.parse_args()
         for k, v in args.__dict__.items():
             setattr(self, k, v)
@@ -164,10 +163,44 @@ class CustomArgs:
         script_string = ' \\\n'.join(script_string)
         print(script_string)
         # exit()
+        
+    def generate_parser(self):
+        parser_lines = []
+        with open('./arguments.py', 'r', encoding='utf8')as f:
+            sep_label = 0
+            for line in f.readlines():
+                if (line.count('#') > 3 and 'Args' in line) or 'additional setting' in line:
+                    if sep_label:
+                        break
+                    else:
+                        sep_label = 1
+                        continue
+                if not sep_label:
+                    continue
+                
+                if line.count('=') == 1:
+                    k, v = line.split('=')
+                    k, v = k.strip(), v.strip()
+                    if '\'' in v or '"' in v:
+                        v_type = 'str'
+                    elif v in ['True', 'False']:
+                        v_type = 'arg_bool'
+                    elif float(v) == int(float(v)):
+                        v_type = 'int'
+                    else:
+                        v_type = 'float'
+                    parser_lines.append(f'parser.add_argument("--{k}", type={v_type}, default={v})')
+                else:
+                    parser_lines.append(line.strip())
+        with open('./tmp/arg_parser.txt', 'w', encoding='utf8')as f:
+            for line in parser_lines:
+                print(line)
+                f.write(' '*8+line+'\n')
 
 
 if __name__ == '__main__':
     sample_args = CustomArgs()
     # print(list(sample_args))
     # print(dict(sample_args))
-    sample_args.generate_script()
+    # sample_args.generate_script()
+    sample_args.generate_parser()

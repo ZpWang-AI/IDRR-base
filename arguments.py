@@ -154,17 +154,20 @@ class CustomArgs:
         
         return iter(sorted(self.__dict__.items(), key=lambda x:keys_order[x[0]]))
         
-    def generate_script(self):
+    def generate_script(self, file_path='./tmp/script.sh'):
         script_string = ['python main.py']
         for k, v in list(self):
             if k in ['cur_time']:
                 continue
             script_string.append(f'    --{k} {v}')
         script_string = ' \\\n'.join(script_string)
-        print(script_string)
-        # exit()
         
-    def generate_parser(self):
+        print(script_string)
+        path(file_path).parent.mkdir(parents=True, exist_ok=True)
+        with open(file_path, 'w', encoding='utf8')as f:
+            f.write(script_string)
+        
+    def generate_parser(self, file_path='./tmp/arg_parser.txt'):
         parser_lines = []
         with open('./arguments.py', 'r', encoding='utf8')as f:
             sep_label = 0
@@ -192,7 +195,9 @@ class CustomArgs:
                     parser_lines.append(f'parser.add_argument("--{k}", type={v_type}, default={v})')
                 else:
                     parser_lines.append(line.strip())
-        with open('./tmp/arg_parser.txt', 'w', encoding='utf8')as f:
+                    
+        path(file_path).parent.mkdir(parents=True, exist_ok=True)
+        with open(file_path, 'w', encoding='utf8')as f:
             for line in parser_lines:
                 print(line)
                 f.write(' '*8+line+'\n')
@@ -202,5 +207,5 @@ if __name__ == '__main__':
     sample_args = CustomArgs()
     # print(list(sample_args))
     # print(dict(sample_args))
-    # sample_args.generate_script()
-    sample_args.generate_parser()
+    sample_args.generate_script()
+    # sample_args.generate_parser()

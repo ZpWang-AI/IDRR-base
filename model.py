@@ -136,9 +136,10 @@ class RankModel(nn.Module):
         pooler_output = hidden_state.pooler_output
         label_vector = self.label_vectors[labels[0]]
         scores = (torch.stack([label_vector]*pooler_output.shape[0]) * pooler_output).sum(dim=1)
+        loss = self.rank_loss_fn(scores)
         return {
-            'logits': pooler_output,
-            'loss': self.rank_loss_fn(scores),
+            'logits': scores,
+            'loss': loss,
         }
     
     def forward_fine_tune(self, input_ids, attention_mask, labels):
@@ -151,8 +152,62 @@ class RankModel(nn.Module):
             'loss': loss,
         }
         
-    def forward(self, *args, **kwargs):
-        return self.forward_fn(*args, **kwargs)  
+    def forward(self, input_ids, attention_mask, labels):
+        return self.forward_fn(input_ids, attention_mask, labels)
+    
+    
+# class RankModelTest(nn.Module):
+#     def __init__(
+#         self, 
+#         model_name_or_path,
+#         label_list=(),
+#         cache_dir='',
+#         loss_type='CELoss',
+#         rank_loss_type='ListMLELoss',
+#         *args, **kwargs) -> None:
+#         super().__init__(*args, **kwargs)
+        
+#         self.model_name_or_path = model_name_or_path
+#         self.label_list = label_list
+#         self.num_labels = len(label_list)
+#         self.cache_dir = cache_dir
+        
+#         self.add_model:nn.Module = None
+        
+#         self.forward_fn = self.forward_fine_tune
+#         if loss_type.lower() == 'celoss':
+#             self.loss_fn = CELoss()
+#         else:
+#             raise Exception('wrong loss_type')
+#         if rank_loss_type.lower() == 'listmleloss':
+#             self.rank_loss_fn = ListMLELoss()
+#         else:
+#             raise Exception('wrong rank_loss_type')
+        
+#         self.initial_model()
+        
+#     def initial_model(self):
+#         self.add_model = AutoModelForSequenceClassification.from_pretrained(self.model_name_or_path, cache_dir=self.cache_dir, num_labels=self.num_labels)
+    
+#     def forward_fine_tune(self, input_ids, attention_mask, labels):
+#         # hidden_state = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
+#         # # last_hidden_state, pooler_output
+#         # logits = self.classifier(hidden_state.last_hidden_state)
+#         logits = self.add_model(input_ids=input_ids, attention_mask=attention_mask).logits
+#         loss = self.loss_fn(logits, labels)
+#         return {
+#             'logits': logits,
+#             'loss': loss,
+#         }
+    
+#     # def forward(self, *args, **kwargs):
+#     #     print(args, kwargs)
+#     #     return self.forward_fn(*args, **kwargs)
+    
+#     def forward(self, input_ids, attention_mask, labels):
+#         res = self.forward_fn(input_ids, attention_mask, labels)
+#         # print(res)
+#         return res
      
         
 class CustomModel(nn.Module):
@@ -194,7 +249,7 @@ class CustomModel(nn.Module):
         model_outputs = self.model(input_ids=input_ids, attention_mask=attention_mask)
         logits = model_outputs.logits
         loss = self.loss_fn(logits, labels)
-
+        
         return {
             'logits': logits,
             'loss': loss,

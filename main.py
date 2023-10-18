@@ -104,7 +104,7 @@ def evaluate_func(
     training_args:TrainingArguments,
     logger:CustomLogger,
     dataset:CustomCorpusDataset,
-    model:CustomModel,
+    model:RankModel,
     compute_metrics:ComputeMetrics,
 ):
     callback = CustomCallback(
@@ -253,7 +253,7 @@ def main(args:CustomArgs):
             
             exit()
 
-            ##### prepare train
+            #### prepare train
             training_args.num_train_epochs = args.epochs
             training_args.eval_steps = args.eval_steps
             training_args.logging_steps = args.log_steps

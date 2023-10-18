@@ -1,6 +1,7 @@
 import json
 import numpy as np
 import pandas as pd
+import torch
 
 from typing import *
 from itertools import cycle
@@ -29,7 +30,7 @@ class CustomData:
             return_tensors='pt',
         )
         
-        model_inputs['labels'] = self.labels[indices]
+        model_inputs['labels'] = torch.IntTensor(self.labels[indices])
     
         return model_inputs
     

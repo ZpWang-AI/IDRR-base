@@ -16,6 +16,7 @@ class RankMetrics:
         res = {
             'Acc': np.mean( np.argmax(predictions, axis=1) == 0)
         }
+        print(res)
         return res
 
 

@@ -83,6 +83,7 @@ class RankingDataset():
     ):
         self.corpus_dataset = corpus_dataset
         self.label_to_id = corpus_dataset.label_to_id
+        self.tokenizer = corpus_dataset.tokenizer
         
         with open(rank_order_file, 'r', encoding='utf8')as f:
             rank_order_label = json.load(f)
@@ -96,7 +97,7 @@ class RankingDataset():
         self.test_dataset = [(p, 2) for p in range(corpus_dataset.test_df.shape[0])]
         
         self.data_collator = CustomDataCollator(
-            tokenizer=corpus_dataset.tokenizer,
+            tokenizer=self.tokenizer,
             num_labels=corpus_dataset.num_labels,
             rank_order=self.rank_order,
             train_data=self.get_data(corpus_dataset.train_df),

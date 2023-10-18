@@ -135,84 +135,85 @@ def main(args:CustomArgs):
     
     # === prepare === 
     
-    args.complete_path()
-    args.check_path()
-    
-    training_args = TrainingArguments(
-        output_dir = args.output_dir,
+    if 1:
+        args.complete_path()
+        args.check_path()
         
-        # strategies of evaluation, logging, save
-        evaluation_strategy = "steps", 
-        eval_steps = args.eval_steps,
-        logging_strategy = 'steps',
-        logging_steps = args.log_steps,
-        save_strategy = 'no',
-        # save_strategy = 'epoch',
-        # save_total_limit = 1,
+        training_args = TrainingArguments(
+            output_dir = args.output_dir,
+            
+            # strategies of evaluation, logging, save
+            evaluation_strategy = "steps", 
+            eval_steps = args.eval_steps,
+            logging_strategy = 'steps',
+            logging_steps = args.log_steps,
+            save_strategy = 'no',
+            # save_strategy = 'epoch',
+            # save_total_limit = 1,
+            
+            # optimizer and lr_scheduler
+            optim = 'adamw_torch',
+            learning_rate = args.learning_rate,
+            weight_decay = args.weight_decay,
+            lr_scheduler_type = 'linear',
+            warmup_ratio = args.warmup_ratio,
+            
+            # epochs and batches 
+            num_train_epochs = args.epochs, 
+            max_steps = args.max_steps,
+            per_device_train_batch_size = args.train_batch_size,
+            per_device_eval_batch_size = args.eval_batch_size,
+            gradient_accumulation_steps = args.gradient_accumulation_steps,
+        )
         
-        # optimizer and lr_scheduler
-        optim = 'adamw_torch',
-        learning_rate = args.learning_rate,
-        weight_decay = args.weight_decay,
-        lr_scheduler_type = 'linear',
-        warmup_ratio = args.warmup_ratio,
-        
-        # epochs and batches 
-        num_train_epochs = args.epochs, 
-        max_steps = args.max_steps,
-        per_device_train_batch_size = args.train_batch_size,
-        per_device_eval_batch_size = args.eval_batch_size,
-        gradient_accumulation_steps = args.gradient_accumulation_steps,
-    )
-    
-    logger = CustomLogger(
-        log_dir=args.log_dir,
-        print_output=True,
-    )
+        logger = CustomLogger(
+            log_dir=args.log_dir,
+            print_output=True,
+        )
 
-    dataset = CustomCorpusDataset(
-        file_path=args.data_path,
-        data_name=args.data_name,
-        model_name_or_path=args.model_name_or_path,
-        cache_dir=args.cache_dir,
-        mini_dataset=args.mini_dataset,
+        dataset = CustomCorpusDataset(
+            file_path=args.data_path,
+            data_name=args.data_name,
+            model_name_or_path=args.model_name_or_path,
+            cache_dir=args.cache_dir,
+            mini_dataset=args.mini_dataset,
+            
+            label_level=args.label_level,
+            data_augmentation=args.data_augmentation,
+        )
+        rank_dataset = RankingDataset(
+            corpus_dataset=dataset,
+            rank_order_file=args.rank_order_file,
+        )
         
-        label_level=args.label_level,
-        data_augmentation=args.data_augmentation,
-    )
-    rank_dataset = RankingDataset(
-        corpus_dataset=dataset,
-        rank_order_file=args.rank_order_file,
-    )
-    
-    args.trainset_size, args.devset_size, args.testset_size = map(len, [
-        dataset.train_dataset, dataset.dev_dataset, dataset.test_dataset
-    ])
-    logger.info('-' * 30)
-    logger.info(f'Trainset Size: {args.trainset_size:7d}')
-    logger.info(f'Devset Size  : {args.devset_size:7d}')
-    logger.info(f'Testset Size : {args.testset_size:7d}')
-    logger.info('-' * 30)
-    
-    model = RankModel(
-        model_name_or_path=args.model_name_or_path,
-        label_list=dataset.label_list,
-        cache_dir=args.cache_dir,
-        loss_type=args.loss_type,
-        rank_loss_type=args.rank_loss_type,
-    )
-    
-    compute_metrics = ComputeMetrics(label_list=dataset.label_list)
-    rank_metrics = RankMetrics(num_labels=dataset.num_labels)
-    
-    train_evaluate_kwargs = {
-        'args': args,
-        'training_args': training_args,
-        'model': model,
-        'dataset': dataset,
-        'compute_metrics': compute_metrics,
-        'logger': logger,
-    }
+        args.trainset_size, args.devset_size, args.testset_size = map(len, [
+            dataset.train_dataset, dataset.dev_dataset, dataset.test_dataset
+        ])
+        logger.info('-' * 30)
+        logger.info(f'Trainset Size: {args.trainset_size:7d}')
+        logger.info(f'Devset Size  : {args.devset_size:7d}')
+        logger.info(f'Testset Size : {args.testset_size:7d}')
+        logger.info('-' * 30)
+        
+        model = RankModel(
+            model_name_or_path=args.model_name_or_path,
+            label_list=dataset.label_list,
+            cache_dir=args.cache_dir,
+            loss_type=args.loss_type,
+            rank_loss_type=args.rank_loss_type,
+        )
+        
+        compute_metrics = ComputeMetrics(label_list=dataset.label_list)
+        rank_metrics = RankMetrics(num_labels=dataset.num_labels)
+        
+        train_evaluate_kwargs = {
+            'args': args,
+            'training_args': training_args,
+            'model': model,
+            'dataset': dataset,
+            'compute_metrics': compute_metrics,
+            'logger': logger,
+        }
     
     # === train or evaluate ===
     
@@ -244,10 +245,13 @@ def main(args:CustomArgs):
             training_args.logging_steps = args.rank_log_steps
             training_args.per_device_train_batch_size = 1
             training_args.per_device_eval_batch_size = 1
-            training_args.gradient_accumulation_steps = args.train_batch_size*args.gradient_accumulation_steps
+            training_args.gradient_accumulation_steps = args.rank_gradient_accumulation_steps
             train_evaluate_kwargs['dataset'] = rank_dataset
             train_evaluate_kwargs['compute_metrics'] = rank_metrics
+            model.forward_fn = model.forward_rank
             rank_func(**train_evaluate_kwargs)
+            
+            exit()
 
             ##### prepare train
             training_args.num_train_epochs = args.epochs
@@ -258,6 +262,7 @@ def main(args:CustomArgs):
             training_args.gradient_accumulation_steps = args.gradient_accumulation_steps
             train_evaluate_kwargs['dataset'] = dataset
             train_evaluate_kwargs['compute_metrics'] = compute_metrics
+            model.forward_fn = model.forward_fine_tune
             train_func(**train_evaluate_kwargs)  
         
         # calculate average

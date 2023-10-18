@@ -96,7 +96,7 @@ class RankModel(nn.Module):
         self.model_config = None
         self.encoder:nn.Module = None
         self.classifier:nn.Module = None
-        self.label_vectors:torch.Tensor = None
+        self.label_vectors:nn.Parameter = None
         
         self.forward_fn = self.forward_fine_tune
         if loss_type.lower() == 'celoss':
@@ -125,10 +125,11 @@ class RankModel(nn.Module):
         
         tokenizer = AutoTokenizer.from_pretrained(self.model_name_or_path, cache_dir=self.cache_dir)
         tokenized_labels = tokenizer(self.label_list, padding=True, return_tensors='pt')
-        self.label_vectors = self.encoder(
+        label_vectors = self.encoder(
             input_ids=tokenized_labels['input_ids'],
             attention_mask=tokenized_labels['attention_mask'],
         ).last_hidden_state[:,0,:]
+        self.label_vectors = nn.Parameter(label_vectors)
     
     def forward_rank(self, input_ids, attention_mask, labels):
         hidden_state = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
@@ -136,7 +137,7 @@ class RankModel(nn.Module):
         label_vector = self.label_vectors[labels[0]]
         scores = (torch.stack([label_vector]*pooler_output.shape[0]) * pooler_output).sum(dim=1)
         return {
-            'logits': scores,
+            'logits': pooler_output,
             'loss': self.rank_loss_fn(scores),
         }
     

@@ -28,6 +28,11 @@ def local_test_args():
     args.epochs = 2
     args.eval_steps = 4
     args.log_steps = 4
+    
+    args.rank_epochs = 2
+    args.rank_gradient_accumulation_steps = 8
+    args.rank_eval_steps = 2
+    args.rank_log_steps = 1
 
     return args
     

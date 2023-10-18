@@ -35,6 +35,7 @@ class CustomArgs:
     
     # improvement
     loss_type = 'CELoss'
+    rank_loss_type = 'ListMLELoss'
     data_augmentation = False
     rank_order_file = './rank_order/rank_order1.json'
     
@@ -46,6 +47,10 @@ class CustomArgs:
     eval_steps = 100
     log_steps = 10
     gradient_accumulation_steps = 1
+    rank_epochs = 2
+    rank_eval_steps = 800
+    rank_log_steps = 40
+    rank_gradient_accumulation_steps = 2
     
     # seed, lr
     seed = 2023
@@ -65,7 +70,7 @@ class CustomArgs:
         parser = argparse.ArgumentParser('zp')
 
         parser.add_argument("--version", type=str, default='colab')
-
+        
         # base setting
         parser.add_argument("--mini_dataset", type=arg_bool, default=False)
         parser.add_argument("--do_train", type=arg_bool, default=True)
@@ -75,18 +80,20 @@ class CustomArgs:
         parser.add_argument("--label_level", type=str, default='level1')
         parser.add_argument("--model_name_or_path", type=str, default='roberta-base')
         parser.add_argument("--data_name", type=str, default='pdtb2')
-
+        
         # path
         parser.add_argument("--data_path", type=str, default='/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv')
         parser.add_argument("--cache_dir", type=str, default='/content/drive/MyDrive/IDRR/plm_cache')
         parser.add_argument("--output_dir", type=str, default='./output_space/')
         parser.add_argument("--log_dir", type=str, default='/content/drive/MyDrive/IDRR/log_space')
         parser.add_argument("--load_ckpt_dir", type=str, default='./ckpt_fold')
-
+        
         # improvement
         parser.add_argument("--loss_type", type=str, default='CELoss')
+        parser.add_argument("--rank_loss_type", type=str, default='ListMLELoss')
         parser.add_argument("--data_augmentation", type=arg_bool, default=False)
-
+        parser.add_argument("--rank_order_file", type=str, default='./rank_order/rank_order1.json')
+        
         # epoch, batch, step
         parser.add_argument("--epochs", type=int, default=5)
         parser.add_argument("--max_steps", type=int, default=-1)
@@ -95,7 +102,11 @@ class CustomArgs:
         parser.add_argument("--eval_steps", type=int, default=100)
         parser.add_argument("--log_steps", type=int, default=10)
         parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
-
+        parser.add_argument("--rank_epochs", type=int, default=2)
+        parser.add_argument("--rank_eval_steps", type=int, default=800)
+        parser.add_argument("--rank_log_steps", type=int, default=40)
+        parser.add_argument("--rank_gradient_accumulation_steps", type=int, default=2)
+        
         # seed, lr
         parser.add_argument("--seed", type=int, default=2023)
         parser.add_argument("--warmup_ratio", type=float, default=0.05)
@@ -212,4 +223,4 @@ if __name__ == '__main__':
     # print(list(sample_args))
     # print(dict(sample_args))
     sample_args.generate_script()
-    # sample_args.generate_parser()
+    sample_args.generate_parser()

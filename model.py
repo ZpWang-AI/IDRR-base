@@ -84,7 +84,7 @@ class RankModel(nn.Module):
         label_list=(),
         cache_dir='',
         loss_type='CELoss',
-        rank_loss_type='ListMLE',
+        rank_loss_type='ListMLELoss',
         *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         
@@ -103,7 +103,7 @@ class RankModel(nn.Module):
             self.loss_fn = CELoss()
         else:
             raise Exception('wrong loss_type')
-        if rank_loss_type.lower() == 'listmle':
+        if rank_loss_type.lower() == 'listmleloss':
             self.rank_loss_fn = ListMLELoss()
         else:
             raise Exception('wrong rank_loss_type')

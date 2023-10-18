@@ -1,3 +1,4 @@
+import json
 import numpy as np
 import pandas as pd
 
@@ -144,7 +145,6 @@ class RankingDataset():
     
 if __name__ == '__main__':
     import os
-    import json
     os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
     sample_corpus_dataset = CustomCorpusDataset(

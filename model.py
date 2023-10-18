@@ -14,7 +14,7 @@ class ListMLELoss(nn.Module):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         
-    def forward(self, scores, labels=None, k=None):
+    def forward(self, scores:torch.Tensor, labels=None, k=None):
         if k is not None:
             sublist_ids = (torch.rand(size=(k,))*scores.shape[1]).long()
             scores = scores[:, sublist_ids]
@@ -24,10 +24,18 @@ class ListMLELoss(nn.Module):
         if labels is not None:
             _, sort_ids = labels.sort(descending=True, dim=-1)
             scores = scores.gather(dim=1, index=sort_ids)
-            
-        cumsums = scores.exp().flip(dims=[1]).cumsum(dim=1).flip(dims=[1])
-        loss = torch.log(cumsums+1e-10) - scores
-        return loss.sum(dim=1).mean()
+        
+        if scores.dim() == 1:
+            cumsums = scores.exp().flip(dims=[0]).cumsum(dim=0).flip(dims=[0])
+            loss = torch.log(cumsums+1e-10) - scores
+            loss = loss.sum()
+        elif scores.dim() == 2:
+            cumsums = scores.exp().flip(dims=[1]).cumsum(dim=1).flip(dims=[1])
+            loss = torch.log(cumsums+1e-10) - scores
+            loss = loss.sum(dim=1).mean()
+        else:
+            raise Exception(f'wrong scores.dim {scores.dim()}')
+        return loss
 
 
 class ListNetLoss(nn.Module):
@@ -76,6 +84,7 @@ class RankModel(nn.Module):
         label_list=(),
         cache_dir='',
         loss_type='CELoss',
+        rank_loss_type='ListMLE',
         *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         
@@ -94,6 +103,10 @@ class RankModel(nn.Module):
             self.loss_fn = CELoss()
         else:
             raise Exception('wrong loss_type')
+        if rank_loss_type.lower() == 'listmle':
+            self.rank_loss_fn = ListMLELoss()
+        else:
+            raise Exception('wrong rank_loss_type')
         
         self.initial_model()
         
@@ -120,9 +133,12 @@ class RankModel(nn.Module):
     def forward_rank(self, input_ids, attention_mask, labels):
         hidden_state = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
         pooler_output = hidden_state.pooler_output
-        label_vector = self.label_vectors[np.argmax(labels[0])]
-        
-        
+        label_vector = self.label_vectors[labels[0]]
+        scores = (torch.stack([label_vector]*pooler_output.shape[0]) * pooler_output).sum(dim=1)
+        return {
+            'logits': scores,
+            'loss': self.rank_loss_fn(scores),
+        }
     
     def forward_fine_tune(self, input_ids, attention_mask, labels):
         hidden_state = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
@@ -201,6 +217,10 @@ if __name__ == '__main__':
         res = sample_model(sample_x_token['input_ids'], sample_x_token['attention_mask'], sample_y)
         print(res)
         
+        sample_model.forward_fn = sample_model.forward_rank
+        res = sample_model(sample_x_token['input_ids'], sample_x_token['attention_mask'], sample_y)
+        print(res)
+        
     def demo_CELoss():
         y_pred = torch.tensor([[0.8, 0.5, 0.9, 0.4, 0.7],
                             [0.3, 0.6, 0.1, 0.7, 0.5]])
@@ -222,6 +242,7 @@ if __name__ == '__main__':
         loss = criterion(y_pred, y_true, k)
         print(loss)
     
-    demo_CELoss()
+    demo_model()
+    # demo_CELoss()
     # demo_listMLE()
     

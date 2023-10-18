@@ -12,12 +12,45 @@ from transformers import TrainingArguments, Trainer, DataCollatorWithPadding, se
 from arguments import CustomArgs
 from logger import CustomLogger
 from corpusDataset import CustomCorpusDataset
-from model import CustomModel
-from metrics import ComputeMetrics
+from rankingDataset import RankingDataset
+from model import CustomModel, RankModel
+from metrics import ComputeMetrics, RankMetrics
 from callbacks import CustomCallback
 from analyze import analyze_metrics_json
 
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
+
+
+def rank_func(
+    args:CustomArgs, 
+    training_args:TrainingArguments, 
+    logger:CustomLogger,
+    dataset:RankingDataset, 
+    model:RankModel, 
+    compute_metrics:RankMetrics,
+):
+    callback = CustomCallback(
+        args=args, 
+        logger=logger, 
+        metric_names=compute_metrics.metric_names,
+    )
+    
+    trainer = Trainer(
+        model=model, 
+        args=training_args, 
+        tokenizer=dataset.tokenizer, 
+        compute_metrics=compute_metrics,
+        callbacks=[callback],
+        
+        data_collator=dataset.data_collator,
+        train_dataset=dataset.train_dataset,
+        eval_dataset=dataset.dev_dataset, 
+    )
+    callback.trainer = trainer
+    callback.dataset = dataset
+
+    train_output = trainer.train().metrics
+    logger.log_json(train_output, 'rank_output.json', log_info=True)
 
 
 def train_func(

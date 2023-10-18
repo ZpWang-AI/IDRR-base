@@ -13,7 +13,7 @@ class CustomData:
         self.arg1 = arg1
         self.arg2 = arg2
         self.tokenizer = tokenizer
-        self.labels = labels
+        self.labels = np.array(labels)
         
     def __getitem__(self, indices) -> Any:
         arg_pair_list = [(self.arg1[p], self.arg2[p])for p in indices]
@@ -25,6 +25,8 @@ class CustomData:
             padding=True,
             return_tensors='pt',
         )
+        
+        model_inputs['labels'] = self.labels[indices]
     
         return model_inputs
     

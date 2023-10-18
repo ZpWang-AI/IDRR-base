@@ -1,5 +1,6 @@
 python main.py \
-    --version colab_baseline \
+    --version colab \
+    --mini_dataset False \
     --do_train True \
     --do_eval True \
     --training_iteration 3 \
@@ -12,7 +13,10 @@ python main.py \
     --output_dir ./output_space/ \
     --log_dir /content/drive/MyDrive/IDRR/log_space \
     --load_ckpt_dir ./ckpt_fold \
+    --loss_type CELoss \
+    --rank_loss_type ListMLELoss \
     --data_augmentation False \
+    --rank_order_file ./rank_order/rank_order1.json \
     --epochs 5 \
     --max_steps -1 \
     --train_batch_size 8 \
@@ -20,6 +24,10 @@ python main.py \
     --eval_steps 100 \
     --log_steps 10 \
     --gradient_accumulation_steps 1 \
+    --rank_epochs 2 \
+    --rank_eval_steps 400 \
+    --rank_log_steps 40 \
+    --rank_gradient_accumulation_steps 2 \
     --seed 2023 \
     --warmup_ratio 0.05 \
     --weight_decay 0.01 \

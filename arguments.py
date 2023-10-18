@@ -169,7 +169,18 @@ class CustomArgs:
         
         return iter(sorted(self.__dict__.items(), key=lambda x:keys_order[x[0]]))
         
-    def generate_script(self, file_path='./tmp/script.sh'):
+    def generate_script(self, file_path='./tmp/script.sh', test_setting=True):
+        if test_setting:
+            self.version = 'colab_test'
+            self.mini_dataset = True
+            self.training_iteration = 2
+            self.data_augmentation = True
+            self.epochs = 2
+            self.eval_steps = 2
+            self.log_steps = 2
+            self.rank_eval_steps = 2
+            self.rank_log_steps = 1
+            
         script_string = ['python main.py']
         for k, v in list(self):
             if k in ['cur_time']:
@@ -222,5 +233,5 @@ if __name__ == '__main__':
     sample_args = CustomArgs()
     # print(list(sample_args))
     # print(dict(sample_args))
-    sample_args.generate_script()
+    sample_args.generate_script(test_setting=False)
     sample_args.generate_parser()

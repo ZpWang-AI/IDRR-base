@@ -34,8 +34,8 @@ def rank_func(
         logger=logger, 
         metric_names=compute_metrics.metric_names,
     )
-    callback.best_metric_file_name = 'best_rank_metric_scores.json'
-    callback.dev_metric_file_name = 'dev_rank_metric_scores.jsonl'
+    callback.best_metric_file_name = 'best_rank_metric_score.json'
+    callback.dev_metric_file_name = 'dev_rank_metric_score.jsonl'
     
     trainer = Trainer(
         model=model, 
@@ -53,6 +53,19 @@ def rank_func(
     train_output = trainer.train().metrics
     logger.log_json(train_output, 'rank_output.json', log_info=True)
 
+    if args.do_eval:
+        callback.evaluate_testdata = True
+        
+        eval_metrics = {}
+        for metric_ in compute_metrics.metric_names:
+            load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
+            if load_ckpt_dir.exists():
+                evaluate_output = trainer.evaluate(eval_dataset=dataset.test_dataset)
+                eval_metric_name = 'eval_'+metric_
+                eval_metrics[eval_metric_name] = evaluate_output[eval_metric_name]
+                
+        logger.log_json(eval_metrics, 'eval_rank_metric_score.json', log_info=True) 
+        
 
 def train_func(
     args:CustomArgs, 
@@ -268,7 +281,14 @@ def main(args:CustomArgs):
         args.log_dir = init_log_dir
         training_args.output_dir = init_output_dir
         logger.log_dir = init_log_dir
-        for json_file_name in ['best_metric_score.json', 'eval_metric_score.json', 'train_output.json']:
+        for json_file_name in [
+            'best_metric_score.json', 
+            'eval_metric_score.json',
+            'train_output.json',
+            'best_rank_metric_score.json', 
+            'eval_rank_metric_score.json',
+            'rank_output.json',
+        ]:
             metric_analysis = analyze_metrics_json(init_log_dir, json_file_name, just_average=True)
             logger.log_json(metric_analysis, json_file_name, log_info=True)
             

@@ -142,14 +142,20 @@ def evaluate_func(
     return trainer
 
 
-def main(args:CustomArgs):
+def main_one_iteration(args:CustomArgs, training_iter_id=0):
     if not args.do_train and not args.do_eval:
         raise Exception('neither do_train nor do_eval')
     
     # === prepare === 
-    
+        
     if 1:
-        args.complete_path()
+        # seed
+        args.seed += training_iter_id
+        set_seed(args.seed)
+        # path
+        train_fold_name = f'training_iteration_{training_iter_id}'
+        args.output_dir = os.path.join(args.output_dir, train_fold_name)
+        args.log_dir = os.path.join(args.log_dir, train_fold_name)
         args.check_path()
         
         training_args = TrainingArguments(
@@ -181,6 +187,7 @@ def main(args:CustomArgs):
         
         logger = CustomLogger(
             log_dir=args.log_dir,
+            logger_name=f'iter{training_iter_id}_logger',
             print_output=True,
         )
 
@@ -198,15 +205,6 @@ def main(args:CustomArgs):
             corpus_dataset=dataset,
             rank_order_file=args.rank_order_file,
         )
-        
-        args.trainset_size, args.devset_size, args.testset_size = map(len, [
-            dataset.train_dataset, dataset.dev_dataset, dataset.test_dataset
-        ])
-        logger.info('-' * 30)
-        logger.info(f'Trainset Size: {args.trainset_size:7d}')
-        logger.info(f'Devset Size  : {args.devset_size:7d}')
-        logger.info(f'Testset Size : {args.testset_size:7d}')
-        logger.info('-' * 30)
         
         model = RankModel(
             model_name_or_path=args.model_name_or_path,
@@ -230,67 +228,32 @@ def main(args:CustomArgs):
     
     # === train or evaluate ===
     
-    logger.log_json(dict(args), 'hyperparams.json', log_info=True)
+    logger.log_json(dict(args), 'hyperparams.json', log_info=False)
     
     if args.do_train:
-        init_output_dir = args.output_dir
-        init_log_dir = args.log_dir
-        
-        for training_iter_id in range(args.training_iteration):
-            ##### prepare train iteration
-            # seed
-            args.seed += training_iter_id
-            set_seed(args.seed)
-            training_args.seed = args.seed
-            # path
-            train_fold_name = f'training_iteration_{training_iter_id}'
-            args.output_dir = os.path.join(init_output_dir, train_fold_name)
-            args.log_dir = os.path.join(init_log_dir, train_fold_name)
-            args.check_path()
-            training_args.output_dir = args.output_dir
-            logger.log_dir = args.log_dir
-            # model
-            model.initial_model()
-            
-            ##### prepare rank
-            training_args.num_train_epochs = args.rank_epochs
-            training_args.eval_steps = args.rank_eval_steps
-            training_args.logging_steps = args.rank_log_steps
-            training_args.per_device_train_batch_size = 1
-            training_args.per_device_eval_batch_size = 1
-            training_args.gradient_accumulation_steps = args.rank_gradient_accumulation_steps
-            train_evaluate_kwargs['dataset'] = rank_dataset
-            train_evaluate_kwargs['compute_metrics'] = rank_metrics
-            model.forward_fn = model.forward_rank
-            rank_func(**train_evaluate_kwargs)
+        ##### prepare rank
+        training_args.num_train_epochs = args.rank_epochs
+        training_args.eval_steps = args.rank_eval_steps
+        training_args.logging_steps = args.rank_log_steps
+        training_args.per_device_train_batch_size = 1
+        training_args.per_device_eval_batch_size = 1
+        training_args.gradient_accumulation_steps = args.rank_gradient_accumulation_steps
+        train_evaluate_kwargs['dataset'] = rank_dataset
+        train_evaluate_kwargs['compute_metrics'] = rank_metrics
+        model.forward_fn = model.forward_rank
+        rank_func(**train_evaluate_kwargs)
 
-            #### prepare train
-            training_args.num_train_epochs = args.epochs
-            training_args.eval_steps = args.eval_steps
-            training_args.logging_steps = args.log_steps
-            training_args.per_device_train_batch_size = args.train_batch_size
-            training_args.per_device_eval_batch_size = args.eval_batch_size
-            training_args.gradient_accumulation_steps = args.gradient_accumulation_steps
-            train_evaluate_kwargs['dataset'] = dataset
-            train_evaluate_kwargs['compute_metrics'] = compute_metrics
-            model.forward_fn = model.forward_fine_tune
-            train_func(**train_evaluate_kwargs)  
-        
-        # calculate average
-        args.output_dir = init_output_dir
-        args.log_dir = init_log_dir
-        training_args.output_dir = init_output_dir
-        logger.log_dir = init_log_dir
-        for json_file_name in [
-            'best_metric_score.json', 
-            'eval_metric_score.json',
-            'train_output.json',
-            'best_rank_metric_score.json', 
-            'eval_rank_metric_score.json',
-            'rank_output.json',
-        ]:
-            metric_analysis = analyze_metrics_json(init_log_dir, json_file_name, just_average=True)
-            logger.log_json(metric_analysis, json_file_name, log_info=True)
+        #### prepare train
+        training_args.num_train_epochs = args.epochs
+        training_args.eval_steps = args.eval_steps
+        training_args.logging_steps = args.log_steps
+        training_args.per_device_train_batch_size = args.train_batch_size
+        training_args.per_device_eval_batch_size = args.eval_batch_size
+        training_args.gradient_accumulation_steps = args.gradient_accumulation_steps
+        train_evaluate_kwargs['dataset'] = dataset
+        train_evaluate_kwargs['compute_metrics'] = compute_metrics
+        model.forward_fn = model.forward_fine_tune
+        train_func(**train_evaluate_kwargs)  
             
     elif args.do_eval:
         model_params_path = os.path.join(args.load_ckpt_dir, 'pytorch_model.bin')
@@ -317,9 +280,48 @@ def main(args:CustomArgs):
         shutil.rmtree(args.output_dir)
 
 
-def main_multi_iteration():
-    for seed in range(10):
-        train_func(args, seed)
+def main(args:CustomArgs):
+    from copy import deepcopy
+    
+    args.complete_path()
+    args.check_path()
+    main_logger = CustomLogger(args.log_dir, logger_name='main_logger')
+    # dataset size
+    dataset = CustomCorpusDataset(
+        file_path=args.data_path,
+        data_name=args.data_name,
+        model_name_or_path=args.model_name_or_path,
+        cache_dir=args.cache_dir,
+        mini_dataset=args.mini_dataset,
+        
+        label_level=args.label_level,
+        data_augmentation=args.data_augmentation,
+    )
+    args.trainset_size, args.devset_size, args.testset_size = map(len, [
+        dataset.train_dataset, dataset.dev_dataset, dataset.test_dataset
+    ])
+    main_logger.info('-' * 30)
+    main_logger.info(f'Trainset Size: {args.trainset_size:7d}')
+    main_logger.info(f'Devset Size  : {args.devset_size:7d}')
+    main_logger.info(f'Testset Size : {args.testset_size:7d}')
+    main_logger.info('-' * 30)
+    
+    main_logger.log_json(dict(args), log_file_name='hyperparams.json', log_info=True)
+    for training_iter_id in range(args.training_iteration):
+        main_one_iteration(deepcopy(args), training_iter_id=training_iter_id)
+        
+    # calculate average
+    for json_file_name in [
+        'best_metric_score.json', 
+        'eval_metric_score.json',
+        'train_output.json',
+        'best_rank_metric_score.json', 
+        'eval_rank_metric_score.json',
+        'rank_output.json',
+    ]:
+        metric_analysis = analyze_metrics_json(args.log_dir, json_file_name, just_average=True)
+        main_logger.log_json(metric_analysis, json_file_name, log_info=True)
+
 
 if __name__ == '__main__':
     from run import local_test_args

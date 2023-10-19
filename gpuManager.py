@@ -1,6 +1,5 @@
 import time
 import pynvml
-import torch
 
 from typing import *
 
@@ -26,6 +25,7 @@ class GPUManager:
         pynvml.nvmlInit()
         handle = pynvml.nvmlDeviceGetHandleByIndex(cuda_id)
         info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+        pynvml.nvmlShutdown()
         if show:
             print(
                 f'cuda: {cuda_id}, '
@@ -37,7 +37,10 @@ class GPUManager:
 
     @staticmethod
     def get_all_cuda_id():
-        return list(range(torch.cuda.device_count()))
+        pynvml.nvmlInit()
+        cuda_cnt = list(range(pynvml.nvmlDeviceGetCount()))
+        pynvml.nvmlShutdown()
+        return cuda_cnt
         
     @staticmethod
     def _get_most_free_gpu(device_range=None):
@@ -90,6 +93,7 @@ class GPUManager:
         
     @staticmethod
     def _occupy_one_gpu(cuda_id, target_mem_mb=8000):
+        import torch
         '''
         < release by following >
         gpustat -cpu

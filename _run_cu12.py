@@ -5,6 +5,7 @@ from gpuManager import GPUManager
 free_gpu_id = GPUManager.get_free_gpu()
 os.chdir('/data/zpwang/IDRR/IDRR-base/')
 os.environ["CUDA_VISIBLE_DEVICES"] = str(free_gpu_id)
+print(f'== CUDA {free_gpu_id} ===')
 
 
 from arguments import CustomArgs
@@ -55,7 +56,16 @@ def cu12_test_args():
 
     return args
 
+
+def cu12_rank_dataAug_args():
+    args = cu12_base_args()
+    args.version = 'cu12_rank_dataAugmentation'
+    args.data_augmentation = True
+    
+    return args
+
     
 if __name__ == '__main__':
-    main(cu12_test_args())
+    # main(cu12_test_args())
     # main(cu12_base_args())
+    main(cu12_rank_dataAug_args())

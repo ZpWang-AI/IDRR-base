@@ -36,23 +36,6 @@ def local_test_args():
 
     return args
     
-
-def cu12_test_args():
-    args = local_test_args()
-    
-    args.version = 'cu12_test'
-    
-    args.model_name_or_path = '/data/zpwang/IDRR/plm_cache/models--roberta-base/snapshots/bc2764f8af2e92b6eb5679868df33e224075ca68'
-    args.data_path = '/data/zpwang/IDRR/CorpusData/PDTB2/pdtb2.csv'
-    args.load_ckpt_dir = '/data/zpwang/IDRR/ckpt_fold'
-    args.cache_dir = ''
-    args.output_dir = '/data/zpwang/IDRR/output_space/'
-    args.log_dir = '/data/zpwang/IDRR/log_space/'
-    args.rank_order_file = '/data/zpwang/IDRR/IDRR-base/rank_order/rank_order1.json'
-    
-    return args
-    
     
 if __name__ == '__main__':
     main(local_test_args())
-    # main(cu12_test_args())

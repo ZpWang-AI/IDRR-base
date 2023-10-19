@@ -6,6 +6,7 @@ Code and experiments about IDRR
 
 ```
 IDRR-base
+|-analyze.py
 |-arguments.py
 |-callbacks.py
 |-corpusDataset.py
@@ -14,6 +15,7 @@ IDRR-base
 |-main.py
 |-metrics.py
 |-model.py
+|-rankingDataset.py
 |-README.md
 |-requirements.txt
 |-run.py

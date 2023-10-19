@@ -6,7 +6,6 @@ from pathlib import Path as path
 from collections import defaultdict
 
 
-# class CustomLogger(logging.Logger):
 class CustomLogger:
     def __init__(self, log_dir='./log_space', logger_name='custom_logger', print_output=False) -> None:
         self.log_dir = path(log_dir)
@@ -52,10 +51,8 @@ class CustomLogger:
         with open(log_file, 'a', encoding='utf8')as f:
             json.dump(content, f, ensure_ascii=False)
             f.write('\n')
-    
 
-    
 
 if __name__ == '__main__':
-    sample_logger = CustomLogger(print_output=True)
+    sample_logger = CustomLogger(log_dir='./tmp/', print_output=True)
     sample_logger.info('123', {'1231':1231})

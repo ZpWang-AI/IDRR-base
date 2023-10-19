@@ -133,7 +133,7 @@ class CustomArgs:
         
         assert path(self.data_path).exists(), 'wrong data path'
         
-        if str(self.cache_dir) == 'None':
+        if str(self.cache_dir) in ['None', '']:
             self.cache_dir = None
         else:
             path(self.cache_dir).mkdir(parents=True, exist_ok=True)

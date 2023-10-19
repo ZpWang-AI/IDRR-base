@@ -18,8 +18,11 @@ nohup.out
 baseline
 CorpusData/*
 !CorpusData/analyse.ipynb
-!scripts/*.sh
+plm_cache
 output_space
 log_space
+
+!scripts/*.sh
 !just_test.py
-plm_cache
+!_sshTransmitor.py
+!_run_cu12.py

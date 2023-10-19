@@ -317,6 +317,10 @@ def main(args:CustomArgs):
         shutil.rmtree(args.output_dir)
 
 
+def main_multi_iteration():
+    for seed in range(10):
+        train_func(args, seed)
+
 if __name__ == '__main__':
     from run import local_test_args
     args = local_test_args()

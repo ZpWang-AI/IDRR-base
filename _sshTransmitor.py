@@ -83,6 +83,8 @@ class SSHTransmitor:
 
 
 cu12_host = '10.10.80.107'
+cu13_host = '192.168.134.9'
+cu14_host = '10.10.80.63'
 
 
 if __name__ == '__main__':
@@ -103,7 +105,8 @@ if __name__ == '__main__':
                 return True
         return False
     
-    ssh_transer = SSHTransmitor(hostname=cu12_host)
+    ssh_transer = SSHTransmitor(hostname=cu13_host)
+    
     ssh_transer.exclude_file_func = exclude_func
     ssh_transer.exclude_folder_func = exclude_func
     ssh_transer.ssh_transmit(

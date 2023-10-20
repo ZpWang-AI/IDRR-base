@@ -281,13 +281,21 @@ def main_one_iteration(args:CustomArgs, training_iter_id=0):
 
 
 def main(args:CustomArgs, training_iter_id=-1):
+    """
+    params:
+        args: CustomArgs
+        training_iter_id: int ( set t=args.training_iteration )
+            -1: auto train t iterations
+            0, 1, ..., t-1: train a specific iteration
+            t: calculate average of metrics
+    """
     from copy import deepcopy
     
     args.complete_path()
     args.check_path()
+    main_logger = CustomLogger(args.log_dir, logger_name='main_logger')
     
     if training_iter_id < 0 or training_iter_id == 0:
-        main_logger = CustomLogger(args.log_dir, logger_name='main_logger')
         # dataset size
         dataset = CustomCorpusDataset(
             file_path=args.data_path,
@@ -316,7 +324,7 @@ def main(args:CustomArgs, training_iter_id=-1):
     else:
         main_one_iteration(args, training_iter_id=training_iter_id)
     
-    if training_iter_id < 0 or training_iter_id == args.training_iteration-1:
+    if training_iter_id < 0 or training_iter_id == args.training_iteration:
         # calculate average
         for json_file_name in [
             'best_metric_score.json', 

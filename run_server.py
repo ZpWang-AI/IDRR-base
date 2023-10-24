@@ -1,10 +1,10 @@
 
 # ===== prepare server_name, root_fold =====
 SERVER_NAME = 'cu12_'
-if SERVER_NAME in ['cu12_', 'cu13_']:
+if SERVER_NAME in ['cu12_', 'cu13_', 'northern_']:
     ROOT_FOLD_IDRR = '/data/zpwang/IDRR/'
-elif SERVER_NAME == 'northern_':
-    ROOT_FOLD_IDRR = ''
+# elif SERVER_NAME == :
+#     ROOT_FOLD_IDRR = ''
 else:
     raise Exception('wrong ROOT_FOLD_IDRR')
 

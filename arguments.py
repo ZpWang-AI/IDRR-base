@@ -66,7 +66,7 @@ class CustomArgs:
     
     ############################ Args # Don't modify this line
     
-    def __init__(self) -> None:
+    def __init__(self, test_setting=False) -> None:
         parser = argparse.ArgumentParser('zp')
 
         parser.add_argument("--version", type=str, default='colab')
@@ -113,6 +113,21 @@ class CustomArgs:
         parser.add_argument("--weight_decay", type=float, default=0.01)
         parser.add_argument("--learning_rate", type=float, default=5e-6)
 
+        if test_setting:
+            self.version = 'colab_test'
+            self.mini_dataset = True
+            self.data_augmentation = False
+            self.training_iteration = 2
+            self.train_batch_size = 8
+            self.eval_batch_size = 8
+            self.epochs = 2
+            self.eval_steps = 4
+            self.log_steps = 4
+            self.rank_epochs = 2
+            self.rank_gradient_accumulation_steps = 8
+            self.rank_eval_steps = 2
+            self.rank_log_steps = 1
+            
         args = parser.parse_args()
         for k, v in args.__dict__.items():
             setattr(self, k, v)
@@ -169,18 +184,7 @@ class CustomArgs:
         
         return iter(sorted(self.__dict__.items(), key=lambda x:keys_order[x[0]]))
         
-    def generate_script(self, file_path='./tmp/script.sh', test_setting=True):
-        if test_setting:
-            self.version = 'colab_test'
-            self.mini_dataset = True
-            self.training_iteration = 2
-            self.data_augmentation = True
-            self.epochs = 2
-            self.eval_steps = 2
-            self.log_steps = 2
-            self.rank_eval_steps = 2
-            self.rank_log_steps = 1
-            
+    def generate_script(self, file_path='./tmp/script.sh'):
         script_string = ['python main.py']
         for k, v in list(self):
             if k in ['cur_time']:
@@ -230,8 +234,8 @@ class CustomArgs:
 
 
 if __name__ == '__main__':
-    sample_args = CustomArgs()
+    sample_args = CustomArgs(test_setting=False)
     # print(list(sample_args))
     # print(dict(sample_args))
-    sample_args.generate_script(test_setting=False)
+    sample_args.generate_script()
     sample_args.generate_parser()

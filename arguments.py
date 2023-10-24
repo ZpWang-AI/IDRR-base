@@ -113,6 +113,10 @@ class CustomArgs:
         parser.add_argument("--weight_decay", type=float, default=0.01)
         parser.add_argument("--learning_rate", type=float, default=5e-6)
 
+        args = parser.parse_args()
+        for k, v in args.__dict__.items():
+            setattr(self, k, v)
+            
         if test_setting:
             self.version = 'colab_test'
             self.mini_dataset = True
@@ -127,10 +131,6 @@ class CustomArgs:
             self.rank_gradient_accumulation_steps = 8
             self.rank_eval_steps = 2
             self.rank_log_steps = 1
-            
-        args = parser.parse_args()
-        for k, v in args.__dict__.items():
-            setattr(self, k, v)
     
     def complete_path(self):
         self.cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")

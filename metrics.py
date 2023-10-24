@@ -6,7 +6,7 @@ from sklearn.metrics import f1_score, accuracy_score
 class RankMetrics:
     def __init__(self, num_labels:int) -> None:
         self.num_labels = num_labels
-        self.metric_names = ['Acc']
+        self.metric_names = ['rank_Acc']
         pass
     
     def __call__(self, eval_pred):
@@ -14,9 +14,8 @@ class RankMetrics:
         predictions = predictions.reshape((-1, self.num_labels))
         
         res = {
-            'Acc': np.mean( np.argmax(predictions, axis=1) == 0)
+            'rank_Acc': np.mean( np.argmax(predictions, axis=1) == 0)
         }
-        print(res)
         return res
 
 

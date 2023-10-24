@@ -205,6 +205,9 @@ def main_one_iteration(args:CustomArgs, training_iter_id=0):
             corpus_dataset=dataset,
             rank_order_file=args.rank_order_file,
         )
+        args.trainset_size, args.devset_size, args.testset_size = map(len, [
+            dataset.train_dataset, dataset.dev_dataset, dataset.test_dataset
+        ])
         
         model = RankModel(
             model_name_or_path=args.model_name_or_path,
@@ -226,9 +229,9 @@ def main_one_iteration(args:CustomArgs, training_iter_id=0):
             'logger': logger,
         }
     
-    # === train or evaluate ===
-    
     logger.log_json(dict(args), 'hyperparams.json', log_info=False)
+
+    # === train or evaluate ===
     
     if args.do_train:
         ##### prepare rank
@@ -243,7 +246,7 @@ def main_one_iteration(args:CustomArgs, training_iter_id=0):
         model.forward_fn = model.forward_rank
         rank_func(**train_evaluate_kwargs)
 
-        #### prepare train
+        #### prepare fine-tune
         training_args.num_train_epochs = args.epochs
         training_args.eval_steps = args.eval_steps
         training_args.logging_steps = args.log_steps
@@ -293,38 +296,39 @@ def main(args:CustomArgs, training_iter_id=-1):
     
     args.complete_path()
     args.check_path()
-    main_logger = CustomLogger(args.log_dir, logger_name='main_logger')
+    main_logger = CustomLogger(args.log_dir, logger_name='main_logger', print_output=True)
+    # print(training_iter_id)
     
     if training_iter_id < 0 or training_iter_id == 0:
-        # dataset size
-        dataset = CustomCorpusDataset(
-            file_path=args.data_path,
-            data_name=args.data_name,
-            model_name_or_path=args.model_name_or_path,
-            cache_dir=args.cache_dir,
-            mini_dataset=args.mini_dataset,
+        # # dataset size
+        # dataset = CustomCorpusDataset(
+        #     file_path=args.data_path,
+        #     data_name=args.data_name,
+        #     model_name_or_path=args.model_name_or_path,
+        #     cache_dir=args.cache_dir,
+        #     mini_dataset=args.mini_dataset,
             
-            label_level=args.label_level,
-            data_augmentation=args.data_augmentation,
-        )
-        args.trainset_size, args.devset_size, args.testset_size = map(len, [
-            dataset.train_dataset, dataset.dev_dataset, dataset.test_dataset
-        ])
-        main_logger.info('-' * 30)
-        main_logger.info(f'Trainset Size: {args.trainset_size:7d}')
-        main_logger.info(f'Devset Size  : {args.devset_size:7d}')
-        main_logger.info(f'Testset Size : {args.testset_size:7d}')
-        main_logger.info('-' * 30)
+        #     label_level=args.label_level,
+        #     data_augmentation=args.data_augmentation,
+        # )
+        # args.trainset_size, args.devset_size, args.testset_size = map(len, [
+        #     dataset.train_dataset, dataset.dev_dataset, dataset.test_dataset
+        # ])
+        # main_logger.info('-' * 30)
+        # main_logger.info(f'Trainset Size: {args.trainset_size:7d}')
+        # main_logger.info(f'Devset Size  : {args.devset_size:7d}')
+        # main_logger.info(f'Testset Size : {args.testset_size:7d}')
+        # main_logger.info('-' * 30)
     
         main_logger.log_json(dict(args), log_file_name='hyperparams.json', log_info=True)
     
     if training_iter_id < 0:
-        for training_iter_id in range(args.training_iteration):
-            main_one_iteration(deepcopy(args), training_iter_id=training_iter_id)
+        for _training_iter_id in range(args.training_iteration):
+            main_one_iteration(deepcopy(args), training_iter_id=_training_iter_id)
     else:
         main_one_iteration(args, training_iter_id=training_iter_id)
     
-    if training_iter_id < 0 or training_iter_id == args.training_iteration:
+    if training_iter_id < 0:
         # calculate average
         for json_file_name in [
             'best_metric_score.json', 

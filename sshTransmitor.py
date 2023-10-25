@@ -105,7 +105,7 @@ if __name__ == '__main__':
                 return True
         return False
     
-    ssh_transer = SSHTransmitor(hostname=cu13_host)
+    ssh_transer = SSHTransmitor(hostname=cu13_host) # ==========
     
     ssh_transer.exclude_file_func = exclude_func
     ssh_transer.exclude_folder_func = exclude_func

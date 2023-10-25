@@ -12,7 +12,6 @@ def local_test_args():
     args.cache_dir = './plm_cache/'
     args.output_dir = './output_space/'
     args.log_dir = './log_space/'
-    # args.rank_gradient_accumulation_steps
 
     return args
     

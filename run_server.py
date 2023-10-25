@@ -25,7 +25,7 @@ from main import main
 def server_base_args(test_setting=True):
     args = CustomArgs(test_setting=test_setting)
     
-    args.version = SERVER_NAME+('test' if test_setting else 'rank')
+    args.version = SERVER_NAME+('test' if test_setting else 'base')
     
     args.model_name_or_path = ROOT_FOLD_IDRR+'/plm_cache/models--roberta-base/snapshots/bc2764f8af2e92b6eb5679868df33e224075ca68'
     args.data_path = ROOT_FOLD_IDRR+'CorpusData/PDTB2/pdtb2.csv'
@@ -33,14 +33,13 @@ def server_base_args(test_setting=True):
     args.cache_dir = ''
     args.output_dir = ROOT_FOLD_IDRR+'output_space/'
     args.log_dir = ROOT_FOLD_IDRR+'log_space/'
-    args.rank_order_file = ROOT_FOLD_IDRR+'IDRR-base/rank_order/rank_order1.json'
 
     return args
 
 
-def server_rank_dataAug_args():
+def server_dataAug_args():
     args = server_base_args()
-    args.version = SERVER_NAME+'rank_dataAugmentation'
+    args.version = SERVER_NAME+'dataAugmentation'
     args.data_augmentation = True
     
     return args
@@ -48,4 +47,4 @@ def server_rank_dataAug_args():
     
 if __name__ == '__main__':
     main(server_base_args(test_setting=True))
-    # main(server_rank_dataAug_args())
+    # main(server_dataAug_args())

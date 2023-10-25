@@ -12,67 +12,20 @@ from transformers import TrainingArguments, Trainer, DataCollatorWithPadding, se
 from arguments import CustomArgs
 from logger import CustomLogger
 from corpusDataset import CustomCorpusDataset
-from rankingDataset import RankingDataset
-from model import CustomModel, RankModel
-from metrics import ComputeMetrics, RankMetrics
+from model import CustomModel
+from metrics import ComputeMetrics
 from callbacks import CustomCallback
 from analyze import analyze_metrics_json
 
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 
-def rank_func(
-    args:CustomArgs, 
-    training_args:TrainingArguments, 
-    logger:CustomLogger,
-    dataset:RankingDataset, 
-    model:RankModel, 
-    compute_metrics:RankMetrics,
-):
-    callback = CustomCallback(
-        args=args, 
-        logger=logger, 
-        metric_names=compute_metrics.metric_names,
-    )
-    callback.best_metric_file_name = 'best_rank_metric_score.json'
-    callback.dev_metric_file_name = 'dev_rank_metric_score.jsonl'
-    
-    trainer = Trainer(
-        model=model, 
-        args=training_args, 
-        tokenizer=dataset.tokenizer, 
-        compute_metrics=compute_metrics,
-        callbacks=[callback],
-        
-        data_collator=dataset.data_collator,
-        train_dataset=dataset.train_dataset,
-        eval_dataset=dataset.dev_dataset, 
-    )
-    callback.trainer = trainer
-
-    train_output = trainer.train().metrics
-    logger.log_json(train_output, 'rank_output.json', log_info=True)
-
-    if args.do_eval:
-        callback.evaluate_testdata = True
-        
-        eval_metrics = {}
-        for metric_ in compute_metrics.metric_names:
-            load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
-            if load_ckpt_dir.exists():
-                evaluate_output = trainer.evaluate(eval_dataset=dataset.test_dataset)
-                eval_metric_name = 'eval_'+metric_
-                eval_metrics[eval_metric_name] = evaluate_output[eval_metric_name]
-                
-        logger.log_json(eval_metrics, 'eval_rank_metric_score.json', log_info=True) 
-        
-
 def train_func(
     args:CustomArgs, 
     training_args:TrainingArguments, 
     logger:CustomLogger,
     dataset:CustomCorpusDataset, 
-    model:RankModel, 
+    model:CustomModel, 
     compute_metrics:ComputeMetrics,
 ):
     callback = CustomCallback(
@@ -117,7 +70,7 @@ def evaluate_func(
     training_args:TrainingArguments,
     logger:CustomLogger,
     dataset:CustomCorpusDataset,
-    model:RankModel,
+    model:CustomModel,
     compute_metrics:ComputeMetrics,
 ):
     callback = CustomCallback(
@@ -201,24 +154,18 @@ def main_one_iteration(args:CustomArgs, training_iter_id=0):
             label_level=args.label_level,
             data_augmentation=args.data_augmentation,
         )
-        rank_dataset = RankingDataset(
-            corpus_dataset=dataset,
-            rank_order_file=args.rank_order_file,
-        )
         args.trainset_size, args.devset_size, args.testset_size = map(len, [
             dataset.train_dataset, dataset.dev_dataset, dataset.test_dataset
         ])
         
-        model = RankModel(
+        model = CustomModel(
             model_name_or_path=args.model_name_or_path,
-            label_list=dataset.label_list,
+            num_labels=dataset.num_labels,
             cache_dir=args.cache_dir,
             loss_type=args.loss_type,
-            rank_loss_type=args.rank_loss_type,
         )
         
         compute_metrics = ComputeMetrics(label_list=dataset.label_list)
-        rank_metrics = RankMetrics(num_labels=dataset.num_labels)
         
         train_evaluate_kwargs = {
             'args': args,
@@ -312,9 +259,6 @@ def main(args:CustomArgs, training_iter_id=-1):
             'best_metric_score.json', 
             'eval_metric_score.json',
             'train_output.json',
-            'best_rank_metric_score.json', 
-            'eval_rank_metric_score.json',
-            'rank_output.json',
         ]:
             metric_analysis = analyze_metrics_json(args.log_dir, json_file_name, just_average=True)
             main_logger.log_json(metric_analysis, json_file_name, log_info=True)

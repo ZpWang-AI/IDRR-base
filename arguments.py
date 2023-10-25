@@ -35,9 +35,7 @@ class CustomArgs:
     
     # improvement
     loss_type = 'CELoss'
-    rank_loss_type = 'ListMLELoss'
     data_augmentation = False
-    rank_order_file = './rank_order/rank_order1.json'
     
     # epoch, batch, step
     epochs = 5
@@ -47,10 +45,6 @@ class CustomArgs:
     eval_steps = 100
     log_steps = 10
     gradient_accumulation_steps = 1
-    rank_epochs = 2
-    rank_eval_steps = 800
-    rank_log_steps = 40
-    rank_gradient_accumulation_steps = 2
     
     # seed, lr
     seed = 2023
@@ -121,10 +115,6 @@ class CustomArgs:
             self.epochs = 2
             self.eval_steps = 4
             self.log_steps = 4
-            self.rank_epochs = 2
-            self.rank_gradient_accumulation_steps = 8
-            self.rank_eval_steps = 2
-            self.rank_log_steps = 1
     
     def complete_path(self):
         self.cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
@@ -152,9 +142,6 @@ class CustomArgs:
         
         if not self.do_train and self.do_eval and not path(self.load_ckpt_dir).exists():
             raise Exception('no do_train and load_ckpt_dir does not exist')  
-        
-        if not path(self.rank_order_file).exists():
-            raise Exception('rank_order_file not exists')
         
     def __iter__(self):
         # keep the same order as the args shown in the file

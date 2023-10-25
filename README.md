@@ -15,7 +15,6 @@ IDRR-base
 |-main.py
 |-metrics.py
 |-model.py
-|-rankingDataset.py
 |-README.md
 |-requirements.txt
 |-run.py

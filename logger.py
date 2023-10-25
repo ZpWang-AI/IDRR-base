@@ -10,23 +10,17 @@ class CustomLogger:
     def __init__(self, log_dir='./log_space', logger_name='custom_logger', print_output=False) -> None:
         self.log_dir = path(log_dir)
         
-        # 创建一个logger
         self.logger = logging.getLogger(logger_name)
-
-        # 设置全局级别为DEBUG
         self.logger.setLevel(logging.DEBUG)
 
-        # 创建一个handler，用于写入日志文件
         fh = logging.FileHandler(self.log_dir/'log.out')
         ch = logging.StreamHandler()
 
-        # 定义handler的输出格式
         # formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
         formatter = logging.Formatter('%(asctime)s - %(message)s')
         fh.setFormatter(formatter)
         ch.setFormatter(formatter)
 
-        # 给logger添加handler
         self.logger.addHandler(fh)
         if print_output:
             self.logger.addHandler(ch)

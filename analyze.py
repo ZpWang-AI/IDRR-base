@@ -42,6 +42,7 @@ def analyze_experiment_evaluations(target_log_folds, to_json_file=None, to_csv_f
     hypers = []
     for log_dir in target_log_folds:
         analysis = analyze_metrics_json(log_dir, 'eval_metric_score.json', just_average=False)
+        results.append(analysis)
         
         hyper_path = path(log_dir)/'hyperparams.json'
         if hyper_path.exists():
@@ -49,8 +50,6 @@ def analyze_experiment_evaluations(target_log_folds, to_json_file=None, to_csv_f
                 hyper = json.load(f)
             hypers.append(hyper)
         
-        results.append(analysis)
-    
     df_results = pd.DataFrame(results)
     df_hypers = pd.DataFrame(hypers)
     

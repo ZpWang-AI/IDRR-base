@@ -30,6 +30,9 @@ class CustomCallback(TrainerCallback):
         self.metric_names = metric_names
         self.best_metrics = {'best_'+m:-1 for m in self.metric_names}
         self.metric_map = {m:p for p, m in enumerate(self.metric_names)}
+        
+        self.best_metric_file_name = 'best_metric_score.json'
+        self.dev_metric_file_name = 'dev_metric_score.jsonl'
 
     def on_evaluate(self, args, state, control, metrics:Dict[str, float], **kwargs):
         if self.evaluate_testdata:
@@ -51,25 +54,8 @@ class CustomCallback(TrainerCallback):
                     self.logger.info(f'{best_metric_name}: {metric_value}')
                     # self.logger.info(f"New best model saved to {best_model_path}")
 
-        self.logger.log_json(self.best_metrics, 'best_metric_score.json', log_info=False)
-        self.logger.log_jsonl(dev_metrics, 'dev_metric_score.jsonl', log_info=True)
-        
-    # def on_step_begin(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
-    #     print('\n===== step begin =====\n')
-    #     print(f'= args: \n{args}\n')
-    #     print(f'= state: \n{state}\n')
-    #     print(f'= control: \n{control}\n')
-    #     print(f'= kwargs: \n{kwargs}\n')
-    #     print('\n===== step begin =====\n')
-    #     return super().on_step_begin(args, state, control, **kwargs)
-    
-    # def on_step_end(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
-    #     print('\n===== step end =====\n')
-    #     print(f'= args: \n{args}\n')
-    #     print(f'= state: \n{state}\n')
-    #     print(f'= control: \n{control}\n')
-    #     print(f'= kwargs: \n{kwargs}\n')
-    #     print('\n===== step end =====\n')
-    #     return super().on_step_end(args, state, control, **kwargs)
+        self.logger.log_json(self.best_metrics, self.best_metric_file_name, log_info=False)
+        self.logger.log_jsonl(dev_metrics, self.dev_metric_file_name, log_info=True)
+
             
     

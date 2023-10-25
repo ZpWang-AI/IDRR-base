@@ -35,7 +35,9 @@ class CustomArgs:
     
     # improvement
     loss_type = 'CELoss'
+    rank_loss_type = 'ListMLELoss'
     data_augmentation = False
+    rank_order_file = './rank_order/rank_order1.json'
     
     # epoch, batch, step
     epochs = 5
@@ -45,6 +47,10 @@ class CustomArgs:
     eval_steps = 100
     log_steps = 10
     gradient_accumulation_steps = 1
+    rank_epochs = 2
+    rank_eval_steps = 800
+    rank_log_steps = 40
+    rank_gradient_accumulation_steps = 2
     
     # seed, lr
     seed = 2023
@@ -60,11 +66,11 @@ class CustomArgs:
     
     ############################ Args # Don't modify this line
     
-    def __init__(self) -> None:
+    def __init__(self, test_setting=False) -> None:
         parser = argparse.ArgumentParser('zp')
 
         parser.add_argument("--version", type=str, default='colab')
-
+        
         # base setting
         parser.add_argument("--mini_dataset", type=arg_bool, default=False)
         parser.add_argument("--do_train", type=arg_bool, default=True)
@@ -74,14 +80,14 @@ class CustomArgs:
         parser.add_argument("--label_level", type=str, default='level1')
         parser.add_argument("--model_name_or_path", type=str, default='roberta-base')
         parser.add_argument("--data_name", type=str, default='pdtb2')
-
+        
         # path
         parser.add_argument("--data_path", type=str, default='/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv')
         parser.add_argument("--cache_dir", type=str, default='/content/drive/MyDrive/IDRR/plm_cache')
         parser.add_argument("--output_dir", type=str, default='./output_space/')
         parser.add_argument("--log_dir", type=str, default='/content/drive/MyDrive/IDRR/log_space')
         parser.add_argument("--load_ckpt_dir", type=str, default='./ckpt_fold')
-
+        
         # improvement
         parser.add_argument("--loss_type", type=str, default='CELoss')
         parser.add_argument("--data_augmentation", type=arg_bool, default=False)
@@ -104,6 +110,21 @@ class CustomArgs:
         args = parser.parse_args()
         for k, v in args.__dict__.items():
             setattr(self, k, v)
+            
+        if test_setting:
+            self.version = 'colab_test'
+            self.mini_dataset = True
+            self.data_augmentation = False
+            self.training_iteration = 2
+            self.train_batch_size = 8
+            self.eval_batch_size = 8
+            self.epochs = 2
+            self.eval_steps = 4
+            self.log_steps = 4
+            self.rank_epochs = 2
+            self.rank_gradient_accumulation_steps = 8
+            self.rank_eval_steps = 2
+            self.rank_log_steps = 1
     
     def complete_path(self):
         self.cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
@@ -121,7 +142,7 @@ class CustomArgs:
         
         assert path(self.data_path).exists(), 'wrong data path'
         
-        if str(self.cache_dir) == 'None':
+        if str(self.cache_dir) in ['None', '']:
             self.cache_dir = None
         else:
             path(self.cache_dir).mkdir(parents=True, exist_ok=True)
@@ -131,7 +152,10 @@ class CustomArgs:
         
         if not self.do_train and self.do_eval and not path(self.load_ckpt_dir).exists():
             raise Exception('no do_train and load_ckpt_dir does not exist')  
-    
+        
+        if not path(self.rank_order_file).exists():
+            raise Exception('rank_order_file not exists')
+        
     def __iter__(self):
         # keep the same order as the args shown in the file
         keys_order = {k:-1 for k in self.__dict__}
@@ -204,8 +228,8 @@ class CustomArgs:
 
 
 if __name__ == '__main__':
-    sample_args = CustomArgs()
+    sample_args = CustomArgs(test_setting=False)
     # print(list(sample_args))
     # print(dict(sample_args))
     sample_args.generate_script()
-    # sample_args.generate_parser()
+    sample_args.generate_parser()

@@ -12,20 +12,67 @@ from transformers import TrainingArguments, Trainer, DataCollatorWithPadding, se
 from arguments import CustomArgs
 from logger import CustomLogger
 from corpusDataset import CustomCorpusDataset
-from model import CustomModel
-from metrics import ComputeMetrics
+from rankingDataset import RankingDataset
+from model import CustomModel, RankModel
+from metrics import ComputeMetrics, RankMetrics
 from callbacks import CustomCallback
 from analyze import analyze_metrics_json
 
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 
+def rank_func(
+    args:CustomArgs, 
+    training_args:TrainingArguments, 
+    logger:CustomLogger,
+    dataset:RankingDataset, 
+    model:RankModel, 
+    compute_metrics:RankMetrics,
+):
+    callback = CustomCallback(
+        args=args, 
+        logger=logger, 
+        metric_names=compute_metrics.metric_names,
+    )
+    callback.best_metric_file_name = 'best_rank_metric_score.json'
+    callback.dev_metric_file_name = 'dev_rank_metric_score.jsonl'
+    
+    trainer = Trainer(
+        model=model, 
+        args=training_args, 
+        tokenizer=dataset.tokenizer, 
+        compute_metrics=compute_metrics,
+        callbacks=[callback],
+        
+        data_collator=dataset.data_collator,
+        train_dataset=dataset.train_dataset,
+        eval_dataset=dataset.dev_dataset, 
+    )
+    callback.trainer = trainer
+
+    train_output = trainer.train().metrics
+    logger.log_json(train_output, 'rank_output.json', log_info=True)
+
+    if args.do_eval:
+        callback.evaluate_testdata = True
+        
+        eval_metrics = {}
+        for metric_ in compute_metrics.metric_names:
+            load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
+            if load_ckpt_dir.exists():
+                evaluate_output = trainer.evaluate(eval_dataset=dataset.test_dataset)
+                eval_metric_name = 'eval_'+metric_
+                eval_metrics[eval_metric_name] = evaluate_output[eval_metric_name]
+                
+        logger.log_json(eval_metrics, 'eval_rank_metric_score.json', log_info=True) 
+        
+
 def train_func(
     args:CustomArgs, 
     training_args:TrainingArguments, 
     logger:CustomLogger,
     dataset:CustomCorpusDataset, 
-    model:CustomModel, 
+    model:RankModel, 
     compute_metrics:ComputeMetrics,
 ):
     callback = CustomCallback(
@@ -45,7 +92,6 @@ def train_func(
         eval_dataset=dataset.dev_dataset, 
     )
     callback.trainer = trainer
-    callback.dataset = dataset
 
     train_output = trainer.train().metrics
     logger.log_json(train_output, 'train_output.json', log_info=True)
@@ -71,7 +117,7 @@ def evaluate_func(
     training_args:TrainingArguments,
     logger:CustomLogger,
     dataset:CustomCorpusDataset,
-    model:CustomModel,
+    model:RankModel,
     compute_metrics:ComputeMetrics,
 ):
     callback = CustomCallback(
@@ -101,7 +147,7 @@ def main_one_iteration(args:CustomArgs, training_iter_id=0):
         raise Exception('neither do_train nor do_eval')
     
     # === prepare === 
-    
+        
     if 1:
         # seed
         args.seed += training_iter_id
@@ -111,7 +157,7 @@ def main_one_iteration(args:CustomArgs, training_iter_id=0):
         args.output_dir = os.path.join(args.output_dir, train_fold_name)
         args.log_dir = os.path.join(args.log_dir, train_fold_name)
         args.check_path()
-            
+        
         training_args = TrainingArguments(
             output_dir = args.output_dir,
             
@@ -155,15 +201,24 @@ def main_one_iteration(args:CustomArgs, training_iter_id=0):
             label_level=args.label_level,
             data_augmentation=args.data_augmentation,
         )
-
-        model = CustomModel(
+        rank_dataset = RankingDataset(
+            corpus_dataset=dataset,
+            rank_order_file=args.rank_order_file,
+        )
+        args.trainset_size, args.devset_size, args.testset_size = map(len, [
+            dataset.train_dataset, dataset.dev_dataset, dataset.test_dataset
+        ])
+        
+        model = RankModel(
             model_name_or_path=args.model_name_or_path,
+            label_list=dataset.label_list,
             cache_dir=args.cache_dir,
-            num_labels=dataset.num_labels,
             loss_type=args.loss_type,
+            rank_loss_type=args.rank_loss_type,
         )
         
         compute_metrics = ComputeMetrics(label_list=dataset.label_list)
+        rank_metrics = RankMetrics(num_labels=dataset.num_labels)
         
         train_evaluate_kwargs = {
             'args': args,
@@ -174,9 +229,9 @@ def main_one_iteration(args:CustomArgs, training_iter_id=0):
             'logger': logger,
         }
     
-    # === train or evaluate ===
-    
     logger.log_json(dict(args), 'hyperparams.json', log_info=False)
+
+    # === train or evaluate ===
     
     if args.do_train:
         train_func(**train_evaluate_kwargs)
@@ -206,44 +261,63 @@ def main_one_iteration(args:CustomArgs, training_iter_id=0):
         shutil.rmtree(args.output_dir)
 
 
-def main(args:CustomArgs):
+def main(args:CustomArgs, training_iter_id=-1):
+    """
+    params:
+        args: CustomArgs
+        training_iter_id: int ( set t=args.training_iteration )
+            -1: auto train t iterations
+            0, 1, ..., t-1: train a specific iteration
+            t: calculate average of metrics
+    """
     from copy import deepcopy
     
     args.complete_path()
     args.check_path()
     main_logger = CustomLogger(args.log_dir, logger_name='main_logger', print_output=True)
-    # dataset size
-    dataset = CustomCorpusDataset(
-        file_path=args.data_path,
-        data_name=args.data_name,
-        model_name_or_path=args.model_name_or_path,
-        cache_dir=args.cache_dir,
-        mini_dataset=args.mini_dataset,
-        
-        label_level=args.label_level,
-        data_augmentation=args.data_augmentation,
-    )
-    args.trainset_size, args.devset_size, args.testset_size = map(len, [
-        dataset.train_dataset, dataset.dev_dataset, dataset.test_dataset
-    ])
-    main_logger.info('-' * 30)
-    main_logger.info(f'Trainset Size: {args.trainset_size:7d}')
-    main_logger.info(f'Devset Size  : {args.devset_size:7d}')
-    main_logger.info(f'Testset Size : {args.testset_size:7d}')
-    main_logger.info('-' * 30)
+    # print(training_iter_id)
     
-    main_logger.log_json(dict(args), log_file_name='hyperparams.json', log_info=True)
-    for training_iter_id in range(args.training_iteration):
-        main_one_iteration(deepcopy(args), training_iter_id=training_iter_id)
-        
-    # calculate average
-    for json_file_name in [
-        'best_metric_score.json', 
-        'eval_metric_score.json',
-        'train_output.json',
-    ]:
-        metric_analysis = analyze_metrics_json(args.log_dir, json_file_name, just_average=True)
-        main_logger.log_json(metric_analysis, json_file_name, log_info=True)
+    if training_iter_id < 0 or training_iter_id == 0:
+        # # dataset size
+        # dataset = CustomCorpusDataset(
+        #     file_path=args.data_path,
+        #     data_name=args.data_name,
+        #     model_name_or_path=args.model_name_or_path,
+        #     cache_dir=args.cache_dir,
+        #     mini_dataset=args.mini_dataset,
+            
+        #     label_level=args.label_level,
+        #     data_augmentation=args.data_augmentation,
+        # )
+        # args.trainset_size, args.devset_size, args.testset_size = map(len, [
+        #     dataset.train_dataset, dataset.dev_dataset, dataset.test_dataset
+        # ])
+        # main_logger.info('-' * 30)
+        # main_logger.info(f'Trainset Size: {args.trainset_size:7d}')
+        # main_logger.info(f'Devset Size  : {args.devset_size:7d}')
+        # main_logger.info(f'Testset Size : {args.testset_size:7d}')
+        # main_logger.info('-' * 30)
+    
+        main_logger.log_json(dict(args), log_file_name='hyperparams.json', log_info=True)
+    
+    if training_iter_id < 0:
+        for _training_iter_id in range(args.training_iteration):
+            main_one_iteration(deepcopy(args), training_iter_id=_training_iter_id)
+    else:
+        main_one_iteration(args, training_iter_id=training_iter_id)
+    
+    if training_iter_id < 0:
+        # calculate average
+        for json_file_name in [
+            'best_metric_score.json', 
+            'eval_metric_score.json',
+            'train_output.json',
+            'best_rank_metric_score.json', 
+            'eval_rank_metric_score.json',
+            'rank_output.json',
+        ]:
+            metric_analysis = analyze_metrics_json(args.log_dir, json_file_name, just_average=True)
+            main_logger.log_json(metric_analysis, json_file_name, log_info=True)
 
 
 if __name__ == '__main__':

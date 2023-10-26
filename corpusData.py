@@ -1,22 +1,22 @@
-from typing import Any
+import json
 import numpy as np
 import pandas as pd
 
 from typing import *
 from transformers import AutoTokenizer, DataCollatorWithPadding
 from torch.utils.data import Dataset
-
+    
 
 class CustomDataset(Dataset):
-    def __init__(self, arg1, arg2, tokenizer, label_vectors) -> None:
+    def __init__(self, arg1, arg2, tokenizer, labels) -> None:
         super().__init__()
         
         self.arg1 = arg1
         self.arg2 = arg2
         self.tokenizer = tokenizer
-        self.label_vectors = label_vectors
+        self.labels = labels
         
-    def __getitem__(self, index) -> Any:
+    def __getitem__(self, index):
         model_inputs = self.tokenizer(
             self.arg1[index], 
             self.arg2[index], 
@@ -25,7 +25,7 @@ class CustomDataset(Dataset):
             max_length=256,
         )
         
-        model_inputs['label'] = self.label_vectors[index]
+        model_inputs['label'] = self.labels[index]
     
         return model_inputs
     
@@ -33,10 +33,10 @@ class CustomDataset(Dataset):
         return len(self.arg1)
 
 
-class CustomCorpusDataset():
+class CustomCorpusData():
     def __init__(
         self, 
-        file_path,
+        data_path,
         data_name='pdtb2',
         model_name_or_path='roberta-base',
         cache_dir='',
@@ -47,8 +47,6 @@ class CustomCorpusDataset():
     ):
         assert data_name in ['pdtb2', 'pdtb3', 'conll']
         tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, cache_dir=cache_dir)
-        self.sep_t = tokenizer.sep_token
-        self.cls_t = tokenizer.cls_token
         self.tokenizer = tokenizer 
         
         if label_level == 'level1':
@@ -59,7 +57,7 @@ class CustomCorpusDataset():
         self.label_map = {label:p for p, label in enumerate(self.label_list)}
 
         df = pd.read_csv(
-            file_path, 
+            data_path, 
             usecols=[
                 'Relation', 'Section', 
                 'Arg1_RawText', 'Arg2_RawText', 
@@ -93,6 +91,53 @@ class CustomCorpusDataset():
         self.dev_dataset = self.get_dataset(dev_df, is_train=False)
         self.test_dataset = self.get_dataset(test_df, is_train=False)
     
+    def get_dataframe(self, data_path, data_name):
+        if data_name == 'pdtb2':
+            df = pd.read_csv(
+                data_path, 
+                usecols=[
+                    'Relation', 'Section', 
+                    'Arg1_RawText', 'Arg2_RawText', 
+                    'Conn1', 'Conn2',
+                    'ConnHeadSemClass1', 'ConnHeadSemClass2',
+                    'Conn2SemClass1', 'Conn2SemClass2'],
+                low_memory=False,
+            )
+            df = df[df['Relation'] == 'Implicit']
+            df = df.rename(columns={
+                'Arg1_RawText': 'arg1',
+                'Arg2_RawText': 'arg2',
+                'Conn1': 'conn1',
+                'Conn2': 'conn2',
+                'ConnHeadSemClass1': 'conn1sem1',
+                'ConnHeadSemClass2': 'conn1sem2',
+                'Conn2SemClass1': 'conn2sem1',
+                'Conn2SemClass2': 'conn2sem2',
+            })
+            
+            self.train_df = df[~df['Section'].isin([0, 1, 21, 22, 23, 24])]
+            self.dev_df = df[df['Section'].isin([0, 1])]
+            self.test_df = df[df['Section'].isin([21, 22])]
+            
+        elif data_name == 'pdtb3':
+            pass
+        elif data_name == 'conll':
+            def load_conll_json(json_path):
+                with open(json_path, 'r', encoding='utf8')as f:
+                    init_dicts = [json.loads(line)for line in f.readlines()]
+                dicts = []
+                for dic in init_dicts:
+                    if dic['Type'] == 'Implicit':
+                        dicts.append({
+                            'arg1':dic[''],
+                            'arg2':dic[''],
+                            '':dic[''],
+                            '':dic[''],
+                            '':dic[''],
+                        })
+        else:
+            raise Exception('wrong data_name')
+        
     def label_to_id(self, sense):
         if self.label_level == 'level1':
             label_id = self.label_map[sense.split('.')[0]]
@@ -157,7 +202,7 @@ if __name__ == '__main__':
     import os
     os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
-    sample_dataset = CustomCorpusDataset(
+    sample_dataset = CustomCorpusData(
         r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\CorpusData\PDTB2\pdtb2.csv',
         data_name='pdtb2',
         model_name_or_path='roberta-base',

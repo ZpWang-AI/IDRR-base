@@ -14,9 +14,15 @@ class ListMLELoss(nn.Module):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         
-    def forward(self, scores:torch.Tensor, labels=None, k=None):
+    def forward(self, scores:torch.Tensor, labels:torch.Tensor=None, k:int=None):
+        if scores.dim() == 1:
+            scores = scores.unsqueeze(0)
+        if labels is not None and labels.dim() == 1:
+            labels = labels.unsqueeze(0)
+        
         if k is not None:
             sublist_ids = (torch.rand(size=(k,))*scores.shape[1]).long()
+            sublist_ids, _ = sublist_ids.sort()
             scores = scores[:, sublist_ids]
             if labels is not None:
                 labels = labels[:, sublist_ids]
@@ -25,16 +31,9 @@ class ListMLELoss(nn.Module):
             _, sort_ids = labels.sort(descending=True, dim=-1)
             scores = scores.gather(dim=1, index=sort_ids)
         
-        if scores.dim() == 1:
-            cumsums = scores.exp().flip(dims=[0]).cumsum(dim=0).flip(dims=[0])
-            loss = torch.log(cumsums+1e-10) - scores
-            loss = loss.sum()
-        elif scores.dim() == 2:
-            cumsums = scores.exp().flip(dims=[1]).cumsum(dim=1).flip(dims=[1])
-            loss = torch.log(cumsums+1e-10) - scores
-            loss = loss.sum(dim=1).mean()
-        else:
-            raise Exception(f'wrong scores.dim {scores.dim()}')
+        cumsums = scores.exp().flip(dims=[1]).cumsum(dim=1).flip(dims=[1])
+        loss = torch.log(cumsums+1e-10) - scores
+        loss = loss.sum(dim=1).mean()
         return loss
 
 
@@ -52,7 +51,9 @@ class CELoss(nn.Module):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
     
-    def forward(self, logits, labels):
+    def forward(self, logits:torch.Tensor, labels:torch.Tensor):
+        if labels.dim() == 1:
+            labels = torch.eye(logits.shape[1])[labels]
         probs = torch.softmax(logits, dim=1)
         return -(labels*torch.log(probs)).sum(dim=1).mean()
 
@@ -124,12 +125,14 @@ if __name__ == '__main__':
         y_pred = torch.tensor([[0.8, 0.5, 0.9, 0.4, 0.7],
                             [0.3, 0.6, 0.1, 0.7, 0.5]])
         y_true = torch.tensor([[1, 0, 0, 0, 0],
-                            [0, 1, 0, 0, 0]])        
+                            [0, 1, 0, 0, 0]])       
+        y_true2 = torch.tensor([0, 1]) 
         criterion1 = CELoss()
         criterion2 = nn.CrossEntropyLoss(reduction='mean')
         loss1 = criterion1(y_pred, y_true)
-        loss2 = criterion2(y_pred, torch.argmax(y_true, dim=1))
-        print(loss1, loss2)
+        loss2 = criterion1(y_pred, y_true2)
+        loss3 = criterion2(y_pred, y_true2)
+        print(loss1, loss2, loss3, sep='\n')
     
     def demo_listMLE():
         y_pred = torch.tensor([[0.8, 0.5, 0.9, 0.4, 0.7],
@@ -141,7 +144,7 @@ if __name__ == '__main__':
         loss = criterion(y_pred, y_true, k)
         print(loss)
     
-    demo_model()
+    # demo_model()
     # demo_CELoss()
-    # demo_listMLE()
+    demo_listMLE()
     

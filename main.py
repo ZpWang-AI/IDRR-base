@@ -11,7 +11,7 @@ from transformers import TrainingArguments, Trainer, DataCollatorWithPadding, se
 
 from arguments import CustomArgs
 from logger import CustomLogger
-from corpusDataset import CustomCorpusDataset
+from corpusData import CustomCorpusData
 from model import CustomModel
 from metrics import ComputeMetrics
 from callbacks import CustomCallback
@@ -24,7 +24,7 @@ def train_func(
     args:CustomArgs, 
     training_args:TrainingArguments, 
     logger:CustomLogger,
-    dataset:CustomCorpusDataset, 
+    dataset:CustomCorpusData, 
     model:CustomModel, 
     compute_metrics:ComputeMetrics,
 ):
@@ -69,7 +69,7 @@ def evaluate_func(
     args:CustomArgs,
     training_args:TrainingArguments,
     logger:CustomLogger,
-    dataset:CustomCorpusDataset,
+    dataset:CustomCorpusData,
     model:CustomModel,
     compute_metrics:ComputeMetrics,
 ):
@@ -144,8 +144,8 @@ def main_one_iteration(args:CustomArgs, training_iter_id=0):
             print_output=True,
         )
 
-        dataset = CustomCorpusDataset(
-            file_path=args.data_path,
+        dataset = CustomCorpusData(
+            data_path=args.data_path,
             data_name=args.data_name,
             model_name_or_path=args.model_name_or_path,
             cache_dir=args.cache_dir,
@@ -224,27 +224,7 @@ def main(args:CustomArgs, training_iter_id=-1):
     main_logger = CustomLogger(args.log_dir, logger_name='main_logger', print_output=True)
     # print(training_iter_id)
     
-    if training_iter_id < 0 or training_iter_id == 0:
-        # # dataset size
-        # dataset = CustomCorpusDataset(
-        #     file_path=args.data_path,
-        #     data_name=args.data_name,
-        #     model_name_or_path=args.model_name_or_path,
-        #     cache_dir=args.cache_dir,
-        #     mini_dataset=args.mini_dataset,
-            
-        #     label_level=args.label_level,
-        #     data_augmentation=args.data_augmentation,
-        # )
-        # args.trainset_size, args.devset_size, args.testset_size = map(len, [
-        #     dataset.train_dataset, dataset.dev_dataset, dataset.test_dataset
-        # ])
-        # main_logger.info('-' * 30)
-        # main_logger.info(f'Trainset Size: {args.trainset_size:7d}')
-        # main_logger.info(f'Devset Size  : {args.devset_size:7d}')
-        # main_logger.info(f'Testset Size : {args.testset_size:7d}')
-        # main_logger.info('-' * 30)
-    
+    if training_iter_id < 0 or training_iter_id == 0:    
         main_logger.log_json(dict(args), log_file_name='hyperparams.json', log_info=True)
     
     if training_iter_id < 0:

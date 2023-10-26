@@ -8,7 +8,7 @@ from transformers import Trainer, TrainerCallback, TrainingArguments, TrainerSta
 
 from arguments import CustomArgs
 from logger import CustomLogger
-from corpusDataset import CustomCorpusDataset
+from corpusData import CustomCorpusData
 
 
 class CustomCallback(TrainerCallback):
@@ -22,7 +22,7 @@ class CustomCallback(TrainerCallback):
         super().__init__()
         
         self.trainer:Trainer = None
-        self.dataset:CustomCorpusDataset = None
+        self.dataset:CustomCorpusData = None
         self.args = args
         self.logger = logger
         self.evaluate_testdata = evaluate_testdata

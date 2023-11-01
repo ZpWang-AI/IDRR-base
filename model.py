@@ -50,12 +50,14 @@ class ListNetLoss(nn.Module):
 class CELoss(nn.Module):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        self.CE = nn.CrossEntropyLoss()
     
     def forward(self, logits:torch.Tensor, labels:torch.Tensor):
-        if labels.dim() == 1:
-            labels = torch.eye(logits.shape[1])[labels]
         probs = torch.softmax(logits, dim=1)
-        return -(labels*torch.log(probs)).sum(dim=1).mean()
+        if labels.dim() == 1:
+            return self.CE(probs, labels)
+        else:
+            return -(labels*torch.log(probs)).sum(dim=1).mean()
 
         
 class CustomModel(nn.Module):

@@ -118,8 +118,8 @@ class CustomArgs:
     
     def complete_path(self):
         self.cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        train_eval_string = '_train'*self.do_train + '_eval'*self.do_eval
-        specific_fold_name = f'{self.cur_time}_{self.version}_{train_eval_string}'
+        # train_eval_string = '_train'*self.do_train + '_eval'*self.do_eval
+        specific_fold_name = f'{self.cur_time}_{self.version}_{self.data_name}'
         self.output_dir = os.path.join(self.output_dir, specific_fold_name)
         self.log_dir = os.path.join(self.log_dir, specific_fold_name) 
         

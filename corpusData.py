@@ -1,4 +1,5 @@
 import json
+import os
 import numpy as np
 import pandas as pd
 
@@ -82,10 +83,14 @@ class CustomCorpusData():
             self.train_df = self.train_df.iloc[:32]
             self.dev_df = self.dev_df.iloc[:16]
             self.test_df = self.test_df.iloc[:16]
+            if data_name == 'conll':
+                self.blind_test_dataset = self.blind_test_dataset.iloc[:16]
         
-        self.train_dataset = self.get_dataset(self.train_df, is_train=True)
-        self.dev_dataset = self.get_dataset(self.dev_df, is_train=False)
-        self.test_dataset = self.get_dataset(self.test_df, is_train=False)
+        self.train_dataset = self.get_dataset(self.train_df)
+        self.dev_dataset = self.get_dataset(self.dev_df)
+        self.test_dataset = self.get_dataset(self.test_df)
+        if data_name == 'conll':
+            self.blind_test_dataset = self.get_dataset(self.blind_test_df)
         
         self.data_collator = DataCollatorWithPadding(self.tokenizer)
     
@@ -175,7 +180,7 @@ class CustomCorpusData():
             raise ValueError('wrong label_level')
         return label_id
     
-    def get_dataset(self, df, is_train):
+    def get_dataset(self, df):
         arg1_list, arg2_list = [], []
         label_ids = []
         additional_label_ids = []

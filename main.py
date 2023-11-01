@@ -63,6 +63,18 @@ def train_func(
                 
         logger.log_json(eval_metrics, 'eval_metric_score.json', log_info=True)                
 
+        if args.data_name == 'conll':
+            eval_metrics = {}
+            for metric_ in compute_metrics.metric_names:
+                load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
+                if load_ckpt_dir.exists():
+                    evaluate_output = trainer.evaluate(eval_dataset=dataset.blind_test_dataset)
+                    eval_metric_name = 'eval_'+metric_
+                    eval_metrics[eval_metric_name] = evaluate_output[eval_metric_name]
+                    
+            logger.log_json(eval_metrics, 'eval_metric_score_blind-test.json', log_info=True)    
+                
+
     return trainer, callback
 
 
@@ -235,15 +247,17 @@ def main(args:CustomArgs, training_iter_id=-1):
     else:
         main_one_iteration(args, training_iter_id=training_iter_id)
     
-    if training_iter_id < 0:
+    if training_iter_id < 0 or training_iter_id == args.training_iteration:
         # calculate average
         for json_file_name in [
             'best_metric_score.json', 
             'eval_metric_score.json',
             'train_output.json',
+            'eval_metric_score_blind-test.json',
         ]:
             metric_analysis = analyze_metrics_json(args.log_dir, json_file_name, just_average=True)
-            main_logger.log_json(metric_analysis, json_file_name, log_info=True)
+            if metric_analysis:
+                main_logger.log_json(metric_analysis, json_file_name, log_info=True)
 
 
 if __name__ == '__main__':

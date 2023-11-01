@@ -22,13 +22,20 @@ from arguments import CustomArgs
 from main import main
 
 
-def server_base_args(test_setting=True):
+def server_base_args(test_setting=True, data_name='pdtb2'):
     args = CustomArgs(test_setting=test_setting)
     
     args.version = SERVER_NAME+('test' if test_setting else 'base')
+        
+    args.data_name = data_name
+    if data_name == 'pdtb2':
+        args.data_path = ROOT_FOLD_IDRR+'CorpusData/PDTB2/pdtb2.csv'
+    elif data_name == 'pdtb3':
+        args.data_path = ROOT_FOLD_IDRR+'CorpusData/PDTB3/pdtb3_implicit.csv'
+    elif data_name == 'conll':
+        args.data_path = ROOT_FOLD_IDRR+'CorpusData/CoNLL16/'
     
     args.model_name_or_path = ROOT_FOLD_IDRR+'/plm_cache/models--roberta-base/snapshots/bc2764f8af2e92b6eb5679868df33e224075ca68'
-    args.data_path = ROOT_FOLD_IDRR+'CorpusData/PDTB2/pdtb2.csv'
     args.load_ckpt_dir = ROOT_FOLD_IDRR+'ckpt_fold'
     args.cache_dir = ''
     args.output_dir = ROOT_FOLD_IDRR+'output_space/'

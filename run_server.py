@@ -22,7 +22,7 @@ from arguments import CustomArgs
 from main import main
 
 
-def server_base_args(test_setting=True, data_name='pdtb2'):
+def server_base_args(test_setting=False, data_name='pdtb2'):
     args = CustomArgs(test_setting=test_setting)
     
     args.version = SERVER_NAME+('test' if test_setting else 'base')
@@ -44,8 +44,8 @@ def server_base_args(test_setting=True, data_name='pdtb2'):
     return args
 
 
-def server_dataAug_args():
-    args = server_base_args()
+def server_dataAug_args(data_name='pdtb2'):
+    args = server_base_args(test_setting=False, data_name=data_name)
     args.version = SERVER_NAME+'dataAugmentation'
     args.data_augmentation = True
     
@@ -53,5 +53,7 @@ def server_dataAug_args():
 
     
 if __name__ == '__main__':
-    main(server_base_args(test_setting=True))
+    main(server_base_args(test_setting=True, data_name='pdtb2'))
+    main(server_base_args(test_setting=True, data_name='pdtb3'))
+    main(server_base_args(test_setting=True, data_name='conll'))
     # main(server_dataAug_args())

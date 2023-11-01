@@ -74,6 +74,7 @@ class SSHTransmitor:
         
         if path(local_path).is_file():
             scp.put(local_path, remote_path)
+            print('upload', remote_path)
         else:
             self.scp_upload_folder(scp, local_path, remote_path)
         
@@ -81,8 +82,8 @@ class SSHTransmitor:
         ssh.close()
 
 
-
 cu12_host = '10.10.80.107'
+cu12_host = '10.10.80.183'  # tmp
 cu13_host = '192.168.134.9'
 northern_host = '10.10.80.63'
 
@@ -105,20 +106,33 @@ if __name__ == '__main__':
                 return True
         return False
     
-    ssh_transer = SSHTransmitor(hostname=cu13_host) # ==========
+    ssh_transer = SSHTransmitor(hostname=cu12_host) # ==========
     
-    ssh_transer.exclude_file_func = exclude_func
-    ssh_transer.exclude_folder_func = exclude_func
-    ssh_transer.ssh_transmit(
-        local_path=r'D:\0--data\projects\04.01-IDRR数据\IDRR-base',
-        remote_path='/data/zpwang/IDRR/IDRR-base'
-    )
-    
+    # # transmit code
+    # ssh_transer.exclude_file_func = exclude_func
+    # ssh_transer.exclude_folder_func = exclude_func
     # ssh_transer.ssh_transmit(
-    #     local_path=r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\CorpusData',
-    #     remote_path='/data/zpwang/IDRR/CorpusData',
+    #     local_path=r'D:\0--data\projects\04.01-IDRR数据\IDRR-base',
+    #     remote_path='/data/zpwang/IDRR/IDRR-base'
     # )
+    
+    # # transmit data
+    # data_path = r'CorpusData\PDTB2\pdtb2.csv'
+    # data_path = r'CorpusData\PDTB3\pdtb3_implicit.csv'
+    # data_path = r'CorpusData\CoNLL16'
+    # ssh_transer.ssh_transmit(
+    #     local_path=r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\\'+data_path,
+    #     remote_path='/data/zpwang/IDRR/'+data_path.replace('\\', '/'),
+    # )
+    
+    # # transmit model
     # ssh_transer.ssh_transmit(
     #     local_path=r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\plm_cache',
     #     remote_path='/data/zpwang/IDRR/plm_cache',
+    # )
+    
+    # # transmit file
+    # ssh_transer.ssh_transmit(
+    #     local_path=r'D:\NewDownload\transformers-main.zip',
+    #     remote_path='/data/zpwang/IDRR/tmp/transformers-main.zip'
     # )

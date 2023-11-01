@@ -84,7 +84,7 @@ class CustomCorpusData():
             self.dev_df = self.dev_df.iloc[:16]
             self.test_df = self.test_df.iloc[:16]
             if data_name == 'conll':
-                self.blind_test_dataset = self.blind_test_dataset.iloc[:16]
+                self.blind_test_df = self.blind_test_df.iloc[:16]
         
         self.train_dataset = self.get_dataset(self.train_df)
         self.dev_dataset = self.get_dataset(self.dev_df)

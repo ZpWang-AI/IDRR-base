@@ -16,11 +16,11 @@ class ComputeMetrics:
         
         res = {
             'Acc': accuracy_score(labels, predictions),
-            'Macro-F1': f1_score(labels, predictions, average='macro'),
+            'Macro-F1': f1_score(labels, predictions, average='macro', zero_division=0),
         }
         
         for i, target_type in enumerate(self.label_list):
-            res[target_type] = f1_score(predictions==i, labels==i)
+            res[target_type] = f1_score(predictions==i, labels==i, zero_division=0)
         
         return res
     

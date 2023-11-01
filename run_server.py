@@ -22,7 +22,7 @@ from arguments import CustomArgs
 from main import main
 
 
-def server_base_args(test_setting=True):
+def server_base_args(test_setting=False):
     args = CustomArgs(test_setting=test_setting)
     
     args.version = SERVER_NAME+('test' if test_setting else 'rank')

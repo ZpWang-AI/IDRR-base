@@ -21,7 +21,7 @@ class CustomArgs:
     do_train = True
     do_eval = True
     training_iteration = 5
-    save_ckpt = True
+    save_ckpt = False
     label_level = 'level1'
     model_name_or_path = 'roberta-base'
     data_name = 'pdtb2'
@@ -70,7 +70,7 @@ class CustomArgs:
         parser.add_argument("--do_train", type=arg_bool, default=True)
         parser.add_argument("--do_eval", type=arg_bool, default=True)
         parser.add_argument("--training_iteration", type=int, default=5)
-        parser.add_argument("--save_ckpt", type=arg_bool, default=True)
+        parser.add_argument("--save_ckpt", type=arg_bool, default=False)
         parser.add_argument("--label_level", type=str, default='level1')
         parser.add_argument("--model_name_or_path", type=str, default='roberta-base')
         parser.add_argument("--data_name", type=str, default='pdtb2')

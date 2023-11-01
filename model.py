@@ -47,17 +47,14 @@ class ListNetLoss(nn.Module):
         return -(labels*torch.log(probs)).sum(dim=1).mean()
     
 
+# make sure `labels.dim = 2`
 class CELoss(nn.Module):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.CE = nn.CrossEntropyLoss()
     
     def forward(self, logits:torch.Tensor, labels:torch.Tensor):
         probs = torch.softmax(logits, dim=1)
-        if labels.dim() == 1:
-            return self.CE(probs, labels)
-        else:
-            return -(labels*torch.log(probs)).sum(dim=1).mean()
+        return -(labels*torch.log(probs)).sum(dim=1).mean()
 
         
 class CustomModel(nn.Module):
@@ -79,7 +76,7 @@ class CustomModel(nn.Module):
         self.initial_model()
         
         if loss_type.lower() == 'celoss':
-            self.loss_fn = CELoss()
+            self.loss_fn = nn.CrossEntropyLoss()
         else:
             raise Exception('wrong loss_type')
     

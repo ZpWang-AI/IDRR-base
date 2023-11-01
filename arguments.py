@@ -20,7 +20,7 @@ class CustomArgs:
     mini_dataset = False
     do_train = True
     do_eval = True
-    training_iteration = 3
+    training_iteration = 5
     save_ckpt = True
     label_level = 'level1'
     model_name_or_path = 'roberta-base'
@@ -69,7 +69,7 @@ class CustomArgs:
         parser.add_argument("--mini_dataset", type=arg_bool, default=False)
         parser.add_argument("--do_train", type=arg_bool, default=True)
         parser.add_argument("--do_eval", type=arg_bool, default=True)
-        parser.add_argument("--training_iteration", type=int, default=3)
+        parser.add_argument("--training_iteration", type=int, default=5)
         parser.add_argument("--save_ckpt", type=arg_bool, default=True)
         parser.add_argument("--label_level", type=str, default='level1')
         parser.add_argument("--model_name_or_path", type=str, default='roberta-base')

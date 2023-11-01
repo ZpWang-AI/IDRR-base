@@ -154,7 +154,7 @@ def main_one_iteration(args:CustomArgs, training_iter_id=0):
         
         logger = CustomLogger(
             log_dir=args.log_dir,
-            logger_name=f'iter{training_iter_id}_logger',
+            logger_name=f'{args.cur_time}_iter{training_iter_id}_logger',
             print_output=True,
         )
 
@@ -235,7 +235,7 @@ def main(args:CustomArgs, training_iter_id=-1):
     
     args.complete_path()
     args.check_path()
-    main_logger = CustomLogger(args.log_dir, logger_name='main_logger', print_output=True)
+    main_logger = CustomLogger(args.log_dir, logger_name=f'{args.cur_time}_main_logger', print_output=True)
     # print(training_iter_id)
     
     if training_iter_id < 0 or training_iter_id == 0:    

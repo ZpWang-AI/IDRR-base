@@ -199,7 +199,7 @@ class CustomCorpusData():
                         if not pd.isna(sense)]
             additional_label_ids.append(cur_adds)
         
-        label_ids = np.eye(self.num_labels)[label_ids]
+        # label_ids = np.eye(self.num_labels)[label_ids]
         
         return CustomDataset(
             arg1=arg1_list,

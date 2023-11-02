@@ -25,6 +25,6 @@ def local_test_args(data_name='pdtb2'):
     
     
 if __name__ == '__main__':
-    # main(local_test_args('pdtb2'))
-    # main(local_test_args('pdtb3'))
+    main(local_test_args('pdtb2'))
+    main(local_test_args('pdtb3'))
     main(local_test_args('conll'))

@@ -69,8 +69,22 @@ class CustomCorpusData():
         # label
         if label_level == 'level1':
             self.label_list = 'Temporal Comparison Contingency Expansion'.split()
-        # elif label_level == 'level2':
-        #     pass
+        elif label_level == 'level2':
+            if data_name == 'pdtb2':
+                self.label_list = [
+                    'Temporal.Asynchronous', 'Temporal.Synchrony', 'Contingency.Cause',
+                    'Contingency.Pragmatic cause', 'Comparison.Contrast', 'Comparison.Concession',
+                    'Expansion.Conjunction', 'Expansion.Instantiation', 'Expansion.Restatement',
+                    'Expansion.Alternative', 'Expansion.List'
+                ]
+            elif data_name == 'pdtb3':
+                self.label_list = [
+                    'Temporal', '', '', 
+                    '', '', '', 
+                    '', '', '', 
+                    '', '', '', 
+                    '', '',
+                ]
         else:
             raise ValueError('wrong label_level')
         self.num_labels = len(self.label_list)
@@ -86,9 +100,9 @@ class CustomCorpusData():
             if data_name == 'conll':
                 self.blind_test_df = self.blind_test_df.iloc[:16]
         
-        self.train_dataset = self.get_dataset(self.train_df)
-        self.dev_dataset = self.get_dataset(self.dev_df)
-        self.test_dataset = self.get_dataset(self.test_df)
+        self.train_dataset = self.get_dataset(self.train_df, is_train=True)
+        self.dev_dataset = self.get_dataset(self.dev_df, is_train=False)
+        self.test_dataset = self.get_dataset(self.test_df, is_train=False)
         if data_name == 'conll':
             self.blind_test_dataset = self.get_dataset(self.blind_test_df)
         
@@ -173,9 +187,15 @@ class CustomCorpusData():
         else:
             raise Exception('wrong data_name')
         
-    def label_to_id(self, sense):
+    def sense_to_id(self, sense):
         if self.label_level == 'level1':
             label_id = self.label_map[sense.split('.')[0]]
+        elif self.label_level == 'level2':
+            selected_second_senses = {
+
+            }
+            sense_l2 = '.'.join(sense.split('.')[:2])
+
         else:
             raise ValueError('wrong label_level')
         return label_id
@@ -198,8 +218,8 @@ class CustomCorpusData():
             arg1_list.append(arg1)
             arg2_list.append(arg2)
             
-            label_ids.append(self.label_to_id(conn1sense1))
-            cur_adds = [self.label_to_id(sense) 
+            label_ids.append(self.sense_to_id(conn1sense1))
+            cur_adds = [self.sense_to_id(sense) 
                         for sense in [conn1sense2, conn2sense1, conn2sense2]
                         if not pd.isna(sense)]
             additional_label_ids.append(cur_adds)

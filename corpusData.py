@@ -67,28 +67,10 @@ class CustomCorpusData():
         self.tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, cache_dir=cache_dir)
         
         # label
-        if label_level == 'level1':
-            self.label_list = 'Temporal Comparison Contingency Expansion'.split()
-        elif label_level == 'level2':
-            if data_name == 'pdtb2':
-                self.label_list = [
-                    'Temporal.Asynchronous', 'Temporal.Synchrony', 'Contingency.Cause',
-                    'Contingency.Pragmatic cause', 'Comparison.Contrast', 'Comparison.Concession',
-                    'Expansion.Conjunction', 'Expansion.Instantiation', 'Expansion.Restatement',
-                    'Expansion.Alternative', 'Expansion.List'
-                ]
-            elif data_name == 'pdtb3':
-                self.label_list = [
-                    'Temporal', '', '', 
-                    '', '', '', 
-                    '', '', '', 
-                    '', '', '', 
-                    '', '',
-                ]
-        else:
-            raise ValueError('wrong label_level')
-        self.num_labels = len(self.label_list)
-        self.label_map = {label:p for p, label in enumerate(self.label_list)}
+        self.label_list: List[str] = []
+        self.num_labels: int = 0
+        self.label_map: Dict[str, int] = {}
+        self.get_label_info(label_level=label_level, data_name=data_name)
             
         if data_augmentation:
             self.train_df = self.data_augmentation_df(self.train_df)
@@ -187,23 +169,83 @@ class CustomCorpusData():
         else:
             raise Exception('wrong data_name')
         
-    def sense_to_id(self, sense):
+    def get_label_info(self, label_level, data_name):
+        if label_level == 'level1':
+            self.label_list = [
+                "Comparison",
+                "Contingency",
+                "Expansion",
+                "Temporal"
+            ]
+        elif label_level == 'level2':
+            if data_name == 'pdtb2':
+                self.label_list = [
+                    "Comparison.Concession",
+                    "Comparison.Contrast",
+                    "Contingency.Cause",
+                    "Contingency.Pragmatic cause",
+                    "Expansion.Alternative",
+                    "Expansion.Conjunction",
+                    "Expansion.Instantiation",
+                    "Expansion.List",
+                    "Expansion.Restatement",
+                    "Temporal.Asynchronous",
+                    "Temporal.Synchrony"
+                ]
+            elif data_name == 'pdtb3':
+                self.label_list = [
+                    "Comparison.Concession",
+                    "Comparison.Contrast",
+                    "Contingency.Cause",
+                    "Contingency.Pragmatic cause",
+                    "Expansion.Alternative",
+                    "Expansion.Conjunction",
+                    "Expansion.Instantiation",
+                    "Expansion.List",
+                    "Expansion.Restatement",
+                    "Temporal.Asynchronous",
+                    "Temporal.Synchrony"
+                ]
+            # elif data_name == 'conll':
+            #     self.label_list = [
+            #         'Comparison.Concession',
+            #         'Comparison.Contrast',
+            #         'Contingency.Cause',
+            #         'Contingency.Condition',
+            #         'Expansion.Alternative',
+            #         'Expansion.Conjunction',
+            #         'Expansion.Exception',
+            #         'Expansion.Instantiation',
+            #         'Expansion.Restatement',
+            #         'Temporal.Asynchronous',
+            #         'Temporal.Synchrony'
+            #     ]
+        
+        if not self.label_list:
+            raise ValueError('wrong label_level or wrong data_name')
+        self.num_labels = len(self.label_list)
+        self.label_map = {label:p for p, label in enumerate(self.label_list)}
+        
+    def label_to_id(self, sense):
+        """
+        return -1 if sense is invalid or useless
+        """
+        if pd.isna(sense):
+            return -1
         if self.label_level == 'level1':
-            label_id = self.label_map[sense.split('.')[0]]
+            sense_l1 = sense.split('.')[0]
+            label_id = self.label_map.get(sense_l1, -1)
         elif self.label_level == 'level2':
-            selected_second_senses = {
-
-            }
             sense_l2 = '.'.join(sense.split('.')[:2])
-
+            label_id = self.label_map.get(sense_l2, -1)
         else:
             raise ValueError('wrong label_level')
         return label_id
     
-    def get_dataset(self, df):
+    def get_dataset(self, df, is_train=False):
         arg1_list, arg2_list = [], []
         label_ids = []
-        additional_label_ids = []
+        secondary_label_ids = []
         for p in range(df.shape[0]):
             row = df.iloc[p]
             arg1 = row.arg1
@@ -215,22 +257,29 @@ class CustomCorpusData():
             conn2sense1 = row.conn2sense1
             conn2sense2 = row.conn2sense2
             
+            primary_label = self.label_to_id(conn1sense1)
+            if primary_label == -1:
+                continue
+            cur_sec_labels = [self.label_to_id(sense)
+                              for sense in [conn1sense2, conn2sense1, conn2sense2]]
+            cur_sec_labels = list(filter(lambda x:x!=-1, cur_sec_labels))
+            
             arg1_list.append(arg1)
             arg2_list.append(arg2)
+            label_ids.append(primary_label)
+            secondary_label_ids.append(cur_sec_labels)
+        
+        label_vectors = np.eye(self.num_labels)[label_ids]
+        for p, sec_labels in enumerate(secondary_label_ids):
+            for sl in sec_labels:
+                label_vectors[p][sl] = 1
             
-            label_ids.append(self.sense_to_id(conn1sense1))
-            cur_adds = [self.sense_to_id(sense) 
-                        for sense in [conn1sense2, conn2sense1, conn2sense2]
-                        if not pd.isna(sense)]
-            additional_label_ids.append(cur_adds)
-        
-        # label_ids = np.eye(self.num_labels)[label_ids]
-        
         return CustomDataset(
             arg1=arg1_list,
             arg2=arg2_list,
             tokenizer=self.tokenizer,
-            labels=label_ids,
+            # labels=label_ids,
+            labels=label_vectors,
         )
                         
     def data_augmentation_df(self, df:pd.DataFrame):
@@ -249,7 +298,7 @@ if __name__ == '__main__':
     import os, time
     os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
-    def sampling_test(data_name):
+    def sampling_test(data_name, label_level='level1'):
         start_time = time.time()
         if data_name == 'pdtb2':
             data_path = r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\CorpusData\PDTB2\pdtb2.csv'
@@ -265,16 +314,18 @@ if __name__ == '__main__':
             data_name=data_name,
             model_name_or_path=r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\plm_cache\models--roberta-base\snapshots\bc2764f8af2e92b6eb5679868df33e224075ca68',
             # cache_dir='./plm_cache/',
-            label_level='level1',
+            label_level=label_level,
             mini_dataset=False,
             data_augmentation=True,
         )
-        print(f'{data_name}, time: {time.time()-start_time:.2f}s\n')
-        for p in sample_dataset.train_dataset:
-            print(p)
-            break
+        batch = [sample_dataset.train_dataset[p]for p in range(3)]
+        batch = sample_dataset.data_collator(batch)
+        print(batch ,'\n')
+        print(f'{data_name}, time: {time.time()-start_time:.2f}s')
         print('='*10)
     
-    sampling_test('pdtb2')
-    sampling_test('pdtb3')
+    # sampling_test('pdtb2')
+    sampling_test('pdtb2', 'level2')
+    # sampling_test('pdtb3')
+    sampling_test('pdtb3', 'level2')
     sampling_test('conll')

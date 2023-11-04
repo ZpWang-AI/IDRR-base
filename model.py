@@ -76,7 +76,7 @@ class CustomModel(nn.Module):
         self.initial_model()
         
         if loss_type.lower() == 'celoss':
-            self.loss_fn = nn.CrossEntropyLoss()
+            self.loss_fn = CELoss()
         else:
             raise Exception('wrong loss_type')
     

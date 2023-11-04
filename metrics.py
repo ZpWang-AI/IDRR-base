@@ -11,11 +11,11 @@ class ComputeMetrics:
     def __call__(self, eval_pred):
         predictions, labels = eval_pred
         predictions = np.argmax(predictions, axis=1)
-        if labels.ndim == 2:
-            labels = np.argmax(labels, axis=1)
+        predictions = np.eye(len(self.label_list))[predictions]
         
         res = {
-            'Acc': accuracy_score(labels, predictions),
+            # 'Acc': accuracy_score(labels, predictions),
+            'Acc': np.sum(predictions*labels),
             'Macro-F1': f1_score(labels, predictions, average='macro', zero_division=0),
         }
         

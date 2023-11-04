@@ -1,0 +1,22 @@
+{
+    "Temporal": [
+      "Comparison",
+      "Contingency",
+      "Expansion"
+    ],
+    "Comparison": [
+      "Contingency",
+      "Temporal",
+      "Expansion"
+    ],
+    "Contingency": [
+      "Comparison",
+      "Temporal",
+      "Expansion"
+    ],
+    "Expansion": [
+      "Comparison",
+      "Contingency",
+      "Temporal"
+    ]
+  }

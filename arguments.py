@@ -90,8 +90,10 @@ class CustomArgs:
         
         # improvement
         parser.add_argument("--loss_type", type=str, default='CELoss')
+        parser.add_argument("--rank_loss_type", type=str, default='ListMLELoss')
         parser.add_argument("--data_augmentation", type=arg_bool, default=False)
-
+        parser.add_argument("--rank_order_file", type=str, default='./rank_order/rank_order1.json')
+        
         # epoch, batch, step
         parser.add_argument("--epochs", type=int, default=5)
         parser.add_argument("--max_steps", type=int, default=-1)
@@ -100,7 +102,11 @@ class CustomArgs:
         parser.add_argument("--eval_steps", type=int, default=100)
         parser.add_argument("--log_steps", type=int, default=10)
         parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
-
+        parser.add_argument("--rank_epochs", type=int, default=2)
+        parser.add_argument("--rank_eval_steps", type=int, default=800)
+        parser.add_argument("--rank_log_steps", type=int, default=40)
+        parser.add_argument("--rank_gradient_accumulation_steps", type=int, default=2)
+        
         # seed, lr
         parser.add_argument("--seed", type=int, default=2023)
         parser.add_argument("--warmup_ratio", type=float, default=0.05)
@@ -152,7 +158,10 @@ class CustomArgs:
         
         if not self.do_train and self.do_eval and not path(self.load_ckpt_dir).exists():
             raise Exception('no do_train and load_ckpt_dir does not exist')  
-        
+
+        if not path(self.rank_order_file).exists():
+            raise Exception('rank_order_file not exists')  
+
     def __iter__(self):
         # keep the same order as the args shown in the file
         keys_order = {k:-1 for k in self.__dict__}

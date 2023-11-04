@@ -15,7 +15,7 @@ class ComputeMetrics:
         
         res = {
             # 'Acc': accuracy_score(labels, predictions),
-            'Acc': np.sum(predictions*labels),
+            'Acc': np.sum(predictions*labels)/len(predictions),
             'Macro-F1': f1_score(labels, predictions, average='macro', zero_division=0),
         }
         

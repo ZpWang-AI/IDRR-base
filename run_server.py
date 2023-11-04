@@ -40,7 +40,10 @@ def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1'
     args.load_ckpt_dir = ROOT_FOLD_IDRR+'ckpt_fold'
     args.cache_dir = ''
     args.output_dir = ROOT_FOLD_IDRR+'output_space/'
-    args.log_dir = ROOT_FOLD_IDRR+'log_space/'
+    if test_setting:
+        args.log_dir = ROOT_FOLD_IDRR+'log_space_test/'
+    else:
+        args.log_dir = ROOT_FOLD_IDRR+'log_space/'
 
     return args
 

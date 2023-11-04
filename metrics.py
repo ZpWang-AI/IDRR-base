@@ -20,7 +20,7 @@ class ComputeMetrics:
         }
         
         for i, target_type in enumerate(self.label_list):
-            res[target_type] = f1_score(predictions==i, labels==i, zero_division=0)
+            res[target_type] = f1_score(predictions[:,i], labels[:,i], zero_division=0)
         
         return res
     

@@ -116,14 +116,14 @@ if __name__ == '__main__':
         remote_path='/data/zpwang/IDRR/IDRR-base'
     )
     
-    # transmit data
-    data_path = r'CorpusData\PDTB2\pdtb2.csv'
-    data_path = r'CorpusData\PDTB3\pdtb3_implicit.csv'
-    data_path = r'CorpusData\CoNLL16'
-    ssh_transer.ssh_transmit(
-        local_path=r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\\'+data_path,
-        remote_path='/data/zpwang/IDRR/'+data_path.replace('\\', '/'),
-    )
+    # # transmit data
+    # data_path = r'CorpusData\PDTB2\pdtb2.csv'
+    # data_path = r'CorpusData\PDTB3\pdtb3_implicit.csv'
+    # data_path = r'CorpusData\CoNLL16'
+    # ssh_transer.ssh_transmit(
+    #     local_path=r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\\'+data_path,
+    #     remote_path='/data/zpwang/IDRR/'+data_path.replace('\\', '/'),
+    # )
     
     # # transmit model
     # ssh_transer.ssh_transmit(

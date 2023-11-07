@@ -57,7 +57,9 @@ def server_dataAug_args(data_name='pdtb2'):
 
     
 if __name__ == '__main__':
-    main(server_base_args(test_setting=True, data_name='pdtb2', label_level='level2'))
-    main(server_base_args(test_setting=True, data_name='pdtb3'))
-    main(server_base_args(test_setting=True, data_name='conll'))
+    main(server_base_args(test_setting=True, data_name='pdtb2'))
+    # main(server_base_args(test_setting=True, data_name='pdtb2', label_level='level2'))
+    # main(server_base_args(test_setting=True, data_name='pdtb3'))
+    # main(server_base_args(test_setting=True, data_name='conll'))
     # main(server_dataAug_args())
+    pass

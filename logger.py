@@ -28,23 +28,19 @@ class CustomLogger:
     def info(self, *args):
         self.logger.info(' '.join(map(str, args)))
         
-    def log_json(self, content, log_file_name, log_info=False):
-        content_string = json.dumps(content, ensure_ascii=False, indent=2)
-        if log_info:
-            self.logger.info('\n'+content_string)
-        
-        log_file = path(self.log_dir)/log_file_name
-        with open(log_file, 'w', encoding='utf8')as f:
-            f.write(content_string)
-            
-    def log_jsonl(self, content, log_file, log_info=False):
+    def log_json(self, content, log_file_name, log_info=False, mode='w'):
         if log_info:
             self.logger.info('\n'+json.dumps(content, ensure_ascii=False, indent=2))
         
-        log_file = path(self.log_dir)/log_file
-        with open(log_file, 'a', encoding='utf8')as f:
-            json.dump(content, f, ensure_ascii=False)
-            f.write('\n')
+        log_file = path(self.log_dir)/log_file_name
+        with open(log_file, mode=mode, encoding='utf8')as f:
+            if mode == 'w':
+                json.dump(content, f, ensure_ascii=False, indent=2)
+            elif mode == 'a':
+                json.dump(content, f, ensure_ascii=False)
+                f.write('\n')
+            else:
+                raise ValueError('wrong mode')
 
 
 if __name__ == '__main__':

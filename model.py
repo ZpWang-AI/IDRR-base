@@ -15,6 +15,19 @@ class ListMLELoss(nn.Module):
         super().__init__(*args, **kwargs)
         
     def forward(self, scores:torch.Tensor, labels:torch.Tensor=None, k:int=None):
+        """
+        n = the number of the ranked samples
+        scores: [batch size, n]
+        labels: [batch size, n]
+        if shape == [n]:
+            unsqueeze and shape become [1, n]
+        if k is not None:
+            resample and choose `k` samples from the initial array (`scores` and `labels`)
+        if labels is not None: 
+            sort scores by labels from largest label to smallest label
+        
+        formula = softmax(x1, X) * softmax(x2, X-{x1}) * softmax(x3, X-{x1,x2}) * ...
+        """
         if scores.dim() == 1:
             scores = scores.unsqueeze(0)
         if labels is not None and labels.dim() == 1:
@@ -42,6 +55,13 @@ class ListNetLoss(nn.Module):
         super().__init__(*args, **kwargs)
     
     def forward(self, logits, labels):
+        """
+        n = label categories
+        logits: [batch size, n]
+        labels: [batch size, n]
+        
+        formula = sum( softmax(labels) * log(softmax(logits)) )
+        """
         probs = torch.softmax(logits, dim=1)
         labels = torch.softmax(labels, dim=1)
         return -(labels*torch.log(probs)).sum(dim=1).mean()
@@ -53,6 +73,13 @@ class CELoss(nn.Module):
         super().__init__(*args, **kwargs)
     
     def forward(self, logits:torch.Tensor, labels:torch.Tensor):
+        """
+        n = label categories
+        logits: [batch size, n]
+        labels: [batch size, n]
+        
+        formula = sum( labels * log(softmax(logits)) )
+        """
         probs = torch.softmax(logits, dim=1)
         return -(labels*torch.log(probs)).sum(dim=1).mean()
 

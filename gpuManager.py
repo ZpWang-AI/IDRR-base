@@ -72,7 +72,9 @@ class GPUManager:
             
         if not wait:
             target_mem_mb *= 1024**2
-            for cuda_id in device_range:
+            # n = number of cuda device
+            # query from cuda:n-1 to cuda:0
+            for cuda_id in device_range[::-1]:
                 if GPUManager.query_gpu_memory(cuda_id=cuda_id, show=False)[0] > target_mem_mb:
                     return cuda_id
             return -1

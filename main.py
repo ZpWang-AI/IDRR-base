@@ -204,19 +204,19 @@ def main_one_iteration(args:CustomArgs, training_iter_id=0):
 
         evaluate_func(**train_evaluate_kwargs)
     
-    # mv tensorboard ckpt to log_dir
-    cnt = 0
-    for dirpath, dirnames, filenames in os.walk(args.output_dir):
-        if 'checkpoint' in dirpath:
-            continue
-        if 'runs' in dirpath:
-            for filename in filenames:
-                if 'events' in filename:
-                    cur_file = path(dirpath)/filename
-                    tensorboard_dir = path(args.log_dir)/'tensorboard'/str(cnt)
-                    tensorboard_dir.mkdir(parents=True, exist_ok=True)
-                    shutil.copy(cur_file, tensorboard_dir)
-                    cnt += 1
+    # # mv tensorboard ckpt to log_dir
+    # cnt = 0
+    # for dirpath, dirnames, filenames in os.walk(args.output_dir):
+    #     if 'checkpoint' in dirpath:
+    #         continue
+    #     if 'runs' in dirpath:
+    #         for filename in filenames:
+    #             if 'events' in filename:
+    #                 cur_file = path(dirpath)/filename
+    #                 tensorboard_dir = path(args.log_dir)/'tensorboard'/str(cnt)
+    #                 tensorboard_dir.mkdir(parents=True, exist_ok=True)
+    #                 shutil.copy(cur_file, tensorboard_dir)
+    #                 cnt += 1
 
     if not args.save_ckpt:
         shutil.rmtree(args.output_dir)
@@ -241,11 +241,21 @@ def main(args:CustomArgs, training_iter_id=-1):
     if training_iter_id < 0 or training_iter_id == 0:    
         main_logger.log_json(dict(args), log_file_name='hyperparams.json', log_info=True)
     
-    if training_iter_id < 0:
-        for _training_iter_id in range(args.training_iteration):
-            main_one_iteration(deepcopy(args), training_iter_id=_training_iter_id)
-    else:
-        main_one_iteration(args, training_iter_id=training_iter_id)
+    try:
+        if training_iter_id < 0:
+            for _training_iter_id in range(args.training_iteration):
+                main_one_iteration(deepcopy(args), training_iter_id=_training_iter_id)
+            if not args.save_ckpt:
+                shutil.rmtree(args.output_dir)
+        else:
+            main_one_iteration(args, training_iter_id=training_iter_id)
+    except Exception as e:
+        import traceback
+        
+        error_file = main_logger.log_dir/'error.out'
+        with open(error_file, 'w', encoding='utf8')as f:
+            f.write(traceback.format_exc())
+        exit(1)
     
     if training_iter_id < 0 or training_iter_id == args.training_iteration:
         # calculate average

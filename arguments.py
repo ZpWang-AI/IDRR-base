@@ -122,6 +122,11 @@ class CustomArgs:
         specific_fold_name = f'{self.cur_time}_{self.version}_{self.data_name}_{self.label_level}'
         self.output_dir = os.path.join(self.output_dir, specific_fold_name)
         self.log_dir = os.path.join(self.log_dir, specific_fold_name) 
+    
+    def recalculate_eval_log_steps(self, sample_per_eval=800, sample_per_log=80):
+        real_batch_size = self.train_batch_size*self.gradient_accumulation_steps
+        self.eval_steps = sample_per_eval // real_batch_size
+        self.log_steps = sample_per_log // real_batch_size
         
     def check_path(self):
         # self.data_path

@@ -22,7 +22,7 @@ from arguments import CustomArgs
 from main import main
 
 
-def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1'):
+def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1') -> CustomArgs:
     args = CustomArgs(test_setting=test_setting)
     
     args.version = SERVER_NAME+('test' if test_setting else 'base')
@@ -48,8 +48,22 @@ def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1'
     return args
 
 
-def server_dataAug_args(data_name='pdtb2'):
-    args = server_base_args(test_setting=False, data_name=data_name)
+def server_long_args(data_name='pdtb2', data_level='level1'):
+    args = server_base_args(test_setting=False, data_name=data_name, data_level=data_level)
+    
+    args.epochs = 25
+    args.learning_rate = 3e-5
+    args.version = 'cu12_long_bs256'
+    args.train_batch_size = 16
+    args.gradient_accumulation_steps = 16
+    args.recalculate_eval_log_steps(800, 80)
+    
+    return args
+
+
+def server_dataAug_args(args=None, data_name='pdtb2'):
+    if not args:
+        args = server_base_args(test_setting=False, data_name=data_name)
     args.version = SERVER_NAME+'dataAugmentation'
     args.data_augmentation = True
     

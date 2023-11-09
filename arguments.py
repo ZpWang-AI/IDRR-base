@@ -35,6 +35,7 @@ class CustomArgs:
     
     # improvement
     loss_type = 'CELoss'
+    secondary_label_weight = 1.0
     data_augmentation = False
     
     # epoch, batch, step

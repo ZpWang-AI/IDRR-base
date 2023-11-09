@@ -46,13 +46,13 @@ class CustomCorpusData():
         label_level='level1',
         
         mini_dataset=False,
-        data_augmentation=False,
+        data_augmentation_connective_arg2=False,
     ):
         # args
         self.data_name = data_name
         self.label_level = label_level
         self.mini_dataset = mini_dataset
-        self.data_augmentation = data_augmentation
+        self.data_augmentation_connective_arg2 = data_augmentation_connective_arg2
         
         # dataframe
         self.columns = ['arg1', 'arg2', 'conn1', 'conn2', 
@@ -72,7 +72,7 @@ class CustomCorpusData():
         self.label_map: Dict[str, int] = {}
         self.get_label_info(label_level=label_level, data_name=data_name)
             
-        if data_augmentation:
+        if data_augmentation_connective_arg2:
             self.train_df = self.data_augmentation_df(self.train_df)
             
         if mini_dataset:
@@ -316,7 +316,7 @@ if __name__ == '__main__':
             # cache_dir='./plm_cache/',
             label_level=label_level,
             mini_dataset=False,
-            data_augmentation=True,
+            data_augmentation_connective_arg2=True,
         )
         batch = [sample_dataset.train_dataset[p]for p in range(3)]
         batch = sample_dataset.data_collator(batch)

@@ -68,7 +68,7 @@ def server_dataAug_args(args=None, data_name='pdtb2'):
     if not args:
         args = server_base_args(test_setting=False, data_name=data_name)
     args.version = SERVER_NAME+'dataAugmentation'
-    args.data_augmentation = True
+    args.data_augmentation_connective_arg2 = True
     
     return args
 

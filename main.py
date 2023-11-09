@@ -166,7 +166,7 @@ def main_one_iteration(args:CustomArgs, training_iter_id=0):
             mini_dataset=args.mini_dataset,
             
             label_level=args.label_level,
-            data_augmentation=args.data_augmentation,
+            data_augmentation_connective_arg2=args.data_augmentation_connective_arg2,
         )
         args.trainset_size, args.devset_size, args.testset_size = map(len, [
             dataset.train_dataset, dataset.dev_dataset, dataset.test_dataset

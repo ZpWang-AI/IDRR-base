@@ -12,7 +12,7 @@ python main.py \
     --output_dir ./output_space/ \
     --log_dir /content/drive/MyDrive/IDRR/log_space \
     --load_ckpt_dir ./ckpt_fold \
-    --data_augmentation True \
+    --data_augmentation_connective_arg2 True \
     --epochs 5 \
     --max_steps -1 \
     --train_batch_size 8 \

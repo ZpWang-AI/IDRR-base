@@ -35,8 +35,9 @@ class CustomArgs:
     
     # improvement
     loss_type = 'CELoss'
-    secondary_label_weight = 0.5
-    data_augmentation = False
+    secondary_label_weight = 0.5  
+    data_augmentation_secondary_label = False
+    data_augmentation_connective_arg2 = False
     
     # epoch, batch, step
     epochs = 5
@@ -88,7 +89,8 @@ class CustomArgs:
         # improvement
         parser.add_argument("--loss_type", type=str, default='CELoss')
         parser.add_argument("--secondary_label_weight", type=float, default=0.5)
-        parser.add_argument("--data_augmentation", type=arg_bool, default=False)
+        parser.add_argument("--data_augmentation_secondary_label", type=arg_bool, default=False)
+        parser.add_argument("--data_augmentation_connective_arg2", type=arg_bool, default=False)
         
         # epoch, batch, step
         parser.add_argument("--epochs", type=int, default=5)
@@ -114,7 +116,8 @@ class CustomArgs:
         if test_setting:
             self.version = 'colab_test'
             self.mini_dataset = True
-            self.data_augmentation = False
+            self.data_augmentation_secondary_label = False
+            self.data_augmentation_connective_arg2 = False
             self.training_iteration = 2
             self.train_batch_size = 8
             self.eval_batch_size = 8

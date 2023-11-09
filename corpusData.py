@@ -39,19 +39,21 @@ class CustomCorpusData():
         self, 
         data_path,
         data_name='pdtb2',
-        
         model_name_or_path='roberta-base',
         cache_dir='',
-        
         label_level='level1',
         
+        secondary_label_weight=0.5,
         mini_dataset=False,
+        data_augmentation_secondary_label=False,
         data_augmentation_connective_arg2=False,
     ):
         # args
         self.data_name = data_name
         self.label_level = label_level
+        self.secondary_label_weight = secondary_label_weight
         self.mini_dataset = mini_dataset
+        self.data_augmentation_secondary_label = data_augmentation_secondary_label
         self.data_augmentation_connective_arg2 = data_augmentation_connective_arg2
         
         # dataframe
@@ -72,8 +74,10 @@ class CustomCorpusData():
         self.label_map: Dict[str, int] = {}
         self.get_label_info(label_level=label_level, data_name=data_name)
             
-        if data_augmentation_connective_arg2:
-            self.train_df = self.data_augmentation_df(self.train_df)
+        # if data_augmentation_connective_arg2:
+        #     self.train_df = 
+        # self.data_augmentation_df(self.train_df)
+        # self.datau
             
         if mini_dataset:
             self.train_df = self.train_df.iloc[:32]
@@ -270,9 +274,10 @@ class CustomCorpusData():
             secondary_label_ids.append(cur_sec_labels)
         
         label_vectors = np.eye(self.num_labels)[label_ids]
-        for p, sec_labels in enumerate(secondary_label_ids):
-            for sl in sec_labels:
-                label_vectors[p][sl] = 1
+        if self.secondary_label_weight != 0:
+            for p, sec_labels in enumerate(secondary_label_ids):
+                for sl in sec_labels:
+                    label_vectors[p][sl] = self.secondary_label_weight
             
         return CustomDataset(
             arg1=arg1_list,
@@ -282,16 +287,21 @@ class CustomCorpusData():
             labels=label_vectors,
         )
                         
-    def data_augmentation_df(self, df:pd.DataFrame):
-        df2 = df.copy()
-        df2['arg1'] = df2['conn1']+df2['arg2']
-        df3 = df.copy()
-        df3.dropna(subset=['conn2'], inplace=True)
-        df3['arg2'] = df3['conn2']+df3['arg2']
-        df3['conn1sense1'], df3['conn1sense2'], df3['conn2sense1'], df3['conn2sense2'] = (
-            df3['conn2sense1'], df3['conn2sense2'], df3['conn1sense1'], df3['conn1sense2']
-        )
-        return pd.concat([df, df2, df3], ignore_index=True)
+    def data_augmentation_train_df(self):
+        if self.data_augmentation_connective_arg2 and self.data_augmentation_secondary_label:
+            df = self.train_df
+            df2 = df.copy()
+            df2['arg1'] = df2['conn1']+df2['arg2']
+            df3 = df.copy()
+            df3.dropna(subset=['conn2'], inplace=True)
+            df3['arg2'] = df3['conn2']+df3['arg2']
+            df3['conn1sense1'], df3['conn1sense2'], df3['conn2sense1'], df3['conn2sense2'] = (
+                df3['conn2sense1'], df3['conn2sense2'], df3['conn1sense1'], df3['conn1sense2']
+            )
+            df
+            self.train_df = pd.concat([df, df2, df3], ignore_index=True)
+        if self.data_augmentation_secondary_label:
+            df = 
     
     
 if __name__ == '__main__':

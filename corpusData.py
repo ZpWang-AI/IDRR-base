@@ -73,11 +73,8 @@ class CustomCorpusData():
         self.num_labels: int = 0
         self.label_map: Dict[str, int] = {}
         self.get_label_info(label_level=label_level, data_name=data_name)
-            
-        # if data_augmentation_connective_arg2:
-        #     self.train_df = 
-        # self.data_augmentation_df(self.train_df)
-        # self.datau
+        
+        self.data_augmentation_train_df()
             
         if mini_dataset:
             self.train_df = self.train_df.iloc[:32]
@@ -288,7 +285,22 @@ class CustomCorpusData():
         )
                         
     def data_augmentation_train_df(self):
-        if self.data_augmentation_connective_arg2 and self.data_augmentation_secondary_label:
+        if self.data_augmentation_secondary_label:
+            df = self.train_df
+            df2 = df.copy()
+            df2.dropna(subset=['conn1sense2'], inplace=True)
+            df2['conn1sense1'] = df2['conn1sense2']
+            df3 = df.copy()
+            df3.dropna(subset=['conn2sense1'], inplace=True)
+            df3['conn1sense1'], df3['conn1'] = df3['conn2sense1'], df3['conn2']
+            df4 = df.copy()
+            df4.dropna(subset=['conn2sense2'], inplace=True)
+            df4['conn1sense1'], df4['conn1'] = df4['conn2sense2'], df4['conn2']
+            self.train_df = pd.concat([df,df2,df3,df4], ignore_index=True)
+            for dv in 'conn2 conn1sense2 conn2sense1 conn2sense2'.split():
+                self.train_df[dv] = np.nan
+            
+        if self.data_augmentation_connective_arg2:
             df = self.train_df
             df2 = df.copy()
             df2['arg1'] = df2['conn1']+df2['arg2']
@@ -298,10 +310,7 @@ class CustomCorpusData():
             df3['conn1sense1'], df3['conn1sense2'], df3['conn2sense1'], df3['conn2sense2'] = (
                 df3['conn2sense1'], df3['conn2sense2'], df3['conn1sense1'], df3['conn1sense2']
             )
-            df
             self.train_df = pd.concat([df, df2, df3], ignore_index=True)
-        if self.data_augmentation_secondary_label:
-            df = 
     
     
 if __name__ == '__main__':
@@ -326,16 +335,18 @@ if __name__ == '__main__':
             # cache_dir='./plm_cache/',
             label_level=label_level,
             mini_dataset=False,
-            data_augmentation_connective_arg2=True,
+            data_augmentation_secondary_label=True,
+            data_augmentation_connective_arg2=False,
         )
         batch = [sample_dataset.train_dataset[p]for p in range(3)]
         batch = sample_dataset.data_collator(batch)
         print(batch ,'\n')
         print(f'{data_name}, time: {time.time()-start_time:.2f}s')
+        print(sample_dataset.train_df.shape)
         print('='*10)
     
-    # sampling_test('pdtb2')
-    sampling_test('pdtb2', 'level2')
+    sampling_test('pdtb2')
+    # sampling_test('pdtb2', 'level2')
     # sampling_test('pdtb3')
-    sampling_test('pdtb3', 'level2')
-    sampling_test('conll')
+    # sampling_test('pdtb3', 'level2')
+    # sampling_test('conll')

@@ -76,7 +76,7 @@ class CustomModel(nn.Module):
 if __name__ == '__main__':
     def demo_model():
         cache_dir = './plm_cache/'
-        sample_model = CustomModel('roberta-base', label_list=['good', 'bad', 'middle'], cache_dir=cache_dir)
+        sample_model = CustomModel('roberta-base', num_labels=3, cache_dir=cache_dir)
         
         sample_tokenizer = AutoTokenizer.from_pretrained('roberta-base', cache_dir=cache_dir)
         sample_x = ['你好']*2+['hello world. Nice to see you']*2
@@ -102,6 +102,6 @@ if __name__ == '__main__':
         loss2 = criterion2(y_pred, y_true2)
         print(loss1, loss2, sep='\n')
     
-    # demo_model()
+    demo_model()
     demo_CELoss()
     

@@ -50,9 +50,12 @@ def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1'
 
 def server_long_args(data_name='pdtb2', data_level='level1'):
     args = server_base_args(test_setting=False, data_name=data_name, data_level=data_level)
+    args:CustomArgs
     
     args.epochs = 25
     args.learning_rate = 3e-5
+    args.warmup_ratio = 0.1
+    
     args.version = 'cu12_long_bs256'
     args.train_batch_size = 16
     args.gradient_accumulation_steps = 16

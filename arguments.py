@@ -35,7 +35,7 @@ class CustomArgs:
     
     # improvement
     loss_type = 'CELoss'
-    secondary_label_weight = 1.0
+    secondary_label_weight = 0.5
     data_augmentation = False
     
     # epoch, batch, step
@@ -64,6 +64,8 @@ class CustomArgs:
     def __init__(self, test_setting=False) -> None:
         parser = argparse.ArgumentParser('zp')
 
+        ############################ Args # Don't modify this line
+        
         parser.add_argument("--version", type=str, default='colab')
         
         # base setting
@@ -85,8 +87,9 @@ class CustomArgs:
         
         # improvement
         parser.add_argument("--loss_type", type=str, default='CELoss')
+        parser.add_argument("--secondary_label_weight", type=float, default=0.5)
         parser.add_argument("--data_augmentation", type=arg_bool, default=False)
-
+        
         # epoch, batch, step
         parser.add_argument("--epochs", type=int, default=5)
         parser.add_argument("--max_steps", type=int, default=-1)
@@ -95,12 +98,14 @@ class CustomArgs:
         parser.add_argument("--eval_steps", type=int, default=100)
         parser.add_argument("--log_steps", type=int, default=10)
         parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
-
+        
         # seed, lr
         parser.add_argument("--seed", type=int, default=2023)
         parser.add_argument("--warmup_ratio", type=float, default=0.05)
         parser.add_argument("--weight_decay", type=float, default=0.01)
         parser.add_argument("--learning_rate", type=float, default=5e-6)
+        
+        ############################ Args # Don't modify this line
 
         args = parser.parse_args()
         for k, v in args.__dict__.items():
@@ -184,40 +189,45 @@ class CustomArgs:
         with open(file_path, 'w', encoding='utf8')as f:
             f.write(script_string)
         
-    def generate_parser(self, file_path='./tmp/arg_parser.txt'):
-        parser_lines = []
+    def generate_parser(self, file_path='./tmp/arguments.py'):
         with open('./arguments.py', 'r', encoding='utf8')as f:
-            sep_label = 0
-            for line in f.readlines():
-                if (line.count('#') > 3 and 'Args' in line) or 'additional setting' in line:
-                    if sep_label:
-                        break
-                    else:
-                        sep_label = 1
-                        continue
-                if not sep_label:
-                    continue
+            contents = f.readlines()
+            
+        parser_lines, pre_lines, post_lines = [], [], []
+        sep_label = 0
+        for line in contents:
+            if (line.count('#') > 3 and 'Args' in line) or 'additional setting' in line:
+                sep_label += 1
+            if sep_label < 4:
+                pre_lines.append(line)
+            elif sep_label >= 5:
+                post_lines.append(line)
                 
-                if line.count('=') == 1:
-                    k, v = line.split('=')
-                    k, v = k.strip(), v.strip()
-                    if '\'' in v or '"' in v:
-                        v_type = 'str'
-                    elif v in ['True', 'False']:
-                        v_type = 'arg_bool'
-                    elif float(v) == int(float(v)):
-                        v_type = 'int'
-                    else:
-                        v_type = 'float'
-                    parser_lines.append(f'parser.add_argument("--{k}", type={v_type}, default={v})')
+            if sep_label != 1:
+                continue
+            
+            if line.count('=') == 1:
+                k, v = line.split('=')
+                k, v = k.strip(), v.strip()
+                if '\'' in v or '"' in v:
+                    v_type = 'str'
+                elif v in ['True', 'False']:
+                    v_type = 'arg_bool'
+                elif float(v) == int(float(v)):
+                    v_type = 'int'
                 else:
-                    parser_lines.append(line.strip())
+                    v_type = 'float'
+                parser_lines.append(f'parser.add_argument("--{k}", type={v_type}, default={v})')
+            else:
+                parser_lines.append(line.strip())
                     
         path(file_path).parent.mkdir(parents=True, exist_ok=True)
         with open(file_path, 'w', encoding='utf8')as f:
+            f.write(''.join(pre_lines))
             for line in parser_lines:
                 print(line)
                 f.write(' '*8+line+'\n')
+            f.write(''.join(post_lines))
 
 
 if __name__ == '__main__':

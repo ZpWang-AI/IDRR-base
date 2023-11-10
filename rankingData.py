@@ -7,7 +7,12 @@ from typing import *
 from itertools import cycle
 from transformers import AutoTokenizer
 
-from corpusData import CustomCorpusData
+from corpusData import CustomCorpusData, Dataset
+
+
+class RankingDataset(Dataset):
+    def __init__(self, ) -> None:
+        super().__init__()
 
 
 class CustomData:
@@ -76,7 +81,7 @@ class CustomDataCollator:
         return data[sample_id_list]
 
 
-class RankingDataset():
+class RankingData():
     def __init__(
         self, 
         corpus_data:CustomCorpusData,
@@ -155,7 +160,7 @@ if __name__ == '__main__':
         mini_dataset=False,
         data_augmentation=False,
     )
-    sample_rank_dataset = RankingDataset(
+    sample_rank_dataset = RankingData(
         corpus_data=sample_corpus_data,
         rank_order_file='./rank_order/rank_order1.json'
     )

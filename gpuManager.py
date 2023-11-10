@@ -101,7 +101,8 @@ class GPUManager:
     ):
         if not device_range:
             device_range = GPUManager.get_all_cuda_id()
-        
+
+        target_mem_mb *= 1024**2
         while 1:
             gpu_id_lst = []
             # n = number of cuda device

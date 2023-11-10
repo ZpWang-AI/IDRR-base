@@ -12,9 +12,9 @@ os.chdir(ROOT_FOLD_IDRR+'IDRR-base/')
 
 # ===== prepare gpu =====
 from gpuManager import GPUManager
-free_gpu_id = GPUManager.get_free_gpu()
-os.environ["CUDA_VISIBLE_DEVICES"] = str(free_gpu_id)
-print(f'=== CUDA {free_gpu_id} ===')
+free_gpu_ids = GPUManager.get_some_free_gpus(gpu_cnt=1)
+os.environ["CUDA_VISIBLE_DEVICES"] = free_gpu_ids
+print(f'=== CUDA {free_gpu_ids} ===')
 
 # ===== import =====
 from arguments import CustomArgs
@@ -34,7 +34,7 @@ def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1'
         args.data_path = ROOT_FOLD_IDRR+'CorpusData/PDTB3/pdtb3_implicit.csv'
     elif data_name == 'conll':
         args.data_path = ROOT_FOLD_IDRR+'CorpusData/CoNLL16/'
-    args.cuda_id = free_gpu_id
+    args.cuda_id = free_gpu_ids
     args.label_level = label_level
     
     args.model_name_or_path = ROOT_FOLD_IDRR+'/plm_cache/models--roberta-base/snapshots/bc2764f8af2e92b6eb5679868df33e224075ca68'

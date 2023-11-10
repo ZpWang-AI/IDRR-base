@@ -93,11 +93,11 @@ class GPUManager:
                 time.sleep(wait_gap)
     
     @staticmethod
-    def get_multi_free_gpu(
+    def get_some_free_gpus(
         gpu_cnt=1,
         target_mem_mb=8000,
         device_range=None,
-        return_str=False,
+        return_str=True,
     ):
         if not device_range:
             device_range = GPUManager.get_all_cuda_id()

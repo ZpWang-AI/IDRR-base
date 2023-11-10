@@ -42,7 +42,6 @@ class CustomArgs:
     # improvement
     loss_type = 'CELoss'
     rank_loss_type = 'ListMLELoss'
-    data_augmentation = False
     rank_order_file = './rank_order/rank_order1.json'
     
     # epoch, batch, step
@@ -107,7 +106,6 @@ class CustomArgs:
         # improvement
         parser.add_argument("--loss_type", type=str, default='CELoss')
         parser.add_argument("--rank_loss_type", type=str, default='ListMLELoss')
-        parser.add_argument("--data_augmentation", type=arg_bool, default=False)
         parser.add_argument("--rank_order_file", type=str, default='./rank_order/rank_order1.json')
         
         # epoch, batch, step
@@ -119,7 +117,7 @@ class CustomArgs:
         parser.add_argument("--log_steps", type=int, default=10)
         parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
         parser.add_argument("--eval_per_epoch", type=int, default=15)
-                parser.add_argument("--rank_epochs", type=int, default=2)
+        parser.add_argument("--rank_epochs", type=int, default=2)
         parser.add_argument("--rank_eval_steps", type=int, default=800)
         parser.add_argument("--rank_log_steps", type=int, default=40)
         parser.add_argument("--rank_gradient_accumulation_steps", type=int, default=2)
@@ -151,7 +149,7 @@ class CustomArgs:
             self.rank_gradient_accumulation_steps = 8
             self.rank_eval_steps = 2
             self.rank_log_steps = 1
-                    self.eval_per_epoch = -1
+            self.eval_per_epoch = -1
     
     def complete_path(self):
         self.cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")

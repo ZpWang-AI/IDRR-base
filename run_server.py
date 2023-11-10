@@ -63,7 +63,8 @@ def server_long_args(data_name='pdtb2', data_level='level1'):
     trainset_size = len(CustomCorpusData(**dict(args)).train_dataset)
     eval_per_epoch = 15
     sample_per_eval = trainset_size//eval_per_epoch
-    args.recalculate_eval_log_steps(sample_per_eval=sample_per_eval, sample_per_log=sample_per_eval//10)
+    args.recalculate_eval_log_steps(sample_per_eval=sample_per_eval, 
+                                    sample_per_log=sample_per_eval//10)
     
     return args
 

@@ -34,7 +34,7 @@ class CustomDataset(Dataset):
         return len(self.arg1)
 
 
-class CustomCorpusData():
+class CustomCorpusData:
     def __init__(
         self, 
         data_path,
@@ -47,6 +47,9 @@ class CustomCorpusData():
         mini_dataset=False,
         data_augmentation_secondary_label=False,
         data_augmentation_connective_arg2=False,
+        
+        prepare_dataset=True,
+        *args, **kwargs,
     ):
         # args
         self.data_name = data_name
@@ -65,6 +68,14 @@ class CustomCorpusData():
         self.blind_test_df: pd.DataFrame = None
         self.get_dataframe(data_path=data_path, data_name=data_name)
         
+        self.data_augmentation_train_df()
+        if mini_dataset:
+            self.train_df = self.train_df.iloc[:32]
+            self.dev_df = self.dev_df.iloc[:16]
+            self.test_df = self.test_df.iloc[:16]
+            if data_name == 'conll':
+                self.blind_test_df = self.blind_test_df.iloc[:16]
+
         # tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, cache_dir=cache_dir)
         
@@ -74,21 +85,14 @@ class CustomCorpusData():
         self.label_map: Dict[str, int] = {}
         self.get_label_info(label_level=label_level, data_name=data_name)
         
-        self.data_augmentation_train_df()
-            
-        if mini_dataset:
-            self.train_df = self.train_df.iloc[:32]
-            self.dev_df = self.dev_df.iloc[:16]
-            self.test_df = self.test_df.iloc[:16]
-            if data_name == 'conll':
-                self.blind_test_df = self.blind_test_df.iloc[:16]
-        
+        # dataset
         self.train_dataset = self.get_dataset(self.train_df, is_train=True)
         self.dev_dataset = self.get_dataset(self.dev_df, is_train=False)
         self.test_dataset = self.get_dataset(self.test_df, is_train=False)
         if data_name == 'conll':
             self.blind_test_dataset = self.get_dataset(self.blind_test_df)
         
+        # data collator
         self.data_collator = DataCollatorWithPadding(self.tokenizer)
     
     def get_dataframe(self, data_path, data_name):
@@ -271,10 +275,15 @@ class CustomCorpusData():
             secondary_label_ids.append(cur_sec_labels)
         
         label_vectors = np.eye(self.num_labels)[label_ids]
-        if self.secondary_label_weight != 0:
+        if is_train:
+            if self.secondary_label_weight != 0:
+                for p, sec_labels in enumerate(secondary_label_ids):
+                    for sl in sec_labels:
+                        label_vectors[p][sl] = self.secondary_label_weight
+        else:
             for p, sec_labels in enumerate(secondary_label_ids):
                 for sl in sec_labels:
-                    label_vectors[p][sl] = self.secondary_label_weight
+                    label_vectors[p][sl] = 1           
             
         return CustomDataset(
             arg1=arg1_list,
@@ -345,8 +354,13 @@ if __name__ == '__main__':
         print(sample_dataset.train_df.shape)
         print('='*10)
     
-    sampling_test('pdtb2')
+    # sampling_test('pdtb2')
     # sampling_test('pdtb2', 'level2')
     # sampling_test('pdtb3')
     # sampling_test('pdtb3', 'level2')
     # sampling_test('conll')
+    
+    # from run import local_test_args
+    # sample_data = CustomCorpusData(**dict(local_test_args()))
+    # print(len(sample_data.train_dataset))
+    pass

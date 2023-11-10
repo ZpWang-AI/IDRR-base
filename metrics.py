@@ -19,6 +19,7 @@ class ComputeMetrics:
         predictions, labels = eval_pred
         predictions = np.argmax(predictions, axis=1)
         predictions = np.eye(len(self.label_list))[predictions]
+        labels = (labels != 0).astype(int)
         
         res = {
             # 'Acc': accuracy_score(labels, predictions),

@@ -1,4 +1,3 @@
-
 # ===== prepare server_name, root_fold =====
 SERVER_NAME = 'cu12_'
 if SERVER_NAME in ['cu12_', 'cu13_', 'northern_']:
@@ -19,6 +18,7 @@ print(f'=== CUDA {free_gpu_id} ===')
 
 # ===== import =====
 from arguments import CustomArgs
+from corpusData import CustomCorpusData
 from main import main
 
 
@@ -34,6 +34,7 @@ def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1'
         args.data_path = ROOT_FOLD_IDRR+'CorpusData/PDTB3/pdtb3_implicit.csv'
     elif data_name == 'conll':
         args.data_path = ROOT_FOLD_IDRR+'CorpusData/CoNLL16/'
+    args.cuda_id = free_gpu_id
     args.label_level = label_level
     
     args.model_name_or_path = ROOT_FOLD_IDRR+'/plm_cache/models--roberta-base/snapshots/bc2764f8af2e92b6eb5679868df33e224075ca68'
@@ -59,7 +60,10 @@ def server_long_args(data_name='pdtb2', data_level='level1'):
     args.version = 'cu12_long_bs256'
     args.train_batch_size = 16
     args.gradient_accumulation_steps = 16
-    args.recalculate_eval_log_steps(800, 80)
+    trainset_size = len(CustomCorpusData(**dict(args)).train_dataset)
+    eval_per_epoch = 15
+    sample_per_eval = trainset_size//eval_per_epoch
+    args.recalculate_eval_log_steps(sample_per_eval=sample_per_eval, sample_per_log=sample_per_eval//10)
     
     return args
 

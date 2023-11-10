@@ -53,26 +53,24 @@ def train_func(
     if args.do_eval:
         callback.evaluate_testdata = True
         
-        eval_metrics = {}
+        test_metrics = {}
         for metric_ in compute_metrics.metric_names:
             load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
             if load_ckpt_dir.exists():
                 evaluate_output = trainer.evaluate(eval_dataset=dataset.test_dataset)
-                eval_metric_name = 'eval_'+metric_
-                eval_metrics[eval_metric_name] = evaluate_output[eval_metric_name]
+                test_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
                 
-        logger.log_json(eval_metrics, 'eval_metric_score.json', log_info=True)                
+        logger.log_json(test_metrics, 'test_metric_score.json', log_info=True)                
 
         if args.data_name == 'conll':
-            eval_metrics = {}
+            test_metrics = {}
             for metric_ in compute_metrics.metric_names:
                 load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
                 if load_ckpt_dir.exists():
                     evaluate_output = trainer.evaluate(eval_dataset=dataset.blind_test_dataset)
-                    eval_metric_name = 'eval_'+metric_
-                    eval_metrics[eval_metric_name] = evaluate_output[eval_metric_name]
+                    test_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
                     
-            logger.log_json(eval_metrics, 'eval_metric_score_blind-test.json', log_info=True)    
+            logger.log_json(test_metrics, 'test_metric_score_blind-test.json', log_info=True)    
                 
 
     return trainer, callback
@@ -166,6 +164,8 @@ def main_one_iteration(args:CustomArgs, training_iter_id=0):
             mini_dataset=args.mini_dataset,
             
             label_level=args.label_level,
+            secondary_label_weight=args.secondary_label_weight,
+            data_augmentation_secondary_label=args.data_augmentation_secondary_label,
             data_augmentation_connective_arg2=args.data_augmentation_connective_arg2,
         )
         args.trainset_size, args.devset_size, args.testset_size = map(len, [
@@ -261,9 +261,9 @@ def main(args:CustomArgs, training_iter_id=-1):
         # calculate average
         for json_file_name in [
             'best_metric_score.json', 
-            'eval_metric_score.json',
+            'test_metric_score.json',
+            'test_metric_score_blind-test.json',
             'train_output.json',
-            'eval_metric_score_blind-test.json',
         ]:
             metric_analysis = analyze_metrics_json(args.log_dir, json_file_name, just_average=True)
             if metric_analysis:

@@ -58,6 +58,7 @@ class CustomArgs:
     trainset_size = -1
     devset_size = -1
     testset_size = -1
+    cuda_id = 0
     cur_time = '2023-10-16-20-00-36'
     
     ############################ Args # Don't modify this line

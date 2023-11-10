@@ -42,7 +42,7 @@ def analyze_experiment_evaluations(target_log_folds, to_json_file=None, to_csv_f
     results = []
     hypers = []
     for log_dir in target_log_folds:
-        analysis = analyze_metrics_json(log_dir, 'eval_metric_score.json', just_average=False)
+        analysis = analyze_metrics_json(log_dir, 'test_metric_score.json', just_average=False)
         results.append(analysis)
         
         hyper_path = path(log_dir)/'hyperparams.json'

@@ -11,7 +11,7 @@ from corpusData import CustomCorpusData, Dataset
 
 
 class RankingDataset(Dataset):
-    def __init__(self, ) -> None:
+    def __init__(self, args1) -> None:
         super().__init__()
 
 

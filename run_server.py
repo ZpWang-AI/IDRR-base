@@ -10,14 +10,7 @@ else:
 import os
 os.chdir(ROOT_FOLD_IDRR+'IDRR-base/')
 
-# ===== prepare gpu =====
-from gpuManager import GPUManager
-GPU_CNT = 1  # TODO: ***** use how many gpu *****
-free_gpu_ids = GPUManager.get_some_free_gpus(gpu_cnt=GPU_CNT)
-os.environ["CUDA_VISIBLE_DEVICES"] = free_gpu_ids
-print(f'=== CUDA {free_gpu_ids} ===')
-
-# ===== import =====
+# ===== import ===== !!! Don't import torch !!!
 from arguments import CustomArgs
 
 
@@ -33,7 +26,6 @@ def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1'
         args.data_path = ROOT_FOLD_IDRR+'CorpusData/PDTB3/pdtb3_implicit.csv'
     elif data_name == 'conll':
         args.data_path = ROOT_FOLD_IDRR+'CorpusData/CoNLL16/'
-    args.cuda_id = free_gpu_ids
     args.label_level = label_level
     
     args.model_name_or_path = ROOT_FOLD_IDRR+'/plm_cache/models--roberta-base/snapshots/bc2764f8af2e92b6eb5679868df33e224075ca68'
@@ -74,13 +66,22 @@ def server_dataAug_args(args=None, data_name='pdtb2'):
 
     
 if __name__ == '__main__':
-    from main import main
+    # ===== choose args =====
+    # todo_args = server_base_args(test_setting=True, data_name='pdtb2')
+    # todo_args = server_base_args(test_setting=True, data_name='pdtb2', label_level='level2')
+    # todo_args = server_base_args(test_setting=True, data_name='pdtb3')
+    # todo_args = server_base_args(test_setting=True, data_name='conll')
+    # todo_args = server_base_args()
+    todo_args = server_long_args()
     
-    main(server_base_args(test_setting=True, data_name='pdtb2'))
-    # main(server_base_args(test_setting=True, data_name='pdtb2', label_level='level2'))
-    # main(server_base_args(test_setting=True, data_name='pdtb3'))
-    # main(server_base_args(test_setting=True, data_name='conll'))
-    # main(server_dataAug_args())
-    main(server_base_args())
-    main(server_long_args())
+    # ===== prepare gpu =====
+    from gpuManager import GPUManager
+    free_gpu_ids = GPUManager.get_some_free_gpus(gpu_cnt=todo_args.cuda_cnt)
+    os.environ["CUDA_VISIBLE_DEVICES"] = free_gpu_ids
+    todo_args.cuda_id = free_gpu_ids
+    print(f'=== CUDA {free_gpu_ids} ===')
+    
+    # ===== run main =====
+    from main import main
+    main(todo_args)
     pass

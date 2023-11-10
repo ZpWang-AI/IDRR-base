@@ -78,13 +78,19 @@ class CustomArgs:
         parser.add_argument("--mini_dataset", type=arg_bool, default=False)
         parser.add_argument("--do_train", type=arg_bool, default=True)
         parser.add_argument("--do_eval", type=arg_bool, default=True)
-        parser.add_argument("--training_iteration", type=int, default=5)
         parser.add_argument("--save_ckpt", type=arg_bool, default=False)
+        parser.add_argument("--training_iteration", type=int, default=5)
+        parser.add_argument("--cuda_cnt", type=int, default=1)
+        
+        # data
         parser.add_argument("--label_level", type=str, default='level1')
-        parser.add_argument("--model_name_or_path", type=str, default='roberta-base')
         parser.add_argument("--data_name", type=str, default='pdtb2')
+        parser.add_argument("--secondary_label_weight", type=float, default=0.5)
+        parser.add_argument("--data_augmentation_secondary_label", type=arg_bool, default=False)
+        parser.add_argument("--data_augmentation_connective_arg2", type=arg_bool, default=False)
         
         # path
+        parser.add_argument("--model_name_or_path", type=str, default='roberta-base')
         parser.add_argument("--data_path", type=str, default='/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv')
         parser.add_argument("--cache_dir", type=str, default='/content/drive/MyDrive/IDRR/plm_cache')
         parser.add_argument("--output_dir", type=str, default='./output_space/')
@@ -93,9 +99,6 @@ class CustomArgs:
         
         # improvement
         parser.add_argument("--loss_type", type=str, default='CELoss')
-        parser.add_argument("--secondary_label_weight", type=float, default=0.5)
-        parser.add_argument("--data_augmentation_secondary_label", type=arg_bool, default=False)
-        parser.add_argument("--data_augmentation_connective_arg2", type=arg_bool, default=False)
         
         # epoch, batch, step
         parser.add_argument("--epochs", type=int, default=5)

@@ -1,4 +1,3 @@
-
 # ===== prepare server_name, root_fold =====
 SERVER_NAME = 'cu12_'
 if SERVER_NAME in ['cu12_', 'cu13_', 'northern_']:
@@ -11,15 +10,8 @@ else:
 import os
 os.chdir(ROOT_FOLD_IDRR+'IDRR-base/')
 
-# ===== prepare gpu =====
-from gpuManager import GPUManager
-free_gpu_id = GPUManager.get_free_gpu()
-os.environ["CUDA_VISIBLE_DEVICES"] = str(free_gpu_id)
-print(f'=== CUDA {free_gpu_id} ===')
-
-# ===== import =====
+# ===== import ===== !!! Don't import torch !!!
 from arguments import CustomArgs
-from main import main
 
 
 def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1') -> CustomArgs:
@@ -39,7 +31,8 @@ def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1'
     args.model_name_or_path = ROOT_FOLD_IDRR+'/plm_cache/models--roberta-base/snapshots/bc2764f8af2e92b6eb5679868df33e224075ca68'
     args.load_ckpt_dir = ROOT_FOLD_IDRR+'ckpt_fold'
     args.cache_dir = ''
-    args.output_dir = ROOT_FOLD_IDRR+'output_space/'
+    # args.output_dir = ROOT_FOLD_IDRR+'output_space/'
+    args.output_dir = '/home/zpwang/IDRR/output_space/'  # TODO: consume lots of memory
     if test_setting:
         args.log_dir = ROOT_FOLD_IDRR+'log_space_test/'
     else:
@@ -48,8 +41,8 @@ def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1'
     return args
 
 
-def server_long_args(data_name='pdtb2', data_level='level1'):
-    args = server_base_args(test_setting=False, data_name=data_name, data_level=data_level)
+def server_long_args(data_name='pdtb2', label_level='level1'):
+    args = server_base_args(test_setting=False, data_name=data_name, label_level=label_level)
     args:CustomArgs
     
     args.epochs = 25
@@ -59,8 +52,7 @@ def server_long_args(data_name='pdtb2', data_level='level1'):
     args.version = 'cu12_long_bs256'
     args.train_batch_size = 16
     args.gradient_accumulation_steps = 16
-    args.recalculate_eval_log_steps(800, 80)
-    
+    # args.eval_per_epoch = 4
     return args
 
 
@@ -68,15 +60,28 @@ def server_dataAug_args(args=None, data_name='pdtb2'):
     if not args:
         args = server_base_args(test_setting=False, data_name=data_name)
     args.version = SERVER_NAME+'dataAugmentation'
-    args.data_augmentation = True
+    args.data_augmentation_connective_arg2 = True
     
     return args
 
     
 if __name__ == '__main__':
-    main(server_base_args(test_setting=True, data_name='pdtb2'))
-    # main(server_base_args(test_setting=True, data_name='pdtb2', label_level='level2'))
-    # main(server_base_args(test_setting=True, data_name='pdtb3'))
-    # main(server_base_args(test_setting=True, data_name='conll'))
-    # main(server_dataAug_args())
+    # ===== choose args =====
+    # todo_args = server_base_args(test_setting=True, data_name='pdtb2')
+    # todo_args = server_base_args(test_setting=True, data_name='pdtb2', label_level='level2')
+    # todo_args = server_base_args(test_setting=True, data_name='pdtb3')
+    # todo_args = server_base_args(test_setting=True, data_name='conll')
+    # todo_args = server_base_args()
+    todo_args = server_long_args()
+    
+    # ===== prepare gpu =====
+    from gpuManager import GPUManager
+    free_gpu_ids = GPUManager.get_some_free_gpus(gpu_cnt=todo_args.cuda_cnt)
+    os.environ["CUDA_VISIBLE_DEVICES"] = free_gpu_ids
+    todo_args.cuda_id = free_gpu_ids
+    print(f'=== CUDA {free_gpu_ids} ===')
+    
+    # ===== run main =====
+    from main import main
+    main(todo_args)
     pass

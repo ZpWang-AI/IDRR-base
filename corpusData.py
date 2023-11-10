@@ -34,25 +34,30 @@ class CustomDataset(Dataset):
         return len(self.arg1)
 
 
-class CustomCorpusData():
+class CustomCorpusData:
     def __init__(
         self, 
         data_path,
         data_name='pdtb2',
-        
         model_name_or_path='roberta-base',
         cache_dir='',
-        
         label_level='level1',
         
+        secondary_label_weight=0.5,
         mini_dataset=False,
-        data_augmentation=False,
+        data_augmentation_secondary_label=False,
+        data_augmentation_connective_arg2=False,
+        
+        prepare_dataset=True,
+        *args, **kwargs,
     ):
         # args
         self.data_name = data_name
         self.label_level = label_level
+        self.secondary_label_weight = secondary_label_weight
         self.mini_dataset = mini_dataset
-        self.data_augmentation = data_augmentation
+        self.data_augmentation_secondary_label = data_augmentation_secondary_label
+        self.data_augmentation_connective_arg2 = data_augmentation_connective_arg2
         
         # dataframe
         self.columns = ['arg1', 'arg2', 'conn1', 'conn2', 
@@ -63,6 +68,14 @@ class CustomCorpusData():
         self.blind_test_df: pd.DataFrame = None
         self.get_dataframe(data_path=data_path, data_name=data_name)
         
+        self.data_augmentation_train_df()
+        if mini_dataset:
+            self.train_df = self.train_df.iloc[:32]
+            self.dev_df = self.dev_df.iloc[:16]
+            self.test_df = self.test_df.iloc[:16]
+            if data_name == 'conll':
+                self.blind_test_df = self.blind_test_df.iloc[:16]
+
         # tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, cache_dir=cache_dir)
         
@@ -71,23 +84,15 @@ class CustomCorpusData():
         self.num_labels: int = 0
         self.label_map: Dict[str, int] = {}
         self.get_label_info(label_level=label_level, data_name=data_name)
-            
-        if data_augmentation:
-            self.train_df = self.data_augmentation_df(self.train_df)
-            
-        if mini_dataset:
-            self.train_df = self.train_df.iloc[:32]
-            self.dev_df = self.dev_df.iloc[:16]
-            self.test_df = self.test_df.iloc[:16]
-            if data_name == 'conll':
-                self.blind_test_df = self.blind_test_df.iloc[:16]
         
+        # dataset
         self.train_dataset = self.get_dataset(self.train_df, is_train=True)
         self.dev_dataset = self.get_dataset(self.dev_df, is_train=False)
         self.test_dataset = self.get_dataset(self.test_df, is_train=False)
         if data_name == 'conll':
             self.blind_test_dataset = self.get_dataset(self.blind_test_df)
         
+        # data collator
         self.data_collator = DataCollatorWithPadding(self.tokenizer)
     
     def get_dataframe(self, data_path, data_name):
@@ -270,9 +275,15 @@ class CustomCorpusData():
             secondary_label_ids.append(cur_sec_labels)
         
         label_vectors = np.eye(self.num_labels)[label_ids]
-        for p, sec_labels in enumerate(secondary_label_ids):
-            for sl in sec_labels:
-                label_vectors[p][sl] = 1
+        if is_train:
+            if self.secondary_label_weight != 0:
+                for p, sec_labels in enumerate(secondary_label_ids):
+                    for sl in sec_labels:
+                        label_vectors[p][sl] = self.secondary_label_weight
+        else:
+            for p, sec_labels in enumerate(secondary_label_ids):
+                for sl in sec_labels:
+                    label_vectors[p][sl] = 1           
             
         return CustomDataset(
             arg1=arg1_list,
@@ -282,16 +293,33 @@ class CustomCorpusData():
             labels=label_vectors,
         )
                         
-    def data_augmentation_df(self, df:pd.DataFrame):
-        df2 = df.copy()
-        df2['arg1'] = df2['conn1']+df2['arg2']
-        df3 = df.copy()
-        df3.dropna(subset=['conn2'], inplace=True)
-        df3['arg2'] = df3['conn2']+df3['arg2']
-        df3['conn1sense1'], df3['conn1sense2'], df3['conn2sense1'], df3['conn2sense2'] = (
-            df3['conn2sense1'], df3['conn2sense2'], df3['conn1sense1'], df3['conn1sense2']
-        )
-        return pd.concat([df, df2, df3], ignore_index=True)
+    def data_augmentation_train_df(self):
+        if self.data_augmentation_secondary_label:
+            df = self.train_df
+            df2 = df.copy()
+            df2.dropna(subset=['conn1sense2'], inplace=True)
+            df2['conn1sense1'] = df2['conn1sense2']
+            df3 = df.copy()
+            df3.dropna(subset=['conn2sense1'], inplace=True)
+            df3['conn1sense1'], df3['conn1'] = df3['conn2sense1'], df3['conn2']
+            df4 = df.copy()
+            df4.dropna(subset=['conn2sense2'], inplace=True)
+            df4['conn1sense1'], df4['conn1'] = df4['conn2sense2'], df4['conn2']
+            self.train_df = pd.concat([df,df2,df3,df4], ignore_index=True)
+            for dv in 'conn2 conn1sense2 conn2sense1 conn2sense2'.split():
+                self.train_df[dv] = np.nan
+            
+        if self.data_augmentation_connective_arg2:
+            df = self.train_df
+            df2 = df.copy()
+            df2['arg1'] = df2['conn1']+df2['arg2']
+            df3 = df.copy()
+            df3.dropna(subset=['conn2'], inplace=True)
+            df3['arg2'] = df3['conn2']+df3['arg2']
+            df3['conn1sense1'], df3['conn1sense2'], df3['conn2sense1'], df3['conn2sense2'] = (
+                df3['conn2sense1'], df3['conn2sense2'], df3['conn1sense1'], df3['conn1sense2']
+            )
+            self.train_df = pd.concat([df, df2, df3], ignore_index=True)
     
     
 if __name__ == '__main__':
@@ -316,16 +344,23 @@ if __name__ == '__main__':
             # cache_dir='./plm_cache/',
             label_level=label_level,
             mini_dataset=False,
-            data_augmentation=True,
+            data_augmentation_secondary_label=True,
+            data_augmentation_connective_arg2=False,
         )
         batch = [sample_dataset.train_dataset[p]for p in range(3)]
         batch = sample_dataset.data_collator(batch)
         print(batch ,'\n')
         print(f'{data_name}, time: {time.time()-start_time:.2f}s')
+        print(sample_dataset.train_df.shape)
         print('='*10)
     
     # sampling_test('pdtb2')
-    sampling_test('pdtb2', 'level2')
+    # sampling_test('pdtb2', 'level2')
     # sampling_test('pdtb3')
-    sampling_test('pdtb3', 'level2')
-    sampling_test('conll')
+    # sampling_test('pdtb3', 'level2')
+    # sampling_test('conll')
+    
+    # from run import local_test_args
+    # sample_data = CustomCorpusData(**dict(local_test_args()))
+    # print(len(sample_data.train_dataset))
+    pass

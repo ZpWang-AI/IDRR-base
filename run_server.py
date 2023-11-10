@@ -40,7 +40,8 @@ def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1'
     args.model_name_or_path = ROOT_FOLD_IDRR+'/plm_cache/models--roberta-base/snapshots/bc2764f8af2e92b6eb5679868df33e224075ca68'
     args.load_ckpt_dir = ROOT_FOLD_IDRR+'ckpt_fold'
     args.cache_dir = ''
-    args.output_dir = ROOT_FOLD_IDRR+'output_space/'
+    # args.output_dir = ROOT_FOLD_IDRR+'output_space/'
+    args.output_dir = '/home/zpwang/IDRR/output_space/'  # TODO: consume lots of memory
     if test_setting:
         args.log_dir = ROOT_FOLD_IDRR+'log_space_test/'
     else:
@@ -60,12 +61,6 @@ def server_long_args(data_name='pdtb2', label_level='level1'):
     args.version = 'cu12_long_bs256'
     args.train_batch_size = 16
     args.gradient_accumulation_steps = 16
-    trainset_size = len(CustomCorpusData(**dict(args)).train_dataset)
-    eval_per_epoch = 15
-    sample_per_eval = trainset_size//eval_per_epoch
-    args.recalculate_eval_log_steps(sample_per_eval=sample_per_eval, 
-                                    sample_per_log=sample_per_eval//10)
-    
     return args
 
 

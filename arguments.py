@@ -47,6 +47,7 @@ class CustomArgs:
     eval_steps = 100
     log_steps = 10
     gradient_accumulation_steps = 1
+    eval_per_epoch = 15
     
     # seed, lr
     seed = 2023
@@ -101,6 +102,7 @@ class CustomArgs:
         parser.add_argument("--eval_steps", type=int, default=100)
         parser.add_argument("--log_steps", type=int, default=10)
         parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
+        parser.add_argument("--eval_per_epoch", type=int, default=15)
         
         # seed, lr
         parser.add_argument("--seed", type=int, default=2023)
@@ -125,6 +127,7 @@ class CustomArgs:
             self.epochs = 2
             self.eval_steps = 4
             self.log_steps = 4
+            self.eval_per_epoch = -1
     
     def complete_path(self):
         self.cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
@@ -133,10 +136,13 @@ class CustomArgs:
         self.output_dir = os.path.join(self.output_dir, specific_fold_name)
         self.log_dir = os.path.join(self.log_dir, specific_fold_name) 
     
-    def recalculate_eval_log_steps(self, sample_per_eval=800, sample_per_log=80):
-        real_batch_size = self.train_batch_size*self.gradient_accumulation_steps
-        self.eval_steps = sample_per_eval // real_batch_size
-        self.log_steps = sample_per_log // real_batch_size
+    def recalculate_eval_log_steps(self):
+        if self.eval_per_epoch > 0:
+            sample_per_eval = self.trainset_size / self.eval_per_epoch
+            sample_per_log = sample_per_eval / 10
+            real_batch_size = self.train_batch_size*self.gradient_accumulation_steps
+            self.eval_steps = max(1, int(sample_per_eval / real_batch_size))
+            self.log_steps = max(1, int(sample_per_log / real_batch_size))
         
     def check_path(self):
         # self.data_path

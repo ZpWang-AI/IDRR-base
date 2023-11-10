@@ -24,7 +24,7 @@ def train_func(
     args:CustomArgs, 
     training_args:TrainingArguments, 
     logger:CustomLogger,
-    dataset:CustomCorpusData, 
+    data:CustomCorpusData, 
     model:CustomModel, 
     compute_metrics:ComputeMetrics,
 ):
@@ -37,13 +37,13 @@ def train_func(
     trainer = Trainer(
         model=model, 
         args=training_args, 
-        tokenizer=dataset.tokenizer, 
+        tokenizer=data.tokenizer, 
         compute_metrics=compute_metrics,
         callbacks=[callback],
-        data_collator=dataset.data_collator,
+        data_collator=data.data_collator,
         
-        train_dataset=dataset.train_dataset,
-        eval_dataset=dataset.dev_dataset, 
+        train_dataset=data.train_dataset,
+        eval_dataset=data.dev_dataset, 
     )
     callback.trainer = trainer
 
@@ -57,7 +57,7 @@ def train_func(
         for metric_ in compute_metrics.metric_names:
             load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
             if load_ckpt_dir.exists():
-                evaluate_output = trainer.evaluate(eval_dataset=dataset.test_dataset)
+                evaluate_output = trainer.evaluate(eval_dataset=data.test_dataset)
                 test_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
                 
         logger.log_json(test_metrics, 'test_metric_score.json', log_info=True)                
@@ -67,7 +67,7 @@ def train_func(
             for metric_ in compute_metrics.metric_names:
                 load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
                 if load_ckpt_dir.exists():
-                    evaluate_output = trainer.evaluate(eval_dataset=dataset.blind_test_dataset)
+                    evaluate_output = trainer.evaluate(eval_dataset=data.blind_test_dataset)
                     test_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
                     
             logger.log_json(test_metrics, 'test_metric_score_blind-test.json', log_info=True)    
@@ -80,7 +80,7 @@ def evaluate_func(
     args:CustomArgs,
     training_args:TrainingArguments,
     logger:CustomLogger,
-    dataset:CustomCorpusData,
+    data:CustomCorpusData,
     model:CustomModel,
     compute_metrics:ComputeMetrics,
 ):
@@ -94,20 +94,20 @@ def evaluate_func(
     trainer = Trainer(
         model=model, 
         args=training_args, 
-        tokenizer=dataset.tokenizer, 
+        tokenizer=data.tokenizer, 
         compute_metrics=compute_metrics,
         callbacks=[callback],
-        data_collator=dataset.data_collator,
+        data_collator=data.data_collator,
     )
     callback.trainer = trainer
     
-    evaluate_output = trainer.evaluate(dataset.test_dataset)
+    evaluate_output = trainer.evaluate(data.test_dataset)
     logger.log_json(evaluate_output, 'evaluate_output.json', log_info=True)
         
     return trainer
 
 
-def main_one_iteration(args:CustomArgs, training_iter_id=0):
+def main_one_iteration(args:CustomArgs, data:CustomCorpusData, training_iter_id=0):
     if not args.do_train and not args.do_eval:
         raise Exception('neither do_train nor do_eval')
     
@@ -155,37 +155,21 @@ def main_one_iteration(args:CustomArgs, training_iter_id=0):
             logger_name=f'{args.cur_time}_iter{training_iter_id}_logger',
             print_output=True,
         )
-
-        dataset = CustomCorpusData(
-            data_path=args.data_path,
-            data_name=args.data_name,
-            model_name_or_path=args.model_name_or_path,
-            cache_dir=args.cache_dir,
-            mini_dataset=args.mini_dataset,
-            
-            label_level=args.label_level,
-            secondary_label_weight=args.secondary_label_weight,
-            data_augmentation_secondary_label=args.data_augmentation_secondary_label,
-            data_augmentation_connective_arg2=args.data_augmentation_connective_arg2,
-        )
-        args.trainset_size, args.devset_size, args.testset_size = map(len, [
-            dataset.train_dataset, dataset.dev_dataset, dataset.test_dataset
-        ])
         
         model = CustomModel(
             model_name_or_path=args.model_name_or_path,
-            num_labels=dataset.num_labels,
+            num_labels=data.num_labels,
             cache_dir=args.cache_dir,
             loss_type=args.loss_type,
         )
         
-        compute_metrics = ComputeMetrics(label_list=dataset.label_list)
+        compute_metrics = ComputeMetrics(label_list=data.label_list)
         
         train_evaluate_kwargs = {
             'args': args,
             'training_args': training_args,
             'model': model,
-            'dataset': dataset,
+            'data': data,
             'compute_metrics': compute_metrics,
             'logger': logger,
         }
@@ -238,17 +222,23 @@ def main(args:CustomArgs, training_iter_id=-1):
     main_logger = CustomLogger(args.log_dir, logger_name=f'{args.cur_time}_main_logger', print_output=True)
     # print(training_iter_id)
     
+    data = CustomCorpusData(**dict(args))
+    args.trainset_size, args.devset_size, args.testset_size = map(len, [
+        data.train_dataset, data.dev_dataset, data.test_dataset
+    ])
+    args.recalculate_eval_log_steps()
+    
     if training_iter_id < 0 or training_iter_id == 0:    
         main_logger.log_json(dict(args), log_file_name='hyperparams.json', log_info=True)
     
     try:
         if training_iter_id < 0:
             for _training_iter_id in range(args.training_iteration):
-                main_one_iteration(deepcopy(args), training_iter_id=_training_iter_id)
+                main_one_iteration(deepcopy(args), data=data, training_iter_id=_training_iter_id)
             if not args.save_ckpt:
                 shutil.rmtree(args.output_dir)
         else:
-            main_one_iteration(args, training_iter_id=training_iter_id)
+            main_one_iteration(deepcopy(args), data=data, training_iter_id=training_iter_id)
     except Exception as e:
         import traceback
         

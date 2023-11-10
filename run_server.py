@@ -61,6 +61,7 @@ def server_long_args(data_name='pdtb2', label_level='level1'):
     args.version = 'cu12_long_bs256'
     args.train_batch_size = 16
     args.gradient_accumulation_steps = 16
+    # args.eval_per_epoch = 4
     return args
 
 
@@ -79,5 +80,6 @@ if __name__ == '__main__':
     # main(server_base_args(test_setting=True, data_name='pdtb3'))
     # main(server_base_args(test_setting=True, data_name='conll'))
     # main(server_dataAug_args())
+    main(server_base_args())
     main(server_long_args())
     pass

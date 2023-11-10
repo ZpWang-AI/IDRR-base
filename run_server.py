@@ -49,8 +49,8 @@ def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1'
     return args
 
 
-def server_long_args(data_name='pdtb2', data_level='level1'):
-    args = server_base_args(test_setting=False, data_name=data_name, data_level=data_level)
+def server_long_args(data_name='pdtb2', label_level='level1'):
+    args = server_base_args(test_setting=False, data_name=data_name, label_level=label_level)
     args:CustomArgs
     
     args.epochs = 25
@@ -84,4 +84,5 @@ if __name__ == '__main__':
     # main(server_base_args(test_setting=True, data_name='pdtb3'))
     # main(server_base_args(test_setting=True, data_name='conll'))
     # main(server_dataAug_args())
+    main(server_long_args())
     pass

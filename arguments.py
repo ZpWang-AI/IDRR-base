@@ -20,13 +20,19 @@ class CustomArgs:
     mini_dataset = False
     do_train = True
     do_eval = True
-    training_iteration = 5
     save_ckpt = False
+    training_iteration = 5
+    cuda_cnt = 1
+    
+    # data
     label_level = 'level1'
-    model_name_or_path = 'roberta-base'
     data_name = 'pdtb2'
+    secondary_label_weight = 0.5  
+    data_augmentation_secondary_label = False
+    data_augmentation_connective_arg2 = False
     
     # path 
+    model_name_or_path = 'roberta-base'
     data_path = '/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv'
     cache_dir = '/content/drive/MyDrive/IDRR/plm_cache'
     output_dir = './output_space/'
@@ -35,9 +41,6 @@ class CustomArgs:
     
     # improvement
     loss_type = 'CELoss'
-    secondary_label_weight = 0.5  
-    data_augmentation_secondary_label = False
-    data_augmentation_connective_arg2 = False
     
     # epoch, batch, step
     epochs = 5
@@ -59,7 +62,7 @@ class CustomArgs:
     trainset_size = -1
     devset_size = -1
     testset_size = -1
-    cuda_id = 0
+    cuda_id = '0'
     cur_time = '2023-10-16-20-00-36'
     
     ############################ Args # Don't modify this line

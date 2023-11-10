@@ -12,14 +12,13 @@ os.chdir(ROOT_FOLD_IDRR+'IDRR-base/')
 
 # ===== prepare gpu =====
 from gpuManager import GPUManager
-free_gpu_ids = GPUManager.get_some_free_gpus(gpu_cnt=1)
+GPU_CNT = 1  # TODO: ***** use how many gpu *****
+free_gpu_ids = GPUManager.get_some_free_gpus(gpu_cnt=GPU_CNT)
 os.environ["CUDA_VISIBLE_DEVICES"] = free_gpu_ids
 print(f'=== CUDA {free_gpu_ids} ===')
 
 # ===== import =====
 from arguments import CustomArgs
-from corpusData import CustomCorpusData
-from main import main
 
 
 def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1') -> CustomArgs:
@@ -75,6 +74,8 @@ def server_dataAug_args(args=None, data_name='pdtb2'):
 
     
 if __name__ == '__main__':
+    from main import main
+    
     main(server_base_args(test_setting=True, data_name='pdtb2'))
     # main(server_base_args(test_setting=True, data_name='pdtb2', label_level='level2'))
     # main(server_base_args(test_setting=True, data_name='pdtb3'))

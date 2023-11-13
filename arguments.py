@@ -146,7 +146,7 @@ class CustomArgs:
         if self.eval_per_epoch > 0:
             sample_per_eval = self.trainset_size / self.eval_per_epoch
             sample_per_log = sample_per_eval / 10
-            real_batch_size = self.train_batch_size*self.gradient_accumulation_steps
+            real_batch_size = self.train_batch_size*self.gradient_accumulation_steps*self.cuda_cnt
             self.eval_steps = max(1, int(sample_per_eval / real_batch_size))
             self.log_steps = max(1, int(sample_per_log / real_batch_size))
         

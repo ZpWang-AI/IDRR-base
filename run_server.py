@@ -49,10 +49,11 @@ def server_long_args(data_name='pdtb2', label_level='level1'):
     args.learning_rate = 3e-5
     args.warmup_ratio = 0.1
     
-    args.version = 'cu12_long_bs256'
-    args.train_batch_size = 16
-    args.gradient_accumulation_steps = 16
-    # args.eval_per_epoch = 4
+    args.version = 'cu12_long_bs32*2'
+    args.train_batch_size = 32
+    args.gradient_accumulation_steps = 1
+    args.cuda_cnt = 2
+    args.eval_per_epoch = 4
     return args
 
 

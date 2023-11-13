@@ -69,7 +69,7 @@ class CustomArgs:
     devset_size = -1
     testset_size = -1
     cuda_id = '0'
-    cur_time = '2023-10-16-20-00-36'
+    cur_time = ''
     
     ############################ Args # Don't modify this line
     
@@ -151,18 +151,30 @@ class CustomArgs:
             self.rank_log_steps = 1
             self.eval_per_epoch = -1
     
-    def complete_path(self):
-        self.cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        # train_eval_string = '_train'*self.do_train + '_eval'*self.do_eval
-        specific_fold_name = f'{self.cur_time}_{self.version}_{self.data_name}_{self.label_level}'
-        self.output_dir = os.path.join(self.output_dir, specific_fold_name)
-        self.log_dir = os.path.join(self.log_dir, specific_fold_name) 
+    def complete_path(self,
+                      show_cur_time=True,
+                      show_data_name=True,
+                      show_label_level=True,
+                      ):
+        if not self.cur_time:
+            self.cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+            # train_eval_string = '_train'*self.do_train + '_eval'*self.do_eval
+            specific_fold_name = ''
+            if show_cur_time:
+                specific_fold_name += self.cur_time+'_'
+            specific_fold_name += self.version+'_'
+            if show_data_name:
+                specific_fold_name += '_'+self.data_name
+            if show_label_level:
+                specific_fold_name += '_'+self.label_level
+            self.output_dir = os.path.join(self.output_dir, specific_fold_name)
+            self.log_dir = os.path.join(self.log_dir, specific_fold_name) 
     
     def recalculate_eval_log_steps(self):
         if self.eval_per_epoch > 0:
             sample_per_eval = self.trainset_size / self.eval_per_epoch
             sample_per_log = sample_per_eval / 10
-            real_batch_size = self.train_batch_size*self.gradient_accumulation_steps
+            real_batch_size = self.train_batch_size*self.gradient_accumulation_steps*self.cuda_cnt
             self.eval_steps = max(1, int(sample_per_eval / real_batch_size))
             self.log_steps = max(1, int(sample_per_log / real_batch_size))
         

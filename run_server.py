@@ -73,6 +73,11 @@ if __name__ == '__main__':
     # todo_args = server_base_args(test_setting=True, data_name='conll')
     # todo_args = server_base_args()
     todo_args = server_long_args()
+    todo_args.complete_path(
+        show_cur_time=True,
+        show_data_name=False,
+        show_label_level=False,
+    )
     
     # ===== prepare gpu =====
     from gpuManager import GPUManager

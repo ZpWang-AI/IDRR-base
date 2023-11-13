@@ -219,8 +219,6 @@ def main(args:CustomArgs, training_iter_id=-1):
     
     args.complete_path()
     args.check_path()
-    main_logger = CustomLogger(args.log_dir, logger_name=f'{args.cur_time}_main_logger', print_output=True)
-    # print(training_iter_id)
     
     data = CustomCorpusData(**dict(args))
     args.trainset_size, args.devset_size, args.testset_size = map(len, [
@@ -228,6 +226,7 @@ def main(args:CustomArgs, training_iter_id=-1):
     ])
     args.recalculate_eval_log_steps()
     
+    main_logger = CustomLogger(args.log_dir, logger_name=f'{args.cur_time}_main_logger', print_output=True)
     if training_iter_id < 0 or training_iter_id == 0:    
         main_logger.log_json(dict(args), log_file_name='hyperparams.json', log_info=True)
     

@@ -2,7 +2,6 @@ import json
 import numpy as np
 import pandas as pd
 import torch
-import random
 
 from typing import Any
 from typing import *
@@ -165,4 +164,43 @@ class RankingData():
     
 if __name__ == '__main__':
     import os
+    import time
     os.environ['TOKENIZERS_PARALLELISM'] = 'false'
+    np.random.seed(1024)
+
+    def sampling_test(data_name='pdtb2', label_level='level1'):
+        if data_name == 'pdtb2':
+            data_path = r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\CorpusData\PDTB2\pdtb2.csv'
+        elif data_name == 'pdtb3':
+            data_path = r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\CorpusData\PDTB3\pdtb3_implicit.csv'
+        elif data_name == 'conll':
+            data_path = r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\CorpusData\CoNLL16'
+        else:
+            raise Exception('wrong data_name')
+            
+        sample_data = CustomCorpusData(
+            data_path=data_path,
+            data_name=data_name,
+            model_name_or_path=r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\plm_cache\models--roberta-base\snapshots\bc2764f8af2e92b6eb5679868df33e224075ca68',
+            # cache_dir='./plm_cache/',
+            label_level=label_level,
+            mini_dataset=False,
+            data_augmentation_secondary_label=True,
+            data_augmentation_connective_arg2=False,
+        )
+        start_time = time.time()
+        sample_ranking_data = RankingData(
+            corpus_data=sample_data,
+            rank_order_file='./rank_order/rank_order1.json',
+            balance_class=True,
+            fixed_sampling=True,
+            dataset_size_multiplier=1,
+        )
+        batch = [sample_ranking_data.train_dataset[p]for p in range(3)]
+        batch = sample_ranking_data.data_collator(batch)
+        print(batch ,'\n')
+        print(batch['input_ids'].shape, batch['labels'].shape)
+        print(f'{data_name}, time: {time.time()-start_time:.2f}s')
+        print('='*10)
+    
+    sampling_test()

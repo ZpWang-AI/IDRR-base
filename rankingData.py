@@ -12,7 +12,7 @@ from corpusData import CustomCorpusData, Dataset
 
 class RandomSampler:
     def __init__(self, label_rec, rank_order) -> None:
-        self.label_rec = label_rec
+        self.label_rec = [p[:]if p else [0] for p in label_rec]
         self.rank_order = rank_order
         
     def __call__(self, first_label, first_item=None):

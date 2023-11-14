@@ -70,7 +70,8 @@ class RankingDataCollator:
     
     def __call__(self, features):
         """
-        features: List[List[(arg1:str, arg2:str), label:int]], (rank_batch, rank_order_len, 2)
+        features: List[List[(arg1:str, arg2:str), label:int]], 
+                  (rank_batch, rank_order_len=num_labels, 2)
         """
         arg_pairs, labels = [], []
         for rank_sample in features:

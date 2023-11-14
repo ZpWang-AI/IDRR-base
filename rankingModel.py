@@ -43,7 +43,7 @@ class ListMLELoss(nn.Module):
                 labels = labels[:, sublist_ids]
         
         if labels is not None:
-            _, sort_ids = labels.sort(descending=True, dim=-1)
+            _, sort_ids = labels.sort(descending=True, dim=1)
             scores = scores.gather(dim=1, index=sort_ids)
         
         cumsums = scores.exp().flip(dims=[1]).cumsum(dim=1).flip(dims=[1])
@@ -147,8 +147,9 @@ class RankModel(nn.Module):
         hidden_state = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
         pooler_output = hidden_state.pooler_output
         label_vector = self.label_vectors[torch.argmax(labels[0])]
-        scores = (torch.stack([label_vector]*pooler_output.shape[0]) * pooler_output).sum(dim=1)
-        loss = self.rank_loss_fn(scores)
+        label_vector = torch.stack([label_vector]*pooler_output.shape[0])
+        scores = (label_vector * pooler_output).sum(dim=1)
+        loss = self.rank_loss_fn(scores.reshape(-1, self.num_labels))
         return {
             'logits': scores,
             'loss': loss,

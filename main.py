@@ -27,6 +27,8 @@ LOG_FILENAME_DICT = {
     'blind test': 'test_blind_metric_score.json',
     'loss': 'train_loss.jsonl',
     'output': 'train_output.json',
+    
+    'evaluate': 'evaluate_output.json'
 }
 
 
@@ -83,7 +85,7 @@ def train_func(
                     evaluate_output = trainer.evaluate(eval_dataset=data.blind_test_dataset)
                     test_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
                     
-            logger.log_json(test_metrics, 'test_metric_score_blind-test.json', log_info=True)    
+            logger.log_json(test_metrics, LOG_FILENAME_DICT['blind test'], log_info=True)    
                 
 
     return trainer, callback
@@ -115,7 +117,7 @@ def evaluate_func(
     callback.trainer = trainer
     
     evaluate_output = trainer.evaluate(data.test_dataset)
-    logger.log_json(evaluate_output, 'evaluate_output.json', log_info=True)
+    logger.log_json(evaluate_output, LOG_FILENAME_DICT['evaluate'], log_info=True)
         
     return trainer
 

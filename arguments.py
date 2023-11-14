@@ -17,7 +17,6 @@ class CustomArgs:
     version = 'colab'
     
     # base setting
-    mini_dataset = False
     do_train = True
     do_eval = True
     save_ckpt = False
@@ -25,6 +24,7 @@ class CustomArgs:
     cuda_cnt = 1
     
     # data
+    mini_dataset = False
     label_level = 'level1'
     data_name = 'pdtb2'
     secondary_label_weight = 0.5  
@@ -77,7 +77,6 @@ class CustomArgs:
         parser.add_argument("--version", type=str, default='colab')
         
         # base setting
-        parser.add_argument("--mini_dataset", type=arg_bool, default=False)
         parser.add_argument("--do_train", type=arg_bool, default=True)
         parser.add_argument("--do_eval", type=arg_bool, default=True)
         parser.add_argument("--save_ckpt", type=arg_bool, default=False)
@@ -85,6 +84,7 @@ class CustomArgs:
         parser.add_argument("--cuda_cnt", type=int, default=1)
         
         # data
+        parser.add_argument("--mini_dataset", type=arg_bool, default=False)
         parser.add_argument("--label_level", type=str, default='level1')
         parser.add_argument("--data_name", type=str, default='pdtb2')
         parser.add_argument("--secondary_label_weight", type=float, default=0.5)

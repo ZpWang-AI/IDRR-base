@@ -2,6 +2,7 @@ import json
 import numpy as np
 import pandas as pd
 import torch
+import random
 
 from typing import *
 from itertools import cycle
@@ -10,23 +11,69 @@ from transformers import AutoTokenizer
 from corpusData import CustomCorpusData, Dataset
 
 
+class RandomSampler:
+    def __init__(self, label_rec, rank_order) -> None:
+        self.label_rec = label_rec
+        self.rank_order = rank_order
+        
+    def __call__(self, first_label, first_item=None):
+        if first_item is not None:
+            return [first_item]+[np.random.choice(self.label_rec[p]) 
+                                 for p in self.rank_order[first_label]]
+        else:
+            return [np.random.choice(self.label_rec[p]) 
+                    for p in [first_label]+self.rank_order[first_label]]
+    
+
 class RankingDataset(Dataset):
-    def __init__(self, arg1, arg2, tokenizer, labels, label_rec, dataset_size) -> None:
+    def __init__(self, 
+                 arg1, arg2, tokenizer, labels, 
+                 label_rec, rank_order, 
+                 balance_class=True,
+                 fixed_sampling=True,
+                 dataset_size=-1
+                 ) -> None:
         super().__init__()
         
         self.arg1 = arg1
         self.arg2 = arg2
         self.tokenizer = tokenizer
         self.labels = labels
-        self.label_rec = label_rec
-        self.dataset_size = dataset_size
+        self.random_sampler = RandomSampler(label_rec, rank_order)
+        self.balance_class = balance_class
+        self.num_labels = len(label_rec)
+        self.fixed_sampling = fixed_sampling
+        if self.fixed_sampling:
+            self.pids_list = [self._get_pids(p)for p in range(dataset_size)]
+        self.dataset_size = len(self.labels) if dataset_size < 0 else dataset_size
+            
+    def _get_pids(self, index):
+        if self.balance_class:
+            pids = self.random_sampler(np.random.randint(self.num_labels))
+        else:
+            pids = self.random_sampler(self.labels[index], first_item=index)
+        return pids
         
-    def __getitem__(self, index) -> Any:
-        return super().__getitem__(index)
+    def __getitem__(self, index):
+        if self.fixed_sampling:
+            pids = self.pids_list[index]
+        else:
+            pids = self._get_pids(index)
+        model_inputs = self.tokenizer(
+            [[self.arg1[p],self.arg2[p]]for p in pids],
+            add_special_tokens=True, 
+            truncation='longest_first', 
+            max_length=256,
+        )
+        
+        model_inputs['label'] = self.labels[index]
+    
+        return model_inputs
+        
     
     def __len__(self):
         return self.dataset_size
-
+    
 
 class RankingData():
     def __init__(

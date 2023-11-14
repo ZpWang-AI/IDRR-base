@@ -23,7 +23,7 @@ from analyze import analyze_metrics_json
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 
-def rank_func(
+def ranking_func(
     args:CustomArgs, 
     training_args:TrainingArguments, 
     logger:CustomLogger,
@@ -36,8 +36,9 @@ def rank_func(
         logger=logger, 
         metric_names=compute_metrics.metric_names,
     )
-    callback.best_metric_file_name = 'best_rank_metric_score.json'
-    callback.dev_metric_file_name = 'dev_rank_metric_score.jsonl'
+    callback.best_metric_file_name = 'ranking_best_metric_score.json'
+    callback.dev_metric_file_name = 'ranking_dev_metric_score.jsonl'
+    callback.train_loss_file_name = 'ranking_train_loss.jsonl'
     
     trainer = Trainer(
         model=model, 
@@ -53,7 +54,7 @@ def rank_func(
     callback.trainer = trainer
 
     train_output = trainer.train().metrics
-    logger.log_json(train_output, 'rank_output.json', log_info=True)
+    logger.log_json(train_output, 'ranking_output.json', log_info=True)
 
     if args.do_eval:
         callback.evaluate_testdata = True
@@ -63,10 +64,9 @@ def rank_func(
             load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
             if load_ckpt_dir.exists():
                 evaluate_output = trainer.evaluate(eval_dataset=data.test_dataset)
-                eval_metric_name = 'eval_'+metric_
-                eval_metrics[eval_metric_name] = evaluate_output[eval_metric_name]
+                eval_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
                 
-        logger.log_json(eval_metrics, 'eval_rank_metric_score.json', log_info=True) 
+        logger.log_json(eval_metrics, 'ranking_test_metric_score.json', log_info=True) 
         
         
 def train_func(
@@ -256,22 +256,22 @@ def main_one_iteration(args:CustomArgs,
 
     # === train or evaluate ===
     
-    def rank_stage():
+    def ranking_stage():
         train_evaluate_kwargs['training_args'] = ranking_training_args
         train_evaluate_kwargs['data'] = ranking_data
         train_evaluate_kwargs['compute_metrics'] = ranking_metrics
         model.forward_fn = model.forward_rank
-        rank_func(**train_evaluate_kwargs)
+        ranking_func(**train_evaluate_kwargs)
     
     def fine_tune_stage():
         train_evaluate_kwargs['training_args'] = training_args
         train_evaluate_kwargs['data'] = data
         train_evaluate_kwargs['compute_metrics'] = compute_metrics
         model.forward_fn = model.forward_fine_tune
-        rank_func(**train_evaluate_kwargs)
+        train_func(**train_evaluate_kwargs)
     
     if args.do_train:
-        rank_stage()
+        ranking_stage()
         fine_tune_stage()
             
     elif args.do_eval:
@@ -354,6 +354,11 @@ def main(args:CustomArgs, training_iter_id=-1):
             'test_metric_score.json',
             'test_metric_score_blind-test.json',
             'train_output.json',
+            
+            'ranking_best_metric_score.json',
+            'ranking_test_metric_score.json',
+            'ranking_test_metric_score_blind.json',
+            'ranking_output.json',
         ]:
             metric_analysis = analyze_metrics_json(args.log_dir, json_file_name, just_average=True)
             if metric_analysis:

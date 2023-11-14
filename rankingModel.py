@@ -144,12 +144,17 @@ class RankingModel(nn.Module):
         self.label_vectors = nn.Parameter(label_vectors)
     
     def forward_rank(self, input_ids, attention_mask, labels):
+        from time import time
+        ct = time()
         hidden_state = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
         pooler_output = hidden_state.pooler_output
         label_vector = self.label_vectors[torch.argmax(labels[0])]
         label_vector = torch.stack([label_vector]*pooler_output.shape[0])
         scores = (label_vector * pooler_output).sum(dim=1)
+        print(f'cal score: {time()-ct:.3f}')
+        ct = time()
         loss = self.rank_loss_fn(scores.reshape(-1, self.num_labels))
+        print(f'cal loss: {time()-ct:.3f}')
         return {
             'logits': scores,
             'loss': loss,

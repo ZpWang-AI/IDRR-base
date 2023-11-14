@@ -13,10 +13,10 @@ from arguments import CustomArgs
 from logger import CustomLogger
 from corpusData import CustomCorpusData
 from rankingData import RankingData
-from model import CustomModel
-from rankingModel import RankModel
+# from model import CustomModel
+from rankingModel import RankingModel
 from metrics import ComputeMetrics
-from rankingMetrics import RankMetrics
+from rankingMetrics import RankingMetrics
 from callbacks import CustomCallback
 from analyze import analyze_metrics_json
 
@@ -28,8 +28,8 @@ def rank_func(
     training_args:TrainingArguments, 
     logger:CustomLogger,
     data:RankingData, 
-    model:RankModel, 
-    compute_metrics:RankMetrics,
+    model:RankingModel, 
+    compute_metrics:RankingMetrics,
 ):
     callback = CustomCallback(
         args=args, 
@@ -74,7 +74,7 @@ def train_func(
     training_args:TrainingArguments, 
     logger:CustomLogger,
     data:CustomCorpusData, 
-    model:CustomModel, 
+    model:RankingModel, 
     compute_metrics:ComputeMetrics,
 ):
     callback = CustomCallback(
@@ -130,7 +130,7 @@ def evaluate_func(
     training_args:TrainingArguments,
     logger:CustomLogger,
     data:CustomCorpusData,
-    model:CustomModel,
+    model:RankingModel,
     compute_metrics:ComputeMetrics,
 ):
     callback = CustomCallback(
@@ -158,7 +158,7 @@ def evaluate_func(
 
 def main_one_iteration(args:CustomArgs,
                        data:CustomCorpusData, 
-                       rank_data:RankingData,
+                       ranking_data:RankingData,
                        training_iter_id=0):
     if not args.do_train and not args.do_eval:
         raise Exception('neither do_train nor do_eval')
@@ -176,30 +176,54 @@ def main_one_iteration(args:CustomArgs,
         args.check_path()
         
         training_args = TrainingArguments(
-            output_dir = args.output_dir,
+            output_dir=args.output_dir,
             
             # strategies of evaluation, logging, save
-            evaluation_strategy = "steps", 
-            eval_steps = args.eval_steps,
-            logging_strategy = 'steps',
-            logging_steps = args.log_steps,
-            save_strategy = 'no',
-            # save_strategy = 'epoch',
-            # save_total_limit = 1,
+            evaluation_strategy="steps", 
+            eval_steps=args.eval_steps,
+            logging_strategy='steps',
+            logging_steps=args.log_steps,
+            save_strategy='no',
+            # save_strategy='epoch',
+            # save_total_limit=1,
             
             # optimizer and lr_scheduler
-            optim = 'adamw_torch',
-            learning_rate = args.learning_rate,
-            weight_decay = args.weight_decay,
-            lr_scheduler_type = 'linear',
-            warmup_ratio = args.warmup_ratio,
+            optim='adamw_torch',
+            learning_rate=args.learning_rate,
+            weight_decay=args.weight_decay,
+            lr_scheduler_type='linear',
+            warmup_ratio=args.warmup_ratio,
             
             # epochs and batches 
-            num_train_epochs = args.epochs, 
-            max_steps = args.max_steps,
-            per_device_train_batch_size = args.train_batch_size,
-            per_device_eval_batch_size = args.eval_batch_size,
-            gradient_accumulation_steps = args.gradient_accumulation_steps,
+            max_steps=args.max_steps,
+            num_train_epochs=args.epochs, 
+            per_device_train_batch_size=args.train_batch_size,
+            per_device_eval_batch_size=args.eval_batch_size,
+            gradient_accumulation_steps=args.gradient_accumulation_steps,
+        )
+        ranking_training_args = TrainingArguments(
+            output_dir=args.output_dir,
+            
+            # strategies of evaluation, logging, save
+            evaluation_strategy="steps", 
+            eval_steps=args.rank_eval_steps,
+            logging_strategy='steps',
+            logging_steps=args.rank_log_steps,
+            save_strategy='no',
+            
+            # optimizer and lr_scheduler
+            optim='adamw_torch',
+            learning_rate=args.learning_rate,
+            weight_decay=args.weight_decay,
+            lr_scheduler_type='linear',
+            warmup_ratio=args.warmup_ratio,
+            
+            # epochs and batches 
+            max_steps=args.max_steps,
+            num_train_epochs=args.rank_epochs, 
+            per_device_train_batch_size=args.rank_train_batch_size,
+            per_device_eval_batch_size=args.rank_eval_batch_size,
+            gradient_accumulation_steps=args.rank_gradient_accumulation_steps,
         )
         
         logger = CustomLogger(
@@ -208,7 +232,7 @@ def main_one_iteration(args:CustomArgs,
             print_output=True,
         )
         
-        model = RankModel(
+        model = RankingModel(
             model_name_or_path=args.model_name_or_path,
             label_list=data.label_list,
             cache_dir=args.cache_dir,
@@ -217,7 +241,7 @@ def main_one_iteration(args:CustomArgs,
         )
         
         compute_metrics = ComputeMetrics(label_list=data.label_list)
-        rank_metrics = RankMetrics(num_labels=data.num_labels)
+        ranking_metrics = RankingMetrics(num_labels=data.num_labels)
         
         train_evaluate_kwargs = {
             'args': args,
@@ -233,24 +257,14 @@ def main_one_iteration(args:CustomArgs,
     # === train or evaluate ===
     
     def rank_stage():
-        training_args.num_train_epochs = args.rank_epochs
-        training_args.train_batch_size = args.rank_train_batch_size
-        training_args.eval_batch_size = args.rank_eval_batch_size
-        training_args.eval_steps = args.rank_eval_steps
-        training_args.logging_steps = args.rank_log_steps
-        training_args.gradient_accumulation_steps = args.rank_gradient_accumulation_steps
-        train_evaluate_kwargs['data'] = rank_data
-        train_evaluate_kwargs['compute_metrics'] = rank_metrics
+        train_evaluate_kwargs['training_args'] = ranking_training_args
+        train_evaluate_kwargs['data'] = ranking_data
+        train_evaluate_kwargs['compute_metrics'] = ranking_metrics
         model.forward_fn = model.forward_rank
         rank_func(**train_evaluate_kwargs)
     
     def fine_tune_stage():
-        training_args.num_train_epochs = args.epochs
-        training_args.train_batch_size = args.train_batch_size
-        training_args.eval_batch_size = args.eval_batch_size
-        training_args.eval_steps = args.eval_steps
-        training_args.logging_steps = args.log_steps
-        training_args.gradient_accumulation_steps = args.gradient_accumulation_steps
+        train_evaluate_kwargs['training_args'] = training_args
         train_evaluate_kwargs['data'] = data
         train_evaluate_kwargs['compute_metrics'] = compute_metrics
         model.forward_fn = model.forward_fine_tune
@@ -303,7 +317,7 @@ def main(args:CustomArgs, training_iter_id=-1):
     args.trainset_size, args.devset_size, args.testset_size = map(len, [
         data.train_dataset, data.dev_dataset, data.test_dataset
     ])
-    rank_data = RankingData(corpus_data=data, **dict(args))
+    ranking_data = RankingData(corpus_data=data, **dict(args))
     args.recalculate_eval_log_steps()
     
     main_logger = CustomLogger(args.log_dir, logger_name=f'{args.cur_time}_main_logger', print_output=True)
@@ -314,13 +328,13 @@ def main(args:CustomArgs, training_iter_id=-1):
         if training_iter_id < 0:
             for _training_iter_id in range(args.training_iteration):
                 main_one_iteration(deepcopy(args), 
-                                   data=data, rank_data=rank_data, 
+                                   data=data, ranking_data=ranking_data, 
                                    training_iter_id=_training_iter_id)
             if not args.save_ckpt:
                 shutil.rmtree(args.output_dir)
         else:
             main_one_iteration(deepcopy(args), 
-                               data=data, rank_data=rank_data,
+                               data=data, ranking_data=ranking_data,
                                training_iter_id=training_iter_id)
     except Exception as e:
         import traceback

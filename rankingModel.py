@@ -89,7 +89,7 @@ class ClassificationHead(nn.Module):
         return x
     
     
-class RankModel(nn.Module):
+class RankingModel(nn.Module):
     def __init__(
         self, 
         model_name_or_path,
@@ -171,7 +171,7 @@ class RankModel(nn.Module):
 if __name__ == '__main__':
     def demo_model():
         cache_dir = './plm_cache/'
-        sample_model = RankModel('roberta-base', label_list=['good', 'bad', 'middle', 'very good', 'very bad'], cache_dir=cache_dir)
+        sample_model = RankingModel('roberta-base', label_list=['good', 'bad', 'middle', 'very good', 'very bad'], cache_dir=cache_dir)
         
         sample_tokenizer = AutoTokenizer.from_pretrained('roberta-base', cache_dir=cache_dir)
         sample_x = ['你好']*2+['hello world. Nice to see you']*2

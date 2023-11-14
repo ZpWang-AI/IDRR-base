@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class RankMetrics:
+class RankingMetrics:
     def __init__(self, num_labels:int) -> None:
         self.num_labels = num_labels
         self.metric_names = ['rank_Acc']

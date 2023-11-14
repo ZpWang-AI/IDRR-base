@@ -162,20 +162,23 @@ class CustomArgs:
             self.mini_dataset = True
             self.data_augmentation_secondary_label = False
             self.data_augmentation_connective_arg2 = False
-            self.rank_balance_class = True
+            self.rank_balance_class = False
             self.rank_fixed_sampling = False
             self.rank_dataset_size_multiplier = 1
             
+            self.epochs = 2
             self.train_batch_size = 8
             self.eval_batch_size = 8
-            self.epochs = 2
             self.eval_steps = 4
             self.log_steps = 4
-            self.rank_epochs = 2
-            self.rank_gradient_accumulation_steps = 8
-            self.rank_eval_steps = 2
-            self.rank_log_steps = 1
             self.eval_per_epoch = -1
+
+            self.rank_epochs = 2
+            self.rank_train_batch_size = 2
+            self.rank_eval_batch_size = 2
+            self.rank_eval_steps = 4
+            self.rank_log_steps = 4
+            self.rank_eval_per_epoch = -1
     
     def complete_path(self,
                       show_cur_time=True,

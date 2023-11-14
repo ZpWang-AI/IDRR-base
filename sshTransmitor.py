@@ -113,7 +113,7 @@ if __name__ == '__main__':
     ssh_transer.exclude_folder_func = exclude_func
     ssh_transer.ssh_transmit(
         local_path=r'D:\0--data\projects\04.01-IDRR数据\IDRR-base',
-        remote_path='/data/zpwang/IDRR/IDRR-base'
+        remote_path='/data/zpwang/IDRR/IDRR-rank'
     )
     
     # # transmit data

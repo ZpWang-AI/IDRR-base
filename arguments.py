@@ -56,7 +56,7 @@ class CustomArgs:
     eval_steps = 100
     log_steps = 10
     gradient_accumulation_steps = 1
-    eval_per_epoch = 15
+    eval_per_epoch = 4
     
     rank_epochs = 2
     rank_train_batch_size = 8
@@ -133,7 +133,7 @@ class CustomArgs:
         parser.add_argument("--eval_steps", type=int, default=100)
         parser.add_argument("--log_steps", type=int, default=10)
         parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
-        parser.add_argument("--eval_per_epoch", type=int, default=15)
+        parser.add_argument("--eval_per_epoch", type=int, default=4)
         
         parser.add_argument("--rank_epochs", type=int, default=2)
         parser.add_argument("--rank_train_batch_size", type=int, default=8)
@@ -256,7 +256,7 @@ class CustomArgs:
     def __iter__(self):
         # keep the same order as the args shown in the file
         keys_order = {k:-1 for k in self.__dict__}
-        with open('./arguments.py', 'r', encoding='utf8')as f:
+        with open(__file__, 'r', encoding='utf8')as f:
             sep_label = 0
             cnt = 0
             for line in f.readlines():

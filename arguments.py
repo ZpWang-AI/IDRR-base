@@ -50,7 +50,7 @@ class CustomArgs:
     eval_steps = 100
     log_steps = 10
     gradient_accumulation_steps = 1
-    eval_per_epoch = 15
+    eval_per_epoch = 4
     
     # seed, lr
     seed = 2023
@@ -110,7 +110,7 @@ class CustomArgs:
         parser.add_argument("--eval_steps", type=int, default=100)
         parser.add_argument("--log_steps", type=int, default=10)
         parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
-        parser.add_argument("--eval_per_epoch", type=int, default=15)
+        parser.add_argument("--eval_per_epoch", type=int, default=4)
         
         # seed, lr
         parser.add_argument("--seed", type=int, default=2023)

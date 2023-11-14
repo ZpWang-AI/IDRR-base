@@ -327,7 +327,10 @@ def main(args:CustomArgs, training_iter_id=-1):
         
         error_file = main_logger.log_dir/'error.out'
         with open(error_file, 'w', encoding='utf8')as f:
-            f.write(traceback.format_exc())
+            error_string = traceback.format_exc()
+            f.write(error_string)
+            print('\n', '='*20, '\n')
+            print(error_string)
         exit(1)
     
     if training_iter_id < 0 or training_iter_id == args.training_iteration:

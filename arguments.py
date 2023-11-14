@@ -191,15 +191,15 @@ class CustomArgs:
         print(f'=== CUDA {free_gpu_ids} ===')
     
     def recalculate_eval_log_steps(self):
+        self.real_batch_size = self.train_batch_size*self.gradient_accumulation_steps*self.cuda_cnt
         if self.eval_per_epoch > 0:
-            self.real_batch_size = self.train_batch_size*self.gradient_accumulation_steps*self.cuda_cnt
             self.eval_steps = max(1, int(
                 self.trainset_size / self.eval_per_epoch / self.real_batch_size
             ))
             self.log_steps = max(1, int(
                 self.trainset_size / self.eval_per_epoch / self.real_batch_size / 10
             ))
-            self.sample_per_eval = self.real_batch_size*self.eval_steps
+        self.sample_per_eval = self.real_batch_size*self.eval_steps
             
             rank_sample_per_eval = 1
         

@@ -63,7 +63,7 @@ class CustomArgs:
     rank_eval_batch_size = 8
     rank_eval_steps = 800
     rank_log_steps = 40
-    rank_gradient_accumulation_steps = 2
+    rank_gradient_accumulation_steps = 1
     rank_eval_per_epoch = 15
     
     # seed, lr

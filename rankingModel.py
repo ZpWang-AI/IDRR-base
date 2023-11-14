@@ -148,22 +148,25 @@ class RankingModel(nn.Module):
         ct = time()
         hidden_state = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
         pooler_output = hidden_state.pooler_output
+        print(f'cal pooler: {time()-ct:.3f}, shape: {input_ids.shape}')
+        ct = time()
         label_vector = self.label_vectors[torch.argmax(labels[0])]
         label_vector = torch.stack([label_vector]*pooler_output.shape[0])
         scores = (label_vector * pooler_output).sum(dim=1)
-        print(f'cal score: {time()-ct:.3f}')
-        ct = time()
+        print(f'cal score: {time()-ct:.3f}, shape: {scores.shape}')
         loss = self.rank_loss_fn(scores.reshape(-1, self.num_labels))
-        print(f'cal loss: {time()-ct:.3f}')
         return {
             'logits': scores,
             'loss': loss,
         }
     
     def forward_fine_tune(self, input_ids, attention_mask, labels):
+        from time import time
+        ct = time()
         hidden_state = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
         # last_hidden_state, pooler_output
         logits = self.classifier(hidden_state.last_hidden_state)
+        print(f'cal score: {time()-ct:.3f}, shape: {input_ids.shape}')
         loss = self.loss_fn(logits, labels)
         return {
             'logits': logits,

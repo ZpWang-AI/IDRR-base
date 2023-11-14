@@ -38,7 +38,7 @@ LOG_FILENAME_DICT = {
     'ranking loss': 'ranking_train_loss.jsonl',
     'ranking output': 'ranking_train_output.json',
     
-    'evaluate': 'evaluate_output.json'
+    'evaluate': 'evaluate_output.json',
 }
 
 

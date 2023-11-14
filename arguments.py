@@ -168,11 +168,13 @@ class CustomArgs:
     
     def recalculate_eval_log_steps(self):
         if self.eval_per_epoch > 0:
-            sample_per_eval = self.trainset_size / self.eval_per_epoch
-            sample_per_log = sample_per_eval / 10
             self.real_batch_size = self.train_batch_size*self.gradient_accumulation_steps*self.cuda_cnt
-            self.eval_steps = max(1, int(sample_per_eval / self.real_batch_size))
-            self.log_steps = max(1, int(sample_per_log / self.real_batch_size))
+            self.eval_steps = max(1, int(
+                self.trainset_size / self.eval_per_epoch / self.real_batch_size
+            ))
+            self.log_steps = max(1, int(
+                self.trainset_size / self.eval_per_epoch / self.real_batch_size / 10
+            ))
             self.sample_per_eval = self.real_batch_size*self.eval_steps
             
     def check_path(self):

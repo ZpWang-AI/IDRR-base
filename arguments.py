@@ -170,6 +170,16 @@ class CustomArgs:
             self.output_dir = os.path.join(self.output_dir, specific_fold_name)
             self.log_dir = os.path.join(self.log_dir, specific_fold_name) 
     
+    def prepare_gpu(self, target_mem_mb=10000):
+        from gpuManager import GPUManager
+        free_gpu_ids = GPUManager.get_some_free_gpus(
+            gpu_cnt=self.cuda_cnt, 
+            target_mem_mb=target_mem_mb,
+        )
+        os.environ["CUDA_VISIBLE_DEVICES"] = free_gpu_ids
+        self.cuda_id = free_gpu_ids
+        print(f'=== CUDA {free_gpu_ids} ===')
+    
     def recalculate_eval_log_steps(self):
         if self.eval_per_epoch > 0:
             sample_per_eval = self.trainset_size / self.eval_per_epoch

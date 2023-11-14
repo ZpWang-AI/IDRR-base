@@ -49,7 +49,7 @@ def server_long_args(data_name='pdtb2', label_level='level1'):
     args.learning_rate = 3e-5
     args.warmup_ratio = 0.1
     
-    args.version = 'cu12_long_bs32*2_sec1'
+    args.version = SERVER_NAME+'long_bs32*2_sec1'
     args.train_batch_size = 32
     args.secondary_label_weight = 1
     args.cuda_cnt = 2
@@ -61,7 +61,7 @@ def server_long_args(data_name='pdtb2', label_level='level1'):
 def server_dataAug_args(args=None, data_name='pdtb2'):
     if not args:
         args = server_base_args(test_setting=False, data_name=data_name)
-    args.version = SERVER_NAME+'dataAugmentation'
+    args.version = SERVER_NAME+'ConnDA'
     args.data_augmentation_connective_arg2 = True
     
     return args

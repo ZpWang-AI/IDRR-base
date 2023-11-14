@@ -24,12 +24,19 @@ os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 LOG_FILENAME_DICT = {
     'hyperparams': 'hyperparams.json',
-    'best': 'best_metric_score.json',
-    'dev': 'dev_metric_score.jsonl',
-    'test': 'test_metric_score.json',
-    'blind test': 'test_blind_metric_score.json',
-    'loss': 'train_loss.jsonl',
-    'output': 'train_output.json',
+    'best': 'ft_best_metric_score.json',
+    'dev': 'ft_dev_metric_score.jsonl',
+    'test': 'ft_test_metric_score.json',
+    'blind test': 'ft_test_blind_metric_score.json',
+    'loss': 'ft_train_loss.jsonl',
+    'output': 'ft_train_output.json',
+    
+    'ranking best': 'ranking_best_metric_score.json',
+    'ranking dev': 'ranking_dev_metric_score.jsonl',
+    'ranking test': 'ranking_test_metric_score.json',
+    'ranking blind test': 'ranking_test_blind_metric_score.json',
+    'ranking loss': 'ranking_train_loss.jsonl',
+    'ranking output': 'ranking_train_output.json',
 }
 
 
@@ -46,9 +53,9 @@ def ranking_func(
         logger=logger, 
         metric_names=compute_metrics.metric_names,
     )
-    callback.best_metric_file_name = 'ranking_best_metric_score.json'
-    callback.dev_metric_file_name = 'ranking_dev_metric_score.jsonl'
-    callback.train_loss_file_name = 'ranking_train_loss.jsonl'
+    callback.best_metric_file_name = LOG_FILENAME_DICT['ranking best']
+    callback.dev_metric_file_name = LOG_FILENAME_DICT['ranking dev']
+    callback.train_loss_file_name = LOG_FILENAME_DICT['ranking loss']
     
     trainer = Trainer(
         model=model, 
@@ -64,7 +71,7 @@ def ranking_func(
     callback.trainer = trainer
 
     train_output = trainer.train().metrics
-    logger.log_json(train_output, 'ranking_output.json', log_info=True)
+    logger.log_json(train_output, LOG_FILENAME_DICT['ranking output'], log_info=True)
 
     if args.do_eval:
         callback.evaluate_testdata = True
@@ -76,7 +83,7 @@ def ranking_func(
                 evaluate_output = trainer.evaluate(eval_dataset=data.test_dataset)
                 eval_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
                 
-        logger.log_json(eval_metrics, 'ranking_test_metric_score.json', log_info=True) 
+        logger.log_json(eval_metrics, LOG_FILENAME_DICT['ranking test'], log_info=True) 
         
         
 def train_func(
@@ -367,6 +374,11 @@ def main(args:CustomArgs, training_iter_id=-1):
             LOG_FILENAME_DICT['test'],
             LOG_FILENAME_DICT['blind test'],
             LOG_FILENAME_DICT['output'],
+            
+            LOG_FILENAME_DICT['ranking best'],
+            LOG_FILENAME_DICT['ranking test'],
+            LOG_FILENAME_DICT['ranking blind test'],
+            LOG_FILENAME_DICT['ranking output'],
         ]:
             metric_analysis = analyze_metrics_json(args.log_dir, json_file_name, just_average=True)
             if metric_analysis:

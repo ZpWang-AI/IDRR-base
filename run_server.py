@@ -9,7 +9,8 @@ else:
 
 import os
 CODE_SPACE = ROOT_FOLD_IDRR+'IDRR-rank/'
-os.chdir(CODE_SPACE)
+if __name__ == '__main__':
+    os.chdir(CODE_SPACE)
 
 # ===== import ===== !!! Don't import torch !!!
 from arguments import CustomArgs

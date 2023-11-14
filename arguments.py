@@ -198,6 +198,8 @@ class CustomArgs:
             self.eval_steps = max(1, int(sample_per_eval / self.real_batch_size))
             self.log_steps = max(1, int(sample_per_log / self.real_batch_size))
             self.sample_per_eval = self.real_batch_size*self.eval_steps
+            
+            rank_sample_per_eval = 1
         
     def check_path(self):
         # self.data_path

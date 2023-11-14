@@ -3,6 +3,7 @@ import os
 from pathlib import Path as path
 
 
+# rename `version` to file name
 for dirpath, dirnames, filenames in os.walk('./scripts'):
     renamed_file_cnt = 0
     

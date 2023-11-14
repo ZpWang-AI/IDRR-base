@@ -49,8 +49,8 @@ class CustomArgs:
     rank_order_file = './rank_order/rank_order1.json'
     
     # epoch, batch, step
-    epochs = 5
     max_steps = -1
+    epochs = 5
     train_batch_size = 8
     eval_batch_size = 32
     eval_steps = 100
@@ -75,6 +75,8 @@ class CustomArgs:
     trainset_size = -1
     devset_size = -1
     testset_size = -1
+    real_batch_size = -1
+    sample_per_eval = -1
     cuda_id = '0'
     cur_time = ''
     
@@ -116,8 +118,8 @@ class CustomArgs:
         parser.add_argument("--rank_order_file", type=str, default='./rank_order/rank_order1.json')
         
         # epoch, batch, step
-        parser.add_argument("--epochs", type=int, default=5)
         parser.add_argument("--max_steps", type=int, default=-1)
+        parser.add_argument("--epochs", type=int, default=5)
         parser.add_argument("--train_batch_size", type=int, default=8)
         parser.add_argument("--eval_batch_size", type=int, default=32)
         parser.add_argument("--eval_steps", type=int, default=100)
@@ -191,9 +193,11 @@ class CustomArgs:
         if self.eval_per_epoch > 0:
             sample_per_eval = self.trainset_size / self.eval_per_epoch
             sample_per_log = sample_per_eval / 10
-            real_batch_size = self.train_batch_size*self.gradient_accumulation_steps*self.cuda_cnt
-            self.eval_steps = max(1, int(sample_per_eval / real_batch_size))
-            self.log_steps = max(1, int(sample_per_log / real_batch_size))
+            self.real_batch_size = self.train_batch_size*self.gradient_accumulation_steps*self.cuda_cnt
+            self.eval_steps = max(1, int(sample_per_eval / self.real_batch_size))
+            self.log_steps = max(1, int(sample_per_log / self.real_batch_size))
+            self.sample_per_eval = self.real_batch_size*self.eval_steps
+            
         
     def check_path(self):
         # self.data_path

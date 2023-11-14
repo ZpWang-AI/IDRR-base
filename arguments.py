@@ -108,6 +108,10 @@ class CustomArgs:
         parser.add_argument("--data_augmentation_secondary_label", type=arg_bool, default=False)
         parser.add_argument("--data_augmentation_connective_arg2", type=arg_bool, default=False)
         
+        parser.add_argument("--rank_balance_class", type=arg_bool, default=False)
+        parser.add_argument("--rank_fixed_sampling", type=arg_bool, default=False)
+        parser.add_argument("--rank_dataset_size_multiplier", type=int, default=1)
+        
         # path
         parser.add_argument("--model_name_or_path", type=str, default='roberta-base')
         parser.add_argument("--data_path", type=str, default='/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv')
@@ -130,10 +134,14 @@ class CustomArgs:
         parser.add_argument("--log_steps", type=int, default=10)
         parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
         parser.add_argument("--eval_per_epoch", type=int, default=15)
+        
         parser.add_argument("--rank_epochs", type=int, default=2)
+        parser.add_argument("--rank_train_batch_size", type=int, default=8)
+        parser.add_argument("--rank_eval_batch_size", type=int, default=8)
         parser.add_argument("--rank_eval_steps", type=int, default=800)
         parser.add_argument("--rank_log_steps", type=int, default=40)
         parser.add_argument("--rank_gradient_accumulation_steps", type=int, default=2)
+        parser.add_argument("--rank_eval_per_epoch", type=int, default=15)
         
         # seed, lr
         parser.add_argument("--seed", type=int, default=2023)

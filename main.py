@@ -19,6 +19,16 @@ from analyze import analyze_metrics_json
 
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
+LOG_FILENAME_DICT = {
+    'hyperparams': 'hyperparams.json',
+    'best': 'best_metric_score.json',
+    'dev': 'dev_metric_score.jsonl',
+    'test': 'test_metric_score.json',
+    'blind test': 'test_blind_metric_score.json',
+    'loss': 'train_loss.jsonl',
+    'output': 'train_output.json',
+}
+
 
 def train_func(
     args:CustomArgs, 
@@ -33,6 +43,9 @@ def train_func(
         logger=logger, 
         metric_names=compute_metrics.metric_names,
     )
+    callback.best_metric_file_name = LOG_FILENAME_DICT['best']
+    callback.dev_metric_file_name = LOG_FILENAME_DICT['dev']
+    callback.train_loss_file_name = LOG_FILENAME_DICT['loss']
     
     trainer = Trainer(
         model=model, 
@@ -48,7 +61,7 @@ def train_func(
     callback.trainer = trainer
 
     train_output = trainer.train().metrics
-    logger.log_json(train_output, 'train_output.json', log_info=True)
+    logger.log_json(train_output, LOG_FILENAME_DICT['output'], log_info=True)
     
     if args.do_eval:
         callback.evaluate_testdata = True
@@ -60,7 +73,7 @@ def train_func(
                 evaluate_output = trainer.evaluate(eval_dataset=data.test_dataset)
                 test_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
                 
-        logger.log_json(test_metrics, 'test_metric_score.json', log_info=True)                
+        logger.log_json(test_metrics, LOG_FILENAME_DICT['test'], log_info=True)                
 
         if args.data_name == 'conll':
             test_metrics = {}
@@ -174,7 +187,7 @@ def main_one_iteration(args:CustomArgs, data:CustomCorpusData, training_iter_id=
             'logger': logger,
         }
     
-    logger.log_json(dict(args), 'hyperparams.json', log_info=False)
+    logger.log_json(dict(args), LOG_FILENAME_DICT['hyperparams'], log_info=False)
 
     # === train or evaluate ===
     
@@ -228,7 +241,7 @@ def main(args:CustomArgs, training_iter_id=-1):
     
     main_logger = CustomLogger(args.log_dir, logger_name=f'{args.cur_time}_main_logger', print_output=True)
     if training_iter_id < 0 or training_iter_id == 0:    
-        main_logger.log_json(dict(args), log_file_name='hyperparams.json', log_info=True)
+        main_logger.log_json(dict(args), log_file_name=LOG_FILENAME_DICT['hyperparams'], log_info=True)
     
     try:
         if training_iter_id < 0:
@@ -252,10 +265,10 @@ def main(args:CustomArgs, training_iter_id=-1):
     if training_iter_id < 0 or training_iter_id == args.training_iteration:
         # calculate average
         for json_file_name in [
-            'best_metric_score.json', 
-            'test_metric_score.json',
-            'test_metric_score_blind-test.json',
-            'train_output.json',
+            LOG_FILENAME_DICT['best'],
+            LOG_FILENAME_DICT['test'],
+            LOG_FILENAME_DICT['blind test'],
+            LOG_FILENAME_DICT['output'],
         ]:
             metric_analysis = analyze_metrics_json(args.log_dir, json_file_name, just_average=True)
             if metric_analysis:

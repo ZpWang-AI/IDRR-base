@@ -4,8 +4,8 @@ import pandas as pd
 import torch
 import random
 
+from typing import Any
 from typing import *
-from itertools import cycle
 from transformers import AutoTokenizer
 
 from corpusData import CustomCorpusData, Dataset
@@ -27,7 +27,7 @@ class RandomSampler:
 
 class RankingDataset(Dataset):
     def __init__(self, 
-                 arg1, arg2, tokenizer, labels, 
+                 arg1, arg2, labels, 
                  label_rec, rank_order, 
                  balance_class=True,
                  fixed_sampling=True,
@@ -37,7 +37,6 @@ class RankingDataset(Dataset):
         
         self.arg1 = arg1
         self.arg2 = arg2
-        self.tokenizer = tokenizer
         self.labels = labels
         self.random_sampler = RandomSampler(label_rec, rank_order)
         self.balance_class = balance_class
@@ -59,21 +58,40 @@ class RankingDataset(Dataset):
             pids = self.pids_list[index]
         else:
             pids = self._get_pids(index)
-        model_inputs = self.tokenizer(
-            [[self.arg1[p],self.arg2[p]]for p in pids],
-            add_special_tokens=True, 
-            truncation='longest_first', 
-            max_length=256,
-        )
-        
-        model_inputs['label'] = self.labels[index]
-    
-        return model_inputs
-        
+        return [[ (self.arg1[p],self.arg2[p]), self.labels[p] ]for p in pids]        
     
     def __len__(self):
         return self.dataset_size
+
+
+class RankingDataCollator:
+    def __init__(self, tokenizer) -> None:
+        self.tokenizer = tokenizer
     
+    def __call__(self, features):
+        """
+        features: List[List[(arg1:str, arg2:str), label:int]], (rank_batch, rank_order_len, 2)
+        """
+        arg_pairs, labels = [], []
+        for rank_sample in features:
+            for arg_pair,label in rank_sample:
+                arg_pairs.append(arg_pair)
+                labels.append(label)
+                
+        model_inputs = self.tokenizer(
+            arg_pairs,
+            add_special_tokens=True, 
+            padding=True,
+            truncation='longest_first',
+            max_length=256,
+            return_tensors='pt',
+        )
+        
+        model_inputs['labels'] = labels
+    
+        return model_inputs
+        
+
 
 class RankingData():
     def __init__(

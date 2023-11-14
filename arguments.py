@@ -157,10 +157,15 @@ class CustomArgs:
             
         if test_setting:
             self.version = 'colab_test'
+            self.training_iteration = 2
+            
             self.mini_dataset = True
             self.data_augmentation_secondary_label = False
             self.data_augmentation_connective_arg2 = False
-            self.training_iteration = 2
+            self.rank_balance_class = True
+            self.rank_fixed_sampling = False
+            self.rank_dataset_size_multiplier = 1
+            
             self.train_batch_size = 8
             self.eval_batch_size = 8
             self.epochs = 2

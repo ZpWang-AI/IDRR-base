@@ -12,14 +12,63 @@ from transformers import TrainingArguments, Trainer, DataCollatorWithPadding, se
 from arguments import CustomArgs
 from logger import CustomLogger
 from corpusData import CustomCorpusData
+from rankingData import RankingData
 from model import CustomModel
+from rankingModel import RankModel
 from metrics import ComputeMetrics
+from rankingMetrics import RankMetrics
 from callbacks import CustomCallback
 from analyze import analyze_metrics_json
 
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 
+def rank_func(
+    args:CustomArgs, 
+    training_args:TrainingArguments, 
+    logger:CustomLogger,
+    data:RankingData, 
+    model:RankModel, 
+    compute_metrics:RankMetrics,
+):
+    callback = CustomCallback(
+        args=args, 
+        logger=logger, 
+        metric_names=compute_metrics.metric_names,
+    )
+    callback.best_metric_file_name = 'best_rank_metric_score.json'
+    callback.dev_metric_file_name = 'dev_rank_metric_score.jsonl'
+    
+    trainer = Trainer(
+        model=model, 
+        args=training_args, 
+        tokenizer=data.tokenizer, 
+        compute_metrics=compute_metrics,
+        callbacks=[callback],
+        
+        data_collator=data.data_collator,
+        train_dataset=data.train_dataset,
+        eval_dataset=data.dev_dataset, 
+    )
+    callback.trainer = trainer
+
+    train_output = trainer.train().metrics
+    logger.log_json(train_output, 'rank_output.json', log_info=True)
+
+    if args.do_eval:
+        callback.evaluate_testdata = True
+        
+        eval_metrics = {}
+        for metric_ in compute_metrics.metric_names:
+            load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
+            if load_ckpt_dir.exists():
+                evaluate_output = trainer.evaluate(eval_dataset=data.test_dataset)
+                eval_metric_name = 'eval_'+metric_
+                eval_metrics[eval_metric_name] = evaluate_output[eval_metric_name]
+                
+        logger.log_json(eval_metrics, 'eval_rank_metric_score.json', log_info=True) 
+        
+        
 def train_func(
     args:CustomArgs, 
     training_args:TrainingArguments, 

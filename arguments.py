@@ -31,6 +31,10 @@ class CustomArgs:
     data_augmentation_secondary_label = False
     data_augmentation_connective_arg2 = False
     
+    rank_balance_class = False
+    rank_fixed_sampling = False
+    rank_dataset_size_multiplier = 1
+    
     # path 
     model_name_or_path = 'roberta-base'
     data_path = '/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv'
@@ -53,7 +57,10 @@ class CustomArgs:
     log_steps = 10
     gradient_accumulation_steps = 1
     eval_per_epoch = 15
+    
     rank_epochs = 2
+    rank_train_batch_size = 8
+    rank_eval_batch_size = 8
     rank_eval_steps = 800
     rank_log_steps = 40
     rank_gradient_accumulation_steps = 2

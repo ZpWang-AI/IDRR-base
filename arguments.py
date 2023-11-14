@@ -174,7 +174,7 @@ class CustomArgs:
             self.eval_per_epoch = -1
             self.gradient_accumulation_steps = 1
 
-            self.rank_epochs = 2
+            self.rank_epochs = 1
             self.rank_train_batch_size = 2
             self.rank_eval_batch_size = 2
             self.rank_eval_steps = 4

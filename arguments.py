@@ -64,6 +64,7 @@ class CustomArgs:
     rank_eval_steps = 800
     rank_log_steps = 40
     rank_gradient_accumulation_steps = 2
+    rank_eval_per_epoch = 15
     
     # seed, lr
     seed = 2023
@@ -197,7 +198,6 @@ class CustomArgs:
             self.eval_steps = max(1, int(sample_per_eval / self.real_batch_size))
             self.log_steps = max(1, int(sample_per_log / self.real_batch_size))
             self.sample_per_eval = self.real_batch_size*self.eval_steps
-            
         
     def check_path(self):
         # self.data_path

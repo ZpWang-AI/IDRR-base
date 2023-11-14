@@ -200,7 +200,7 @@ class CustomArgs:
     def __iter__(self):
         # keep the same order as the args shown in the file
         keys_order = {k:-1 for k in self.__dict__}
-        with open('./arguments.py', 'r', encoding='utf8')as f:
+        with open(__file__, 'r', encoding='utf8')as f:
             sep_label = 0
             cnt = 0
             for line in f.readlines():

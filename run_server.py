@@ -64,7 +64,7 @@ def server_dataAug_args(args=None, data_name='pdtb2'):
     args.data_augmentation_connective_arg2 = True
     
     return args
-
+    
     
 if __name__ == '__main__':
     # ===== choose args =====
@@ -74,20 +74,14 @@ if __name__ == '__main__':
     # todo_args = server_base_args(test_setting=True, data_name='conll')
     # todo_args = server_base_args()
     todo_args = server_long_args()
+    
+    todo_args.prepare_gpu(target_mem_mb=10000)
     todo_args.complete_path(
         show_cur_time=True,
         show_data_name=False,
         show_label_level=False,
     )
     
-    # ===== prepare gpu =====
-    from gpuManager import GPUManager
-    free_gpu_ids = GPUManager.get_some_free_gpus(gpu_cnt=todo_args.cuda_cnt)
-    os.environ["CUDA_VISIBLE_DEVICES"] = free_gpu_ids
-    todo_args.cuda_id = free_gpu_ids
-    print(f'=== CUDA {free_gpu_ids} ===')
-    
-    # ===== run main =====
     from main import main
     main(todo_args)
     pass

@@ -81,6 +81,9 @@ class CustomArgs:
     cuda_id = '0'
     cur_time = ''
     
+    rank_real_batch_size = -1
+    rank_sample_per_eval = -1
+    
     ############################ Args # Don't modify this line
     
     def __init__(self, test_setting=False) -> None:
@@ -201,7 +204,15 @@ class CustomArgs:
             ))
         self.sample_per_eval = self.real_batch_size*self.eval_steps
             
-            rank_sample_per_eval = 1
+        self.rank_real_batch_size = self.rank_train_batch_size*self.rank_gradient_accumulation_steps*self.cuda_cnt
+        if self.rank_eval_per_epoch > 0:
+            self.rank_eval_steps = max(1, int(
+                self.trainset_size / self.rank_eval_per_epoch / self.rank_real_batch_size
+            ))
+            self.rank_log_steps = max(1, int(
+                self.trainset_size / self.rank_eval_per_epoch / self.rank_real_batch_size / 10
+            ))
+        self.rank_sample_per_eval = self.rank_real_batch_size*self.rank_eval_steps
         
     def check_path(self):
         # self.data_path

@@ -40,11 +40,12 @@ class RankingDataset(Dataset):
         self.labels = labels
         self.random_sampler = RandomSampler(label_rec, rank_order)
         self.balance_class = balance_class
-        self.num_labels = len(label_rec)
         self.fixed_sampling = fixed_sampling
-        if self.fixed_sampling:
-            self.pids_list = [self._get_pids(p)for p in range(dataset_size)]
         self.dataset_size = len(self.labels) if dataset_size < 0 else dataset_size
+        
+        self.num_labels = len(label_rec)
+        if fixed_sampling:
+            self.pids_list = [self._get_pids(p)for p in range(dataset_size)]
             
     def _get_pids(self, index):
         if self.balance_class:
@@ -58,7 +59,7 @@ class RankingDataset(Dataset):
             pids = self.pids_list[index]
         else:
             pids = self._get_pids(index)
-        return [[ (self.arg1[p],self.arg2[p]), self.labels[p] ]for p in pids]        
+        return [[ (self.arg1[p],self.arg2[p]), self.labels[p] ] for p in pids]        
     
     def __len__(self):
         return self.dataset_size
@@ -87,7 +88,7 @@ class RankingDataCollator:
             return_tensors='pt',
         )
         
-        model_inputs['labels'] = labels
+        model_inputs['labels'] = torch.IntTensor(labels)
     
         return model_inputs
         
@@ -98,10 +99,17 @@ class RankingData():
         self, 
         corpus_data:CustomCorpusData,
         rank_order_file:str,
+        
+        balance_class=False,
+        fixed_sampling=False,
+        dataset_size_multiplier=1,
     ):
         self.corpus_data = corpus_data
         self.label_to_id = corpus_data.label_to_id
         self.tokenizer = corpus_data.tokenizer
+        self.balance_class = balance_class
+        self.fixed_sampling = fixed_sampling
+        self.dataset_size_multiplier = dataset_size_multiplier
         
         with open(rank_order_file, 'r', encoding='utf8')as f:
             rank_order_label = json.load(f)
@@ -113,6 +121,8 @@ class RankingData():
         self.train_dataset = self.get_dataset(corpus_data.train_df, is_train=True)
         self.dev_dataset = self.get_dataset(corpus_data.dev_df, is_train=False)
         self.test_dataset = self.get_dataset(corpus_data.test_df, is_train=False)
+        
+        self.data_collator = RankingDataCollator(corpus_data.tokenizer)
     
     def get_dataset(self, df, is_train=False):
         arg1_list, arg2_list = [], []
@@ -133,6 +143,23 @@ class RankingData():
             label_ids.append(primary_label)
             label_rec[primary_label].append(p)
         
+        if is_train:
+            return RankingDataset(
+                arg1=arg1_list, arg2=arg1_list, labels=label_ids,
+                label_rec=label_rec, rank_order=self.rank_order,
+                balance_class=self.balance_class,
+                fixed_sampling=self.fixed_sampling,
+                dataset_size=len(label_ids)*self.dataset_size_multiplier,
+            )
+        else:
+            return RankingDataset(
+                arg1=arg1_list, arg2=arg1_list, labels=label_ids,
+                label_rec=label_rec, rank_order=self.rank_order,
+                balance_class=False,
+                fixed_sampling=False,
+                dataset_size=-1,
+            )
+            
          
     
     

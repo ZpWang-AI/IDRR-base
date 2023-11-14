@@ -26,7 +26,7 @@ class CustomDataset(Dataset):
             max_length=256,
         )
         
-        model_inputs['label'] = self.labels[index]
+        model_inputs['labels'] = self.labels[index]
     
         return model_inputs
     

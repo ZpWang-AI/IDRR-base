@@ -45,8 +45,6 @@ class RankingDataset(Dataset):
         self.num_labels = len(label_rec)
         if fixed_sampling:
             self.pids_list = [self._get_pids(p)for p in range(dataset_size)]
-        # self.vis = []
-        # print(dataset_size)
             
     def _get_pids(self, index):
         if self.balance_class:
@@ -56,9 +54,6 @@ class RankingDataset(Dataset):
         return pids
         
     def __getitem__(self, index):
-        # self.vis.append(index)
-        # self.vis.sort()
-        # print(self.vis)
         if self.fixed_sampling:
             pids = self.pids_list[index]
         else:

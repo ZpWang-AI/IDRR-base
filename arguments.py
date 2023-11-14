@@ -140,7 +140,7 @@ class CustomArgs:
         parser.add_argument("--rank_eval_batch_size", type=int, default=8)
         parser.add_argument("--rank_eval_steps", type=int, default=800)
         parser.add_argument("--rank_log_steps", type=int, default=40)
-        parser.add_argument("--rank_gradient_accumulation_steps", type=int, default=2)
+        parser.add_argument("--rank_gradient_accumulation_steps", type=int, default=1)
         parser.add_argument("--rank_eval_per_epoch", type=int, default=15)
         
         # seed, lr
@@ -172,6 +172,7 @@ class CustomArgs:
             self.eval_steps = 4
             self.log_steps = 4
             self.eval_per_epoch = -1
+            self.gradient_accumulation_steps = 1
 
             self.rank_epochs = 2
             self.rank_train_batch_size = 2
@@ -179,6 +180,7 @@ class CustomArgs:
             self.rank_eval_steps = 4
             self.rank_log_steps = 4
             self.rank_eval_per_epoch = -1
+            self.rank_gradient_accumulation_steps = 1
     
     def complete_path(self,
                       show_cur_time=True,

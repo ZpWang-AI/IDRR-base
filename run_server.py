@@ -8,7 +8,8 @@ else:
     raise Exception('wrong ROOT_FOLD_IDRR')
 
 import os
-os.chdir(ROOT_FOLD_IDRR+'IDRR-base/')
+CODE_SPACE = ROOT_FOLD_IDRR+'IDRR-base/'
+os.chdir(CODE_SPACE)
 
 # ===== import ===== !!! Don't import torch !!!
 from arguments import CustomArgs

@@ -103,6 +103,7 @@ class RankingData():
         balance_class=False,
         fixed_sampling=False,
         dataset_size_multiplier=1,
+        *args, **kwargs,
     ):
         self.corpus_data = corpus_data
         self.label_to_id = corpus_data.label_to_id

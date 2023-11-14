@@ -156,7 +156,10 @@ def evaluate_func(
     return trainer
 
 
-def main_one_iteration(args:CustomArgs, data:CustomCorpusData, training_iter_id=0):
+def main_one_iteration(args:CustomArgs,
+                       data:CustomCorpusData, 
+                       rank_data:RankingData,
+                       training_iter_id=0):
     if not args.do_train and not args.do_eval:
         raise Exception('neither do_train nor do_eval')
     
@@ -205,14 +208,16 @@ def main_one_iteration(args:CustomArgs, data:CustomCorpusData, training_iter_id=
             print_output=True,
         )
         
-        model = CustomModel(
+        model = RankModel(
             model_name_or_path=args.model_name_or_path,
-            num_labels=data.num_labels,
+            label_list=data.label_list,
             cache_dir=args.cache_dir,
             loss_type=args.loss_type,
+            rank_loss_type=args.rank_loss_type,
         )
         
         compute_metrics = ComputeMetrics(label_list=data.label_list)
+        rank_metrics = RankMetrics(num_labels=data.num_labels)
         
         train_evaluate_kwargs = {
             'args': args,
@@ -227,8 +232,33 @@ def main_one_iteration(args:CustomArgs, data:CustomCorpusData, training_iter_id=
 
     # === train or evaluate ===
     
+    def rank_stage():
+        training_args.num_train_epochs = args.rank_epochs
+        training_args.train_batch_size = args.rank_train_batch_size
+        training_args.eval_batch_size = args.rank_eval_batch_size
+        training_args.eval_steps = args.rank_eval_steps
+        training_args.logging_steps = args.rank_log_steps
+        training_args.gradient_accumulation_steps = args.rank_gradient_accumulation_steps
+        train_evaluate_kwargs['data'] = rank_data
+        train_evaluate_kwargs['compute_metrics'] = rank_metrics
+        model.forward_fn = model.forward_rank
+        rank_func(**train_evaluate_kwargs)
+    
+    def fine_tune_stage():
+        training_args.num_train_epochs = args.epochs
+        training_args.train_batch_size = args.train_batch_size
+        training_args.eval_batch_size = args.eval_batch_size
+        training_args.eval_steps = args.eval_steps
+        training_args.logging_steps = args.log_steps
+        training_args.gradient_accumulation_steps = args.gradient_accumulation_steps
+        train_evaluate_kwargs['data'] = data
+        train_evaluate_kwargs['compute_metrics'] = compute_metrics
+        model.forward_fn = model.forward_fine_tune
+        rank_func(**train_evaluate_kwargs)
+    
     if args.do_train:
-        train_func(**train_evaluate_kwargs)
+        rank_stage()
+        fine_tune_stage()
             
     elif args.do_eval:
         model_params_path = os.path.join(args.load_ckpt_dir, 'pytorch_model.bin')
@@ -273,6 +303,7 @@ def main(args:CustomArgs, training_iter_id=-1):
     args.trainset_size, args.devset_size, args.testset_size = map(len, [
         data.train_dataset, data.dev_dataset, data.test_dataset
     ])
+    rank_data = RankingData(corpus_data=data, **dict(args))
     args.recalculate_eval_log_steps()
     
     main_logger = CustomLogger(args.log_dir, logger_name=f'{args.cur_time}_main_logger', print_output=True)
@@ -282,11 +313,15 @@ def main(args:CustomArgs, training_iter_id=-1):
     try:
         if training_iter_id < 0:
             for _training_iter_id in range(args.training_iteration):
-                main_one_iteration(deepcopy(args), data=data, training_iter_id=_training_iter_id)
+                main_one_iteration(deepcopy(args), 
+                                   data=data, rank_data=rank_data, 
+                                   training_iter_id=_training_iter_id)
             if not args.save_ckpt:
                 shutil.rmtree(args.output_dir)
         else:
-            main_one_iteration(deepcopy(args), data=data, training_iter_id=training_iter_id)
+            main_one_iteration(deepcopy(args), 
+                               data=data, rank_data=rank_data,
+                               training_iter_id=training_iter_id)
     except Exception as e:
         import traceback
         

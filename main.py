@@ -13,7 +13,7 @@ from arguments import CustomArgs
 from logger import CustomLogger
 from corpusData import CustomCorpusData
 from rankingData import RankingData
-# from model import CustomModel
+from model import CustomModel
 from rankingModel import RankingModel
 from metrics import ComputeMetrics
 from rankingMetrics import RankingMetrics

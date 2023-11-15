@@ -64,7 +64,7 @@ class CustomArgs:
     rank_eval_steps = 800
     rank_log_steps = 40
     rank_gradient_accumulation_steps = 1
-    rank_eval_per_epoch = 15
+    rank_eval_per_epoch = 4
     
     # seed, lr
     seed = 2023
@@ -141,7 +141,7 @@ class CustomArgs:
         parser.add_argument("--rank_eval_steps", type=int, default=800)
         parser.add_argument("--rank_log_steps", type=int, default=40)
         parser.add_argument("--rank_gradient_accumulation_steps", type=int, default=1)
-        parser.add_argument("--rank_eval_per_epoch", type=int, default=15)
+        parser.add_argument("--rank_eval_per_epoch", type=int, default=4)
         
         # seed, lr
         parser.add_argument("--seed", type=int, default=2023)

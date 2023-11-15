@@ -73,6 +73,8 @@ class CustomArgs:
     weight_decay = 0.01
     learning_rate = 5e-6
     
+    rank_learning_rate = 3e-5
+    
     # additional setting ( not shown in ArgumentParser ) # Don't modify this line
     trainset_size = -1
     devset_size = -1
@@ -150,6 +152,8 @@ class CustomArgs:
         parser.add_argument("--warmup_ratio", type=float, default=0.05)
         parser.add_argument("--weight_decay", type=float, default=0.01)
         parser.add_argument("--learning_rate", type=float, default=5e-6)
+        
+        parser.add_argument("--rank_learning_rate", type=float, default=3e-5)
         
         ############################ Args # Don't modify this line
 

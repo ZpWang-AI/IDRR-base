@@ -235,7 +235,7 @@ def main_one_iteration(args:CustomArgs,
             
             # optimizer and lr_scheduler
             optim='adamw_torch',
-            learning_rate=args.learning_rate,
+            learning_rate=args.rank_learning_rate,
             weight_decay=args.weight_decay,
             lr_scheduler_type='linear',
             warmup_ratio=args.warmup_ratio,

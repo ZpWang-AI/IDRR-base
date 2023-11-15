@@ -90,7 +90,7 @@ class RankingDataCollator:
         
         model_inputs['labels'] = torch.IntTensor(labels)
     
-        return model_inputs
+        return dict(model_inputs)
         
 
 
@@ -201,7 +201,7 @@ if __name__ == '__main__':
         batch = [sample_ranking_data.train_dataset[p]for p in range(3)]
         batch = sample_ranking_data.data_collator(batch)
         print(batch ,'\n')
-        print(batch['input_ids'].shape, batch['labels'].shape)
+        print(type(batch), batch['input_ids'].shape, batch['labels'].shape)
         print(f'{data_name}, time: {time.time()-start_time:.2f}s')
         print('='*10)
     

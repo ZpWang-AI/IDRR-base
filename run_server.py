@@ -36,9 +36,9 @@ def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1'
     # args.output_dir = ROOT_FOLD_IDRR+'output_space/'
     args.output_dir = '/home/zpwang/IDRR/output_space/'  # TODO: consume lots of memory
     if test_setting:
-        args.log_dir = ROOT_FOLD_IDRR+'log_space_test/'
+        args.log_dir = ROOT_FOLD_IDRR+'ranking_log_space_test/'
     else:
-        args.log_dir = ROOT_FOLD_IDRR+'log_space/'
+        args.log_dir = ROOT_FOLD_IDRR+'ranking_log_space/'
 
     return args
 

@@ -148,7 +148,8 @@ class RankingModel(nn.Module):
         label_vector = self.label_vectors[torch.argmax(labels[0])]
         label_vector = torch.stack([label_vector]*pooler_output.shape[0])
         scores = (label_vector * pooler_output).sum(dim=1)
-        loss = self.rank_loss_fn(scores.reshape(-1, self.num_labels))
+        scores = scores.reshape(-1, self.num_labels)
+        loss = self.rank_loss_fn(scores)
         return {
             'logits': scores,
             'loss': loss,

@@ -26,4 +26,4 @@ label_map
 !scripts/*.sh
 !just_test.py
 !_sshTransmitor.py
-!_run_cu12.py
+!run_server.sh

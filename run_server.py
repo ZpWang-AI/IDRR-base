@@ -60,8 +60,7 @@ def server_long_args(data_name='pdtb2', label_level='level1'):
     
     args.rank_epochs = 2
     args.rank_train_batch_size = 8
-    args.rank_eval_per_epoch = -1
-    args.rank_eval_steps = 4
+    args.rank_eval_per_epoch = 4
     return args
 
 

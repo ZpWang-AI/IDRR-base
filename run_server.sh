@@ -1,1 +1,1 @@
-nohup python /data/zpwang/IDRR/IDRR-base/run_server.py > /dev/null &
+nohup python /data/zpwang/IDRR/IDRR-rank/run_server.py > /dev/null &

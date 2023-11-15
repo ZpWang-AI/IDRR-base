@@ -45,6 +45,7 @@ class CustomArgs:
     
     # improvement
     loss_type = 'CELoss'
+    
     rank_loss_type = 'ListMLELoss'
     rank_order_file = './rank_order/rank_order1.json'
     
@@ -122,6 +123,7 @@ class CustomArgs:
         
         # improvement
         parser.add_argument("--loss_type", type=str, default='CELoss')
+        
         parser.add_argument("--rank_loss_type", type=str, default='ListMLELoss')
         parser.add_argument("--rank_order_file", type=str, default='./rank_order/rank_order1.json')
         

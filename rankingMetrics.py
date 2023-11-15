@@ -9,7 +9,6 @@ class RankingMetrics:
     
     def __call__(self, eval_pred):
         predictions, labels = eval_pred
-        predictions = predictions.reshape((-1, self.num_labels))
         
         res = {
             'rank_Acc': np.mean( np.argmax(predictions, axis=1) == 0)

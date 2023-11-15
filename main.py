@@ -282,14 +282,14 @@ def main_one_iteration(args:CustomArgs,
         train_evaluate_kwargs['training_args'] = ranking_training_args
         train_evaluate_kwargs['data'] = ranking_data
         train_evaluate_kwargs['compute_metrics'] = ranking_metrics
-        model.forward_fn = model.forward_rank
+        model.forward_fn = 'rank'
         ranking_func(**train_evaluate_kwargs)
     
     def fine_tune_stage():
         train_evaluate_kwargs['training_args'] = training_args
         train_evaluate_kwargs['data'] = data
         train_evaluate_kwargs['compute_metrics'] = compute_metrics
-        model.forward_fn = model.forward_fine_tune
+        model.forward_fn = 'ft'
         train_func(**train_evaluate_kwargs)
     
     if args.do_train:

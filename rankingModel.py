@@ -111,7 +111,7 @@ class RankingModel(nn.Module):
         self.label_vectors:nn.Parameter = None
         self.initial_model()
         
-        self.forward_fn = self.forward_fine_tune
+        self.forward_fn = 'ft'
         if loss_type.lower() == 'celoss':
             self.loss_fn = CELoss()
         else:
@@ -141,32 +141,43 @@ class RankingModel(nn.Module):
             attention_mask=tokenized_labels['attention_mask'],
         ).last_hidden_state[:,0,:]
         self.label_vectors = nn.Parameter(label_vectors)
-    
-    def forward_rank(self, input_ids, attention_mask, labels):
-        hidden_state = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
-        pooler_output = hidden_state.pooler_output
-        label_vector = self.label_vectors[torch.argmax(labels[0])]
-        label_vector = torch.stack([label_vector]*pooler_output.shape[0])
-        scores = (label_vector * pooler_output).sum(dim=1)
-        scores = scores.reshape(-1, self.num_labels)
-        loss = self.rank_loss_fn(scores)
-        return {
-            'logits': scores,
-            'loss': loss,
-        }
-    
-    def forward_fine_tune(self, input_ids, attention_mask, labels):
-        hidden_state = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
-        logits = self.classifier(hidden_state.last_hidden_state)
-        loss = self.loss_fn(logits, labels)
-        return {
-            'logits': logits,
-            'loss': loss,
-        }
         
     def forward(self, input_ids, attention_mask, labels):
-        return self.forward_fn(input_ids, attention_mask, labels)
-    
+        if self.forward_fn == 'ft':
+            hidden_state = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
+            logits = self.classifier(hidden_state.last_hidden_state)
+            loss = self.loss_fn(logits, labels)
+            return {
+                'logits': logits,
+                'loss': loss,
+            }            
+        elif self.forward_fn == 'rank':
+            # input, attention (bs, num, dim)
+            rank_batch_size, num_labels, emb_dim = input_ids.shape  
+            hidden_state = self.encoder(
+                input_ids=input_ids.reshape(-1, emb_dim),
+                attention_mask=attention_mask.reshape(-1, emb_dim),
+            )
+            # output (bs*num, dim2)
+            pooler_output = hidden_state.pooler_output
+            # labels (bs, num)
+            labels = torch.argmax(labels, dim=1)
+            # label_vector (bs*num, dim2)
+            # repeat_interleave: (1,2,3) -> (1,1,2,2,3,3)
+            label_vector = self.label_vectors[labels.repeat_interleave(num_labels)] 
+            # scores (bs, num)
+            scores = (pooler_output*label_vector).sum(dim=1)
+            scores = scores.reshape(-1, num_labels)
+            # loss (1)
+            loss = self.rank_loss_fn(scores)
+            return {
+                'logits': scores,
+                'loss': loss,
+            }
+        else:
+            raise ValueError('wrong forward_fn')
+        
+        
 if __name__ == '__main__':
     def demo_model():
         cache_dir = './plm_cache/'

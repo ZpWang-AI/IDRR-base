@@ -88,9 +88,16 @@ class RankingDataCollator:
             return_tensors='pt',
         )
         
-        model_inputs['labels'] = torch.IntTensor(labels)
+        rank_batch_size = len(features)
+        num_labels = len(features[0])
+        model_inputs['input_ids'] = \
+            model_inputs['input_ids'].reshape(rank_batch_size, num_labels, -1)
+        model_inputs['attention_mask'] = \
+            model_inputs['attention_mask'].reshape(rank_batch_size, num_labels, -1)
+        
+        model_inputs['labels'] = torch.IntTensor(labels).reshape(rank_batch_size, num_labels)
     
-        return dict(model_inputs)
+        return model_inputs
         
 
 
@@ -194,8 +201,8 @@ if __name__ == '__main__':
         sample_ranking_data = RankingData(
             corpus_data=sample_data,
             rank_order_file='./rank_order/rank_order1.json',
-            balance_class=True,
-            fixed_sampling=True,
+            balance_class=False,
+            fixed_sampling=False,
             dataset_size_multiplier=1,
         )
         batch = [sample_ranking_data.train_dataset[p]for p in range(3)]

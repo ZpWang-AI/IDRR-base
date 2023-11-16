@@ -136,10 +136,7 @@ class RankingModel(nn.Module):
         
         tokenizer = AutoTokenizer.from_pretrained(self.model_name_or_path, cache_dir=self.cache_dir)
         tokenized_labels = tokenizer(self.label_list, padding=True, return_tensors='pt')
-        label_vectors = self.encoder(
-            input_ids=tokenized_labels['input_ids'],
-            attention_mask=tokenized_labels['attention_mask'],
-        ).last_hidden_state[:,0,:]
+        label_vectors = self.encoder(**tokenized_labels).last_hidden_state[:,0,:]
         self.label_vectors = nn.Parameter(label_vectors)
         
     def forward(self, input_ids, attention_mask, labels):
@@ -181,9 +178,12 @@ class RankingModel(nn.Module):
 if __name__ == '__main__':
     def demo_model():
         cache_dir = './plm_cache/'
-        sample_model = RankingModel('roberta-base', label_list=['good', 'bad', 'middle', 'very good', 'very bad'], cache_dir=cache_dir)
+        model_name_or_path = 'roberta-base'
+        model_name_or_path = './plm_cache/models--roberta-base/snapshots/bc2764f8af2e92b6eb5679868df33e224075ca68/'
+        sample_model = RankingModel(model_name_or_path, cache_dir=cache_dir,
+                                    label_list=['good', 'bad', 'middle', 'very good', 'very bad'])
         
-        sample_tokenizer = AutoTokenizer.from_pretrained('roberta-base', cache_dir=cache_dir)
+        sample_tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, cache_dir=cache_dir)
         sample_x = ['你好']*2+['hello world. Nice to see you']*2
         sample_x_token = sample_tokenizer(sample_x, padding=True, return_tensors='pt',)
         sample_y = torch.Tensor([
@@ -192,10 +192,17 @@ if __name__ == '__main__':
             [1, 0.5, 0, 0, 0],
             [1, 0.5, -1, 0, 0],
         ])
+        print([(k,v.shape) for k,v in sample_x_token.items()])
+        print(sample_y.shape)
         res = sample_model(sample_x_token['input_ids'], sample_x_token['attention_mask'], sample_y)
         print(res)
         
-        sample_model.forward_fn = sample_model.forward_rank
+        sample_model.forward_fn = 'rank'
+        sample_x_token['input_ids'] = sample_x_token['input_ids'].unsqueeze(0).repeat((10,1,1))
+        sample_x_token['attention_mask'] = sample_x_token['attention_mask'].unsqueeze(0).repeat((10,1,1))
+        sample_y = sample_y.argmax(dim=1).unsqueeze(0).repeat((10,1))
+        print([(k,v.shape) for k,v in sample_x_token.items()])
+        print(sample_y.shape)
         res = sample_model(sample_x_token['input_ids'], sample_x_token['attention_mask'], sample_y)
         print(res)
         
@@ -210,4 +217,4 @@ if __name__ == '__main__':
         print(loss)
     
     demo_model()
-    demo_listMLE()
+    # demo_listMLE()

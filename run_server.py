@@ -9,17 +9,19 @@ else:
     raise Exception('wrong ROOT_FOLD_IDRR')
 
 import os
-os.chdir(ROOT_FOLD_IDRR+'IDRR-base/')
+CODE_SPACE = ROOT_FOLD_IDRR+'IDRR-rank-v1/'
+if __name__ == '__main__':
+    os.chdir(CODE_SPACE)
 
-# ===== prepare gpu =====
-from gpuManager import GPUManager
-free_gpu_id = GPUManager.get_free_gpu()
-os.environ["CUDA_VISIBLE_DEVICES"] = str(free_gpu_id)
-print(f'=== CUDA {free_gpu_id} ===')
+    # ===== prepare gpu =====
+    from gpuManager import GPUManager
+    free_gpu_id = GPUManager.get_free_gpu()
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(free_gpu_id)
+    print(f'=== CUDA {free_gpu_id} ===')
 
-# ===== import =====
-from arguments import CustomArgs
-from main import main
+    # ===== import =====
+    from arguments import CustomArgs
+    from main import main
 
 
 def server_base_args(test_setting=False):
@@ -31,9 +33,10 @@ def server_base_args(test_setting=False):
     args.data_path = ROOT_FOLD_IDRR+'CorpusData/PDTB2/pdtb2.csv'
     args.load_ckpt_dir = ROOT_FOLD_IDRR+'ckpt_fold'
     args.cache_dir = ''
-    args.output_dir = ROOT_FOLD_IDRR+'output_space/'
-    args.log_dir = ROOT_FOLD_IDRR+'log_space/'
-    args.rank_order_file = ROOT_FOLD_IDRR+'IDRR-base/rank_order/rank_order1.json'
+    # args.output_dir = ROOT_FOLD_IDRR+'output_space/'
+    args.output_dir = '/home/zpwang/IDRR/output_space/'  # TODO: consume lots of memory
+    args.log_dir = ROOT_FOLD_IDRR+'log_space_rank-v1/'
+    args.rank_order_file = CODE_SPACE+'rank_order/rank_order1.json'
 
     return args
 

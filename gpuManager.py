@@ -72,7 +72,9 @@ class GPUManager:
             
         if not wait:
             target_mem_mb *= 1024**2
-            for cuda_id in device_range:
+            # n = number of cuda device
+            # query from cuda:n-1 to cuda:0
+            for cuda_id in device_range[::-1]:
                 if GPUManager.query_gpu_memory(cuda_id=cuda_id, show=False)[0] > target_mem_mb:
                     return cuda_id
             return -1
@@ -89,7 +91,28 @@ class GPUManager:
                 if show_waiting:
                     print('waiting cuda ...')
                 time.sleep(wait_gap)
-        
+    
+    @staticmethod
+    def get_some_free_gpus(
+        gpu_cnt=1,
+        target_mem_mb=8000,
+        device_range=None,
+        return_str=True,
+    ):
+        if not device_range:
+            device_range = GPUManager.get_all_cuda_id()
+
+        target_mem_mb *= 1024**2
+        while 1:
+            gpu_id_lst = []
+            # n = number of cuda device
+            # query from cuda:n-1 to cuda:0            
+            for cuda_id in device_range[::-1]:
+                if GPUManager.query_gpu_memory(cuda_id=cuda_id, show=False)[0] > target_mem_mb:
+                    gpu_id_lst.append(cuda_id)
+                    if len(gpu_id_lst) >= gpu_cnt:
+                        return ','.join(map(str,gpu_id_lst)) if return_str else gpu_id_lst
+            time.sleep(5)
         
     @staticmethod
     def _occupy_one_gpu(cuda_id, target_mem_mb=8000):

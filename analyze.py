@@ -38,10 +38,11 @@ def analyze_metrics_json(log_dir, file_name, just_average=False):
 
 
 def analyze_experiment_evaluations(target_log_folds, to_json_file=None, to_csv_file=None):
+    versions = []
     results = []
     hypers = []
     for log_dir in target_log_folds:
-        analysis = analyze_metrics_json(log_dir, 'eval_metric_score.json', just_average=False)
+        analysis = analyze_metrics_json(log_dir, 'test_metric_score.json', just_average=False)
         results.append(analysis)
         
         hyper_path = path(log_dir)/'hyperparams.json'
@@ -49,9 +50,10 @@ def analyze_experiment_evaluations(target_log_folds, to_json_file=None, to_csv_f
             with open(hyper_path, 'r', encoding='utf8')as f:
                 hyper = json.load(f)
             hypers.append(hyper)
+            versions.append(hyper['version'])
         
-    df_results = pd.DataFrame(results)
-    df_hypers = pd.DataFrame(hypers)
+    df_results = pd.DataFrame(results, index=versions)
+    df_hypers = pd.DataFrame(hypers, index=versions)
     
     print(df_results)
     print('='*20)
@@ -65,11 +67,9 @@ def analyze_experiment_evaluations(target_log_folds, to_json_file=None, to_csv_f
     
 
 if __name__ == '__main__':
-    target_log_folds = [
-        r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\log_space\2023-10-16-20-51-27_local_test__train_eval',
-        r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\log_space\2023-10-16-20-53-04_local_test__train_eval',
-        r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\log_space\2023-10-16-20-54-30_local_test__train_eval',
-        r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\log_space\2023-10-16-20-56-42_local_test__train_eval',
-        r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\log_space\2023-10-16-21-02-02_local_test__train_eval',
-    ]
+    target_log_folds = r'''
+    D:\0--data\projects\04.01-IDRR数据\IDRR-base\log_space\2023-11-07-16-02-44_local_test_pdtb2_level1
+D:\0--data\projects\04.01-IDRR数据\IDRR-base\log_space\2023-11-07-15-59-27_local_test_pdtb2_level1
+D:\0--data\projects\04.01-IDRR数据\IDRR-base\log_space\2023-11-07-15-57-02_local_test_pdtb2_level1
+    '''.split()
     analyze_experiment_evaluations(target_log_folds, to_csv_file='./tmp/analysis.csv')

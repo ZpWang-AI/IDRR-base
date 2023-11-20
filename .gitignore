@@ -21,8 +21,10 @@ CorpusData/*
 plm_cache
 output_space
 log_space
+label_map
 
 !scripts/*.sh
 !just_test.py
 !_sshTransmitor.py
-!_run_cu12.py
+!run_server.sh
+!backup/**

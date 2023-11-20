@@ -27,3 +27,4 @@ label_map
 !just_test.py
 !_sshTransmitor.py
 !run_server.sh
+!backup/**

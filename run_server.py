@@ -51,6 +51,7 @@ def server_v1_args():
     
     args.cuda_cnt = 1
     args.secondary_label_weight = 0
+    args.data_augmentation_secondary_label = False
     args.data_augmentation_connective_arg2 = False
     args.rank_data_sampler = 'shuffle'
     args.rank_dataset_size_multiplier = 1
@@ -80,6 +81,8 @@ def server_long_args(data_name='pdtb2', label_level='level1'):
     args = server_base_args(test_setting=False, data_name=data_name, label_level=label_level)
     args:CustomArgs
     
+    args.epochs = 25
+    args.learning_rate = 3e-5
     args.warmup_ratio = 0.1
     
     args.version = SERVER_NAME+'long_base'

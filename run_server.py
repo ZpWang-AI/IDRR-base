@@ -20,7 +20,9 @@ def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1'
     args = CustomArgs(test_setting=test_setting)
     
     args.version = SERVER_NAME+('test' if test_setting else 'base')
-        
+    args.server_name = SERVER_NAME
+    
+    # data
     args.data_name = data_name
     if data_name == 'pdtb2':
         args.data_path = ROOT_FOLD_IDRR+'CorpusData/PDTB2/pdtb2.csv'
@@ -30,6 +32,7 @@ def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1'
         args.data_path = ROOT_FOLD_IDRR+'CorpusData/CoNLL16/'
     args.label_level = label_level
     
+    # file path
     args.model_name_or_path = ROOT_FOLD_IDRR+'/plm_cache/models--roberta-base/snapshots/bc2764f8af2e92b6eb5679868df33e224075ca68'
     args.load_ckpt_dir = ROOT_FOLD_IDRR+'ckpt_fold'
     args.cache_dir = ''

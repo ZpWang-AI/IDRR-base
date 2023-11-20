@@ -66,6 +66,7 @@ class CustomArgs:
     sample_per_eval = -1
     cuda_id = '0'
     cur_time = ''
+    server_name = ''
     
     ############################ Args # Don't modify this line
     
@@ -233,7 +234,7 @@ class CustomArgs:
             f.write(script_string)
         
     def generate_parser(self, file_path='./tmp/arguments.py'):
-        with open('./arguments.py', 'r', encoding='utf8')as f:
+        with open(__file__, 'r', encoding='utf8')as f:
             contents = f.readlines()
             
         parser_lines, pre_lines, post_lines = [], [], []
@@ -277,5 +278,5 @@ if __name__ == '__main__':
     sample_args = CustomArgs(test_setting=False)
     # print(list(sample_args))
     # print(dict(sample_args))
-    sample_args.generate_script()
-    sample_args.generate_parser()
+    # sample_args.generate_script()
+    sample_args.generate_parser(file_path=__file__)

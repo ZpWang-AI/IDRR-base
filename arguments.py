@@ -1,144 +1,67 @@
 import os
-import argparse
 
 from pathlib import Path as path
 from datetime import datetime
 
 
-class arg_bool:
-    def __new__(cls, input_s) -> bool:
-        return 't' in str(input_s).lower()
-       
+def fill_with_delimiter(s):
+    return f'{"="*10} {s} {"="*(30-len(s))}'
+
 
 class CustomArgs:
-    
-    ############################ Args # Don't modify this line
-    
-    version = 'colab'
-    
-    # base setting
-    do_train = True
-    do_eval = True
-    save_ckpt = False
-    training_iteration = 5
-    cuda_cnt = 1
-    
-    # data
-    mini_dataset = False
-    label_level = 'level1'
-    data_name = 'pdtb2'
-    secondary_label_weight = 0.5  
-    data_augmentation_secondary_label = False
-    data_augmentation_connective_arg2 = False
-    
-    rank_balance_class = False
-    rank_fixed_sampling = False
-    rank_dataset_size_multiplier = 1
-    
-    # path 
-    model_name_or_path = 'roberta-base'
-    data_path = '/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv'
-    cache_dir = '/content/drive/MyDrive/IDRR/plm_cache'
-    output_dir = './output_space/'
-    log_dir = '/content/drive/MyDrive/IDRR/log_space'
-    load_ckpt_dir = './ckpt_fold'
-    
-    # improvement
-    loss_type = 'CELoss'
-    
-    rank_loss_type = 'ListMLELoss'
-    rank_order_file = './rank_order/rank_order1.json'
-    
-    # epoch, batch, step
-    max_steps = -1
-    epochs = 5
-    train_batch_size = 8
-    eval_batch_size = 32
-    eval_steps = 100
-    log_steps = 10
-    gradient_accumulation_steps = 1
-    eval_per_epoch = 4
-    
-    rank_epochs = 2
-    rank_train_batch_size = 8
-    rank_eval_batch_size = 8
-    rank_eval_steps = 800
-    rank_log_steps = 40
-    rank_gradient_accumulation_steps = 1
-    rank_eval_per_epoch = 4
-    
-    # seed, lr
-    seed = 2023
-    warmup_ratio = 0.05
-    weight_decay = 0.01
-    learning_rate = 5e-6
-    
-    rank_learning_rate = 3e-5
-    
-    # additional setting ( not shown in ArgumentParser ) # Don't modify this line
-    trainset_size = -1
-    devset_size = -1
-    testset_size = -1
-    real_batch_size = -1
-    sample_per_eval = -1
-    cuda_id = '0'
-    cur_time = ''
-    server_name = ''
-    
-    rank_real_batch_size = -1
-    rank_sample_per_eval = -1
-    
-    ############################ Args # Don't modify this line
-    
     def __init__(self, test_setting=False) -> None:
-        parser = argparse.ArgumentParser('zp')
-
-        ############################ Args # Don't modify this line
-        
-        parser.add_argument("--version", type=str, default='colab')
+        self.version = 'colab'
         
         # base setting
-        parser.add_argument("--do_train", type=arg_bool, default=True)
-        parser.add_argument("--do_eval", type=arg_bool, default=True)
-        parser.add_argument("--save_ckpt", type=arg_bool, default=False)
-        parser.add_argument("--training_iteration", type=int, default=5)
-        parser.add_argument("--cuda_cnt", type=int, default=1)
+        self.part1 = 'base setting'
+        self.do_train = True
+        self.do_eval = True
+        self.save_ckpt = False
+        self.training_iteration = 5
+        self.cuda_cnt = 1
         
         # data
-        parser.add_argument("--mini_dataset", type=arg_bool, default=False)
-        parser.add_argument("--label_level", type=str, default='level1')
-        parser.add_argument("--data_name", type=str, default='pdtb2')
-        parser.add_argument("--secondary_label_weight", type=float, default=0.5)
-        parser.add_argument("--data_augmentation_secondary_label", type=arg_bool, default=False)
-        parser.add_argument("--data_augmentation_connective_arg2", type=arg_bool, default=False)
+        self.part2 = 'data'
+        self.mini_dataset = False
+        self.label_level = 'level1'
+        self.data_name = 'pdtb2'
+        self.secondary_label_weight = 0.5  
+        self.data_augmentation_secondary_label = False
+        self.data_augmentation_connective_arg2 = False
+
+        self.trainset_size = -1
+        self.devset_size = -1
+        self.testset_size = -1
         
-        parser.add_argument("--rank_balance_class", type=arg_bool, default=False)
-        parser.add_argument("--rank_fixed_sampling", type=arg_bool, default=False)
-        parser.add_argument("--rank_dataset_size_multiplier", type=int, default=1)
+        # file path
+        self.part3 = 'file path'
+        self.model_name_or_path = 'roberta-base'
+        self.data_path = '/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv'
+        self.cache_dir = '/content/drive/MyDrive/IDRR/plm_cache'
+        self.output_dir = './output_space/'
+        self.log_dir = '/content/drive/MyDrive/IDRR/log_space'
+        self.load_ckpt_dir = './ckpt_fold'
         
-        # path
-        parser.add_argument("--model_name_or_path", type=str, default='roberta-base')
-        parser.add_argument("--data_path", type=str, default='/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv')
-        parser.add_argument("--cache_dir", type=str, default='/content/drive/MyDrive/IDRR/plm_cache')
-        parser.add_argument("--output_dir", type=str, default='./output_space/')
-        parser.add_argument("--log_dir", type=str, default='/content/drive/MyDrive/IDRR/log_space')
-        parser.add_argument("--load_ckpt_dir", type=str, default='./ckpt_fold')
-        
-        # improvement
-        parser.add_argument("--loss_type", type=str, default='CELoss')
+        # loss
+        self.part4 = 'loss'
+        self.loss_type = 'CELoss'
         
         parser.add_argument("--rank_loss_type", type=str, default='ListMLELoss')
         parser.add_argument("--rank_order_file", type=str, default='./rank_order/rank_order1.json')
         
         # epoch, batch, step
-        parser.add_argument("--max_steps", type=int, default=-1)
-        parser.add_argument("--epochs", type=int, default=5)
-        parser.add_argument("--train_batch_size", type=int, default=8)
-        parser.add_argument("--eval_batch_size", type=int, default=32)
-        parser.add_argument("--eval_steps", type=int, default=100)
-        parser.add_argument("--log_steps", type=int, default=10)
-        parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
-        parser.add_argument("--eval_per_epoch", type=int, default=4)
+        self.part5 = 'epoch, batch, step'
+        self.max_steps = -1
+        self.epochs = 5
+        self.train_batch_size = 8
+        self.eval_batch_size = 32
+        self.eval_steps = 100
+        self.log_steps = 10
+        self.gradient_accumulation_steps = 1
+        self.eval_per_epoch = 4
+
+        self.real_batch_size = -1
+        self.sample_per_eval = -1
         
         parser.add_argument("--rank_epochs", type=int, default=2)
         parser.add_argument("--rank_train_batch_size", type=int, default=8)
@@ -149,19 +72,23 @@ class CustomArgs:
         parser.add_argument("--rank_eval_per_epoch", type=int, default=4)
         
         # seed, lr
-        parser.add_argument("--seed", type=int, default=2023)
-        parser.add_argument("--warmup_ratio", type=float, default=0.05)
-        parser.add_argument("--weight_decay", type=float, default=0.01)
-        parser.add_argument("--learning_rate", type=float, default=5e-6)
+        self.part6 = 'seed, lr'
+        self.seed = 2023
+        self.warmup_ratio = 0.05
+        self.weight_decay = 0.01
+        self.learning_rate = 5e-6
         
-        parser.add_argument("--rank_learning_rate", type=float, default=3e-5)
+        # additional details
+        self.part7 = 'additional details'
+        self.cuda_id = ''
+        self.cur_time = ''
+        self.server_name = ''
         
-        ############################ Args # Don't modify this line
-
-        args = parser.parse_args()
-        for k, v in args.__dict__.items():
-            setattr(self, k, v)
-            
+        for p in range(1, 8):
+            attr_name = f'part{p}'
+            init_attr = self.__getattribute__(attr_name)
+            self.__setattr__(attr_name, fill_with_delimiter(init_attr))
+        
         if test_setting:
             self.version = 'colab_test'
             self.training_iteration = 2
@@ -209,14 +136,15 @@ class CustomArgs:
             self.log_dir = os.path.join(self.log_dir, specific_fold_name) 
     
     def prepare_gpu(self, target_mem_mb=10000):
-        from gpuManager import GPUManager
-        free_gpu_ids = GPUManager.get_some_free_gpus(
-            gpu_cnt=self.cuda_cnt, 
-            target_mem_mb=target_mem_mb,
-        )
-        os.environ["CUDA_VISIBLE_DEVICES"] = free_gpu_ids
-        self.cuda_id = free_gpu_ids
-        print(f'=== CUDA {free_gpu_ids} ===')
+        if not self.cuda_id:
+            from gpuManager import GPUManager
+            free_gpu_ids = GPUManager.get_some_free_gpus(
+                gpu_cnt=self.cuda_cnt, 
+                target_mem_mb=target_mem_mb,
+            )
+            os.environ["CUDA_VISIBLE_DEVICES"] = free_gpu_ids
+            self.cuda_id = free_gpu_ids
+            print(f'=== CUDA {free_gpu_ids} ===')
     
     def recalculate_eval_log_steps(self):
         self.real_batch_size = self.train_batch_size*self.gradient_accumulation_steps*self.cuda_cnt
@@ -263,84 +191,12 @@ class CustomArgs:
             raise Exception('rank_order_file not exists')  
 
     def __iter__(self):
-        # keep the same order as the args shown in the file
-        keys_order = {k:-1 for k in self.__dict__}
-        with open(__file__, 'r', encoding='utf8')as f:
-            sep_label = 0
-            cnt = 0
-            for line in f.readlines():
-                if line.count('#') > 3 and 'Args' in line:
-                    if sep_label:
-                        break
-                    else:
-                        sep_label = 1
-                    continue
-                if sep_label:
-                    for k in keys_order:
-                        if k in line and keys_order[k] == -1:
-                            keys_order[k] = cnt
-                            cnt += 1
-                            break
+        return iter(self.__dict__.items())
         
-        return iter(sorted(self.__dict__.items(), key=lambda x:keys_order[x[0]]))
-        
-    def generate_script(self, file_path='./tmp/script.sh'):
-        script_string = ['python main.py']
-        for k, v in list(self):
-            if k in ['cur_time']:
-                continue
-            script_string.append(f'    --{k} {v}')
-        script_string = ' \\\n'.join(script_string)
-        
-        print(script_string)
-        path(file_path).parent.mkdir(parents=True, exist_ok=True)
-        with open(file_path, 'w', encoding='utf8')as f:
-            f.write(script_string)
-        
-    def generate_parser(self, file_path='./tmp/arguments.py'):
-        with open(__file__, 'r', encoding='utf8')as f:
-            contents = f.readlines()
-            
-        parser_lines, pre_lines, post_lines = [], [], []
-        sep_label = 0
-        for line in contents:
-            if (line.count('#') > 3 and 'Args' in line) or 'additional setting' in line:
-                sep_label += 1
-            if sep_label < 4:
-                pre_lines.append(line)
-            elif sep_label >= 5:
-                post_lines.append(line)
-                
-            if sep_label != 1:
-                continue
-            
-            if line.count('=') == 1:
-                k, v = line.split('=')
-                k, v = k.strip(), v.strip()
-                if '\'' in v or '"' in v:
-                    v_type = 'str'
-                elif v in ['True', 'False']:
-                    v_type = 'arg_bool'
-                elif float(v) == int(float(v)):
-                    v_type = 'int'
-                else:
-                    v_type = 'float'
-                parser_lines.append(f'parser.add_argument("--{k}", type={v_type}, default={v})')
-            else:
-                parser_lines.append(line.strip())
-                    
-        path(file_path).parent.mkdir(parents=True, exist_ok=True)
-        with open(file_path, 'w', encoding='utf8')as f:
-            f.write(''.join(pre_lines))
-            for line in parser_lines:
-                print(line)
-                f.write(' '*8+line+'\n')
-            f.write(''.join(post_lines))
-
 
 if __name__ == '__main__':
+    import json
+    
     sample_args = CustomArgs(test_setting=False)
     # print(list(sample_args))
-    # print(dict(sample_args))
-    # sample_args.generate_script()
-    sample_args.generate_parser(file_path=__file__)
+    print(json.dumps(dict(sample_args), ensure_ascii=False, indent=2))

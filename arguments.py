@@ -29,9 +29,14 @@ class CustomArgs:
         self.data_augmentation_secondary_label = False
         self.data_augmentation_connective_arg2 = False
 
+        self.rank_balance_class = False
+        self.rank_fixed_sampling = False
+        self.rank_dataset_size_multiplier = 1
+
         self.trainset_size = -1
         self.devset_size = -1
         self.testset_size = -1
+        self.rank_trainset_size = -1
         
         # file path
         self.part3 = 'file path'
@@ -42,12 +47,13 @@ class CustomArgs:
         self.log_dir = '/content/drive/MyDrive/IDRR/log_space'
         self.load_ckpt_dir = './ckpt_fold'
         
+        self.rank_order_file = './rank_order/rank_order1.json'
+
         # loss
         self.part4 = 'loss'
         self.loss_type = 'CELoss'
         
-        parser.add_argument("--rank_loss_type", type=str, default='ListMLELoss')
-        parser.add_argument("--rank_order_file", type=str, default='./rank_order/rank_order1.json')
+        self.rank_loss_type = 'ListMLELoss'
         
         # epoch, batch, step
         self.part5 = 'epoch, batch, step'
@@ -60,16 +66,19 @@ class CustomArgs:
         self.gradient_accumulation_steps = 1
         self.eval_per_epoch = 4
 
+        self.rank_epochs = 2
+        self.rank_train_batch_size = 8
+        self.rank_eval_batch_size = 8
+        self.rank_eval_steps = 800
+        self.rank_log_steps = 40
+        self.rank_gradient_accumulation_steps = 1
+        self.rank_eval_per_epoch = 4
+
         self.real_batch_size = -1
         self.sample_per_eval = -1
         
-        parser.add_argument("--rank_epochs", type=int, default=2)
-        parser.add_argument("--rank_train_batch_size", type=int, default=8)
-        parser.add_argument("--rank_eval_batch_size", type=int, default=8)
-        parser.add_argument("--rank_eval_steps", type=int, default=800)
-        parser.add_argument("--rank_log_steps", type=int, default=40)
-        parser.add_argument("--rank_gradient_accumulation_steps", type=int, default=1)
-        parser.add_argument("--rank_eval_per_epoch", type=int, default=4)
+        self.rank_real_batch_size = -1
+        self.rank_sample_per_eval = -1
         
         # seed, lr
         self.part6 = 'seed, lr'
@@ -77,6 +86,8 @@ class CustomArgs:
         self.warmup_ratio = 0.05
         self.weight_decay = 0.01
         self.learning_rate = 5e-6
+        
+        self.rank_learning_rate = 3e-5
         
         # additional details
         self.part7 = 'additional details'

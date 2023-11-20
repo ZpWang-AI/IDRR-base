@@ -28,7 +28,8 @@ class CustomArgs:
         self.secondary_label_weight = 0.5  
         self.data_augmentation_secondary_label = False
         self.data_augmentation_connective_arg2 = False
-
+        
+        self.data_sampler = 'shuffle'
         self.rank_balance_class = False
         self.rank_fixed_sampling = False
         self.rank_dataset_size_multiplier = 1

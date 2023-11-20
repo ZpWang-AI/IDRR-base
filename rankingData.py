@@ -127,7 +127,6 @@ class RankingDataCollator:
         return model_inputs
         
 
-
 class RankingData():
     def __init__(
         self, 
@@ -197,8 +196,6 @@ class RankingData():
                 dataset_size=-1,
             )
             
-         
-    
     
 if __name__ == '__main__':
     import os

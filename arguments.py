@@ -7,12 +7,12 @@ from datetime import datetime
 
 class arg_bool:
     def __new__(cls, input_s) -> bool:
-        return 't' in str(input_s).lower()
-       
+        return str(input_s).lower() == 'true'
+
 
 class CustomArgs:
     
-    ############################ Args # Don't modify this line
+    ############################ Args ### Don't modify this line
     
     version = 'colab'
     
@@ -39,7 +39,7 @@ class CustomArgs:
     log_dir = '/content/drive/MyDrive/IDRR/log_space'
     load_ckpt_dir = './ckpt_fold'
     
-    # improvement
+    # loss
     loss_type = 'CELoss'
     
     # epoch, batch, step
@@ -58,22 +58,24 @@ class CustomArgs:
     weight_decay = 0.01
     learning_rate = 5e-6
     
-    # additional setting ( not shown in ArgumentParser ) # Don't modify this line
-    trainset_size = -1
-    devset_size = -1
-    testset_size = -1
-    real_batch_size = -1
-    sample_per_eval = -1
+    # additional setting ( not shown in ArgumentParser ) ### Don't modify this line
     cuda_id = '0'
     cur_time = ''
     server_name = ''
+
+    trainset_size = -1
+    devset_size = -1
+    testset_size = -1
     
-    ############################ Args # Don't modify this line
+    real_batch_size = -1
+    sample_per_eval = -1
+    
+    ############################ Args ### Don't modify this line
     
     def __init__(self, test_setting=False) -> None:
         parser = argparse.ArgumentParser('zp')
 
-        ############################ Args # Don't modify this line
+        ############################ Args ### Don't modify this line
         
         parser.add_argument("--version", type=str, default='colab')
         
@@ -100,7 +102,7 @@ class CustomArgs:
         parser.add_argument("--log_dir", type=str, default='/content/drive/MyDrive/IDRR/log_space')
         parser.add_argument("--load_ckpt_dir", type=str, default='./ckpt_fold')
         
-        # improvement
+        # loss
         parser.add_argument("--loss_type", type=str, default='CELoss')
         
         # epoch, batch, step
@@ -119,7 +121,7 @@ class CustomArgs:
         parser.add_argument("--weight_decay", type=float, default=0.01)
         parser.add_argument("--learning_rate", type=float, default=5e-6)
         
-        ############################ Args # Don't modify this line
+        ############################ Args ### Don't modify this line
 
         args = parser.parse_args()
         for k, v in args.__dict__.items():
@@ -240,7 +242,8 @@ class CustomArgs:
         parser_lines, pre_lines, post_lines = [], [], []
         sep_label = 0
         for line in contents:
-            if (line.count('#') > 3 and 'Args' in line) or 'additional setting' in line:
+            # if (line.count('#') > 3 and 'Args' in line) or 'additional setting' in line:
+            if line.count('#') > 3 and "# Don't modify this line" in line:
                 sep_label += 1
             if sep_label < 4:
                 pre_lines.append(line)

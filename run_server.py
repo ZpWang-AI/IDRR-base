@@ -66,6 +66,7 @@ def server_v1_args():
             log_steps=40,
             gradient_accumulation_steps=2,
             eval_per_epoch=-15,
+            warmup_ratio=0.05,
             weight_decay=0.01,
             learning_rate=5e-6,
         ),
@@ -78,12 +79,11 @@ def server_v1_args():
             log_steps=10,
             gradient_accumulation_steps=1,
             eval_per_epoch=-4,
+            warmup_ratio=0.05,
             weight_decay=0.01,
             learning_rate=5e-6,
         ),
     ]
-    
-    args.warmup_ratio = 0.05
     
     args.version = SERVER_NAME+'v1-arg'
     return args
@@ -93,20 +93,23 @@ def server_long_args(data_name='pdtb2', label_level='level1'):
     args = server_base_args(test_setting=False, data_name=data_name, label_level=label_level)
     args:CustomArgs
     
-    args.epochs = 25
-    args.learning_rate = 3e-5
-    args.warmup_ratio = 0.1
-    
     args.version = SERVER_NAME+'long_best'
-    args.train_batch_size = 32
-    args.secondary_label_weight = 0.5
-    args.cuda_cnt = 2
-    args.eval_per_epoch = 4
-    args.gradient_accumulation_steps = 1
     
-    args.rank_epochs = 2
-    args.rank_train_batch_size = 8
-    args.rank_eval_per_epoch = 4
+    args.cuda_cnt = 2
+    args.secondary_label_weight = 0.5
+    
+    args.training_stages = [StageArgs(
+        stage_name='ft',
+        epochs=25,
+        train_batch_size=32,
+        eval_batch_size=32,
+        eval_steps=800, log_steps=80,
+        gradient_accumulation_steps=1,
+        eval_per_epoch=4,
+        warmup_ratio=0.1,
+        weight_decay=0.01,
+        learning_rate=3e-5,
+    )]
     return args
 
 

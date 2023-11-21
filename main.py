@@ -197,72 +197,26 @@ def main_one_iteration(args:CustomArgs,
         args.log_dir = os.path.join(args.log_dir, train_fold_name)
         args.check_path()
         
-        # training_args = TrainingArguments(
-        #     output_dir=args.output_dir,
-            
-        #     # strategies of evaluation, logging, save
-        #     evaluation_strategy="steps", 
-        #     eval_steps=args.eval_steps,
-        #     logging_strategy='steps',
-        #     logging_steps=args.log_steps,
-        #     save_strategy='no',
-        #     # save_strategy='epoch',
-        #     # save_total_limit=1,
-            
-        #     # optimizer and lr_scheduler
-        #     optim='adamw_torch',
-        #     learning_rate=args.learning_rate,
-        #     weight_decay=args.weight_decay,
-        #     lr_scheduler_type='linear',
-        #     warmup_ratio=args.warmup_ratio,
-            
-        #     # epochs and batches 
-        #     max_steps=args.max_steps,
-        #     num_train_epochs=args.epochs, 
-        #     per_device_train_batch_size=args.train_batch_size,
-        #     per_device_eval_batch_size=args.eval_batch_size,
-        #     gradient_accumulation_steps=args.gradient_accumulation_steps,
-        # )
-        # ranking_training_args = TrainingArguments(
-        #     output_dir=args.output_dir,
-            
-        #     # strategies of evaluation, logging, save
-        #     evaluation_strategy="steps", 
-        #     eval_steps=args.rank_eval_steps,
-        #     logging_strategy='steps',
-        #     logging_steps=args.rank_log_steps,
-        #     save_strategy='no',
-            
-        #     # optimizer and lr_scheduler
-        #     optim='adamw_torch',
-        #     learning_rate=args.rank_learning_rate,
-        #     weight_decay=args.weight_decay,
-        #     lr_scheduler_type='linear',
-        #     warmup_ratio=args.warmup_ratio,
-            
-        #     # epochs and batches 
-        #     max_steps=args.max_steps,
-        #     num_train_epochs=args.rank_epochs, 
-        #     per_device_train_batch_size=args.rank_train_batch_size,
-        #     per_device_eval_batch_size=args.rank_eval_batch_size,
-        #     gradient_accumulation_steps=args.rank_gradient_accumulation_steps,
-        # )
-        
         logger = CustomLogger(
             log_dir=args.log_dir,
             logger_name=f'{args.cur_time}_iter{training_iter_id}_logger',
             print_output=True,
         )
         
-        ranking_data = RankingData(
-            corpus_data=data,
-            rank_order_file=args.rank_order_file,
-            data_sampler=args.rank_data_sampler,
-            balance_batch=args.rank_balance_batch,
-            balance_class=args.rank_balance_class,
-            fixed_sampling=args.rank_fixed_sampling,
-            dataset_size_multiplier=args.rank_dataset_size_multiplier,
-        )
+        for stage in args.training_stages:
+            if 'rank' in stage.stage_name:
+                ranking_data = RankingData(
+                    corpus_data=data,
+                    rank_order_file=args.rank_order_file,
+                    data_sampler=args.rank_data_sampler,
+                    balance_batch=args.rank_balance_batch,
+                    balance_class=args.rank_balance_class,
+                    fixed_sampling=args.rank_fixed_sampling,
+                    dataset_size_multiplier=args.rank_dataset_size_multiplier,
+                )
+                break
+        else:
+            ranking_data:RankingData = None
         
         model = RankingModel(
             model_name_or_path=args.model_name_or_path,
@@ -306,7 +260,7 @@ def main_one_iteration(args:CustomArgs,
             learning_rate=stage_args.learning_rate,
             weight_decay=stage_args.weight_decay,
             lr_scheduler_type='linear',
-            warmup_ratio=args.warmup_ratio,
+            warmup_ratio=stage_args.warmup_ratio,
             
             # epochs and batches 
             num_train_epochs=stage_args.epochs, 

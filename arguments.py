@@ -16,6 +16,7 @@ class StageArgs(dict):
                  eval_steps, log_steps,
                  gradient_accumulation_steps,
                  eval_per_epoch,
+                 warmup_ratio,
                  weight_decay,
                  learning_rate,
                  ) -> None:
@@ -27,6 +28,7 @@ class StageArgs(dict):
         self.log_steps = log_steps
         self.gradient_accumulation_steps = gradient_accumulation_steps
         self.eval_per_epoch = eval_per_epoch
+        self.warmup_ratio = warmup_ratio
         self.weight_decay = weight_decay
         self.learning_rate = learning_rate
         self.real_batch_size = -1
@@ -56,7 +58,6 @@ class CustomArgs:
         self.do_eval = True
         self.save_ckpt = False
         self.seed = 2023
-        self.warmup_ratio = 0.05
         
         self.training_iteration = 5
         self.cuda_cnt = 1
@@ -98,6 +99,8 @@ class CustomArgs:
         
         self.rank_loss_type = 'ListMLELoss'
         
+        # stage
+        self.part5 = 'stage'
         self.training_stages = [
             StageArgs(
                 stage_name='rank',
@@ -108,6 +111,7 @@ class CustomArgs:
                 log_steps=40,
                 gradient_accumulation_steps=2,
                 eval_per_epoch=15,
+                warmup_ratio=0.05,
                 weight_decay=0.01,
                 learning_rate=5e-6,
             ),
@@ -120,41 +124,11 @@ class CustomArgs:
                 log_steps=10,
                 gradient_accumulation_steps=1,
                 eval_per_epoch=4,
+                warmup_ratio=0.05,
                 weight_decay=0.01,
                 learning_rate=5e-6,
             ),
         ]
-        # # epoch, batch, step
-        # self.part5 = 'epoch, batch, step'
-        # self.max_steps = -1
-        # self.epochs = 5
-        # self.train_batch_size = 8
-        # self.eval_batch_size = 32
-        # self.eval_steps = 100
-        # self.log_steps = 10
-        # self.gradient_accumulation_steps = 1
-        # self.eval_per_epoch = 4
-
-        # self.rank_epochs = 2
-        # self.rank_train_batch_size = 8
-        # self.rank_eval_batch_size = 8
-        # self.rank_eval_steps = 800
-        # self.rank_log_steps = 40
-        # self.rank_gradient_accumulation_steps = 1
-        # self.rank_eval_per_epoch = 4
-
-        # self.real_batch_size = -1
-        # self.sample_per_eval = -1
-        
-        # self.rank_real_batch_size = -1
-        # self.rank_sample_per_eval = -1
-        
-        # # lr
-        # self.part6 = 'lr'
-        # self.weight_decay = 0.01
-        # self.learning_rate = 5e-6
-        
-        # self.rank_learning_rate = 5e-6
         
         # additional details
         self.part7 = 'additional details'
@@ -189,6 +163,7 @@ class CustomArgs:
                     log_steps=4,
                     gradient_accumulation_steps=1,
                     eval_per_epoch=-15,
+                    warmup_ratio=0.05,
                     weight_decay=0.01,
                     learning_rate=5e-6,
                 ),
@@ -201,6 +176,7 @@ class CustomArgs:
                     log_steps=4,
                     gradient_accumulation_steps=1,
                     eval_per_epoch=-4,
+                    warmup_ratio=0.05,
                     weight_decay=0.01,
                     learning_rate=5e-6,
                 ),

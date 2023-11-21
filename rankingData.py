@@ -25,17 +25,28 @@ class RandomSampler:
 
 
 class ShuffleSampler:
-    def __init__(self, label_rec, rank_order) -> None:
+    def __init__(self, label_rec, rank_order, 
+                 group_shuffle=False,
+                 cyclic_shuffle=True, 
+                 ) -> None:
         self.label_rec = [p[:]if p else [0] for p in label_rec]
-        for p in self.label_rec:
-            np.random.shuffle(p)
         self.rank_order = rank_order
         self.needles = [0]*4
+        
+        if group_shuffle:
+            target_length = max(len(p)for p in self.label_rec)
+            self.label_rec = [p*(target_length//len(p)+1)for p in self.label_rec]
+        self.cyclic_shuffle = cyclic_shuffle
+        
+        for sample_ids in self.label_rec:
+            np.random.shuffle(sample_ids)
         
     def _get_sample_id(self, label_id):
         sample_id = self.label_rec[label_id][self.needles[label_id]]
         self.needles[label_id] += 1
         self.needles[label_id] %= len(self.label_rec[label_id])
+        if not self.cyclic_shuffle and not self.needles[label_id]:
+            np.random.shuffle(self.label_rec[label_id])
         return sample_id
     
     def __call__(self, first_label, first_item=None) -> Any:
@@ -43,7 +54,7 @@ class ShuffleSampler:
             return [first_item]+[self._get_sample_id(p)for p in self.rank_order[first_label]]
         else:
             return [self._get_sample_id(p)for p in [first_label]+self.rank_order[first_label]]
-                
+
 
 class RankingDataset(Dataset):
     def __init__(self, 

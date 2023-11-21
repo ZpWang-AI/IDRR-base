@@ -90,7 +90,7 @@ class CustomArgs:
         self.weight_decay = 0.01
         self.learning_rate = 5e-6
         
-        self.rank_learning_rate = 3e-5
+        self.rank_learning_rate = 5e-6
         
         # additional details
         self.part7 = 'additional details'

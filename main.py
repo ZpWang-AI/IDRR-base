@@ -350,6 +350,15 @@ def main(args:CustomArgs, training_iter_id=-1):
     args.trainset_size, args.devset_size, args.testset_size = map(len, [
         data.train_dataset, data.dev_dataset, data.test_dataset
     ])
+    ranking_data = RankingData(
+        corpus_data=data,
+        rank_order_file=args.rank_order_file,
+        data_sampler=args.rank_data_sampler,
+        balance_batch=args.rank_balance_batch,
+        balance_class=args.rank_balance_class,
+        fixed_sampling=args.rank_fixed_sampling,
+        dataset_size_multiplier=args.rank_dataset_size_multiplier,
+    )
     ranking_data = RankingData(corpus_data=data, **dict(args))
     args.recalculate_eval_log_steps()
     

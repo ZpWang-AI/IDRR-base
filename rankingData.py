@@ -49,7 +49,7 @@ class RankingDataset(Dataset):
     def __init__(self, 
                  arg1, arg2, labels, 
                  label_rec, rank_order, 
-                 rank_data_sampler='random',
+                 data_sampler='random',
                  balance_class=True,
                  fixed_sampling=True,
                  dataset_size=-1
@@ -59,12 +59,12 @@ class RankingDataset(Dataset):
         self.arg1 = arg1
         self.arg2 = arg2
         self.labels = labels
-        if rank_data_sampler == 'random':
+        if data_sampler == 'random':
             self.id_sampler = RandomSampler(label_rec, rank_order)
-        elif rank_data_sampler == 'shuffle':
+        elif data_sampler == 'shuffle':
             self.id_sampler = ShuffleSampler(label_rec, rank_order)
         else:
-            raise ValueError('wrong rank_data_sampler')
+            raise ValueError('wrong data_sampler')
         self.balance_class = balance_class
         self.fixed_sampling = fixed_sampling
         self.dataset_size = len(self.labels) if dataset_size < 0 else dataset_size
@@ -133,8 +133,8 @@ class RankingData():
         corpus_data:CustomCorpusData,
         rank_order_file:str,
         
-        rank_data_sampler='shuffle',
-        rank_balance_batch=False,
+        data_sampler='shuffle',
+        balance_batch=False,
         balance_class=False,
         fixed_sampling=False,
         dataset_size_multiplier=1,
@@ -143,8 +143,8 @@ class RankingData():
         self.corpus_data = corpus_data
         self.label_to_id = corpus_data.label_to_id
         self.tokenizer = corpus_data.tokenizer
-        self.rank_data_sampler = rank_data_sampler
-        self.rank_balance_batch = rank_balance_batch
+        self.data_sampler = data_sampler
+        self.balance_batch = balance_batch
         self.balance_class = balance_class
         self.fixed_sampling = fixed_sampling
         self.dataset_size_multiplier = dataset_size_multiplier
@@ -184,7 +184,7 @@ class RankingData():
         if is_train:
             return RankingDataset(
                 arg1=arg1_list, arg2=arg1_list, labels=label_ids,
-                label_rec=label_rec, rank_order=self.rank_order, rank_data_sampler=self.rank_data_sampler,
+                label_rec=label_rec, rank_order=self.rank_order, data_sampler=self.data_sampler,
                 balance_class=self.balance_class,
                 fixed_sampling=self.fixed_sampling,
                 dataset_size=len(label_ids)*self.dataset_size_multiplier,
@@ -192,7 +192,7 @@ class RankingData():
         else:
             return RankingDataset(
                 arg1=arg1_list, arg2=arg1_list, labels=label_ids,
-                label_rec=label_rec, rank_order=self.rank_order, rank_data_sampler=self.rank_data_sampler,
+                label_rec=label_rec, rank_order=self.rank_order, data_sampler=self.data_sampler,
                 balance_class=False,
                 fixed_sampling=False,
                 dataset_size=-1,

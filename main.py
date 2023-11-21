@@ -334,6 +334,7 @@ def main(args:CustomArgs, training_iter_id=-1):
     
     args.complete_path()
     args.check_path()
+    set_seed(args.seed)
     
     data = CustomCorpusData(**dict(args))
     args.trainset_size, args.devset_size, args.testset_size = map(len, [

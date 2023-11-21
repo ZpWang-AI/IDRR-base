@@ -171,6 +171,28 @@ class RankingModel(nn.Module):
                 'logits': scores,
                 'loss': loss,
             }
+        elif self.forward_fn == 'rank+ft':
+            rank_batch_size, num_labels, emb_dim = input_ids.shape  
+            hidden_state = self.encoder(
+                input_ids=input_ids.reshape(-1, emb_dim),
+                attention_mask=attention_mask.reshape(-1, emb_dim),
+            )
+            # rank
+            pooler_output = hidden_state.pooler_output
+            labels = torch.argmax(labels, dim=1)
+            label_vector = self.label_vectors[labels.repeat_interleave(num_labels)] 
+            scores = (pooler_output*label_vector).sum(dim=1)
+            scores = scores.reshape(-1, num_labels)
+            loss_rank = self.rank_loss_fn(scores)
+            # ft
+            logits = self.classifier(hidden_state.last_hidden_state)
+            loss_ft = self.loss_fn(logits, labels)
+            
+            loss = loss_rank+loss_ft
+            return {
+                'logits': logits,
+                'loss': loss,
+            }
         else:
             raise ValueError('wrong forward_fn')
         

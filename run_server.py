@@ -8,12 +8,12 @@ else:
     raise Exception('wrong ROOT_FOLD_IDRR')
 
 import os
-CODE_SPACE = ROOT_FOLD_IDRR+'IDRR-rank/'
+CODE_SPACE = ROOT_FOLD_IDRR+'IDRR-rank-v2-multi-stage/'
 if __name__ == '__main__':
     os.chdir(CODE_SPACE)
 
 # ===== import ===== !!! Don't import torch !!!
-from arguments import CustomArgs
+from arguments import CustomArgs, StageArgs
 
 
 def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1') -> CustomArgs:
@@ -39,9 +39,9 @@ def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1'
     # args.output_dir = ROOT_FOLD_IDRR+'output_space/'
     args.output_dir = '/home/zpwang/IDRR/output_space/'  # TODO: consume lots of memory
     if test_setting:
-        args.log_dir = ROOT_FOLD_IDRR+'log_space_test_rank-v2/'
+        args.log_dir = ROOT_FOLD_IDRR+'log_space_test_rank-v2-multi-stage/'
     else:
-        args.log_dir = ROOT_FOLD_IDRR+'log_space_rank-v2/'
+        args.log_dir = ROOT_FOLD_IDRR+'log_space_rank-v2-multi-stage/'
 
     return args
 
@@ -56,26 +56,38 @@ def server_v1_args():
     args.rank_data_sampler = 'shuffle'
     args.rank_dataset_size_multiplier = 1
     
-    args.epochs = 5
-    args.train_batch_size = 8
-    args.eval_steps = 100
-    args.log_steps = 10
-    args.eval_per_epoch = -1
-    args.gradient_accumulation_steps = 1
-    
-    args.rank_epochs = 2
-    args.rank_train_batch_size = 1
-    args.rank_eval_steps = 800
-    args.rank_log_steps = 40
-    args.rank_gradient_accumulation_steps = 2
+    args.training_stages = [
+        StageArgs(
+            stage_name='rank',
+            epochs=2,
+            train_batch_size=1,
+            eval_batch_size=1,
+            eval_steps=800,
+            log_steps=40,
+            gradient_accumulation_steps=2,
+            eval_per_epoch=-15,
+            weight_decay=0.01,
+            learning_rate=5e-6,
+        ),
+        StageArgs(
+            stage_name='ft',
+            epochs=5,
+            train_batch_size=8,
+            eval_batch_size=32,
+            eval_steps=100,
+            log_steps=10,
+            gradient_accumulation_steps=1,
+            eval_per_epoch=-4,
+            weight_decay=0.01,
+            learning_rate=5e-6,
+        ),
+    ]
     
     args.warmup_ratio = 0.05
-    args.weight_decay = 0.01
-    args.learning_rate = 5e-6
-    args.rank_learning_rate = 5e-6
     
     args.version = SERVER_NAME+'v1-arg'
     return args
+
 
 def server_long_args(data_name='pdtb2', label_level='level1'):
     args = server_base_args(test_setting=False, data_name=data_name, label_level=label_level)

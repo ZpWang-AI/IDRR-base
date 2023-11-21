@@ -8,6 +8,44 @@ def fill_with_delimiter(s):
     return f'{"="*10} {s} {"="*(30-len(s))}'
 
 
+class StageArgs(dict):
+    def __init__(self,
+                 stage_name,
+                 epochs, 
+                 train_batch_size, eval_batch_size,
+                 eval_steps, log_steps,
+                 gradient_accumulation_steps,
+                 eval_per_epoch,
+                 weight_decay,
+                 learning_rate,
+                 ) -> None:
+        self.stage_name = stage_name
+        self.epochs = epochs
+        self.train_batch_size = train_batch_size
+        self.eval_batch_size = eval_batch_size
+        self.eval_steps = eval_steps
+        self.log_steps = log_steps
+        self.gradient_accumulation_steps = gradient_accumulation_steps
+        self.eval_per_epoch = eval_per_epoch
+        self.weight_decay = weight_decay
+        self.learning_rate = learning_rate
+        self.real_batch_size = -1
+        self.sample_per_eval = -1
+        
+        super().__init__(self.__dict__)
+        
+    def recalculate_eval_log_steps(self, cuda_cnt, trainset_size):
+        self.real_batch_size = self.train_batch_size*self.gradient_accumulation_steps*cuda_cnt
+        if self.eval_per_epoch > 0:
+            self.eval_steps = max(1, int(
+                trainset_size / self.eval_per_epoch / self.real_batch_size
+            ))
+            self.log_steps = max(1, int(
+                trainset_size / self.eval_per_epoch / self.real_batch_size / 10
+            ))
+        self.sample_per_eval = self.real_batch_size*self.eval_steps
+    
+
 class CustomArgs:
     def __init__(self, test_setting=False) -> None:
         self.version = 'colab'
@@ -60,37 +98,63 @@ class CustomArgs:
         
         self.rank_loss_type = 'ListMLELoss'
         
-        # epoch, batch, step
-        self.part5 = 'epoch, batch, step'
-        self.max_steps = -1
-        self.epochs = 5
-        self.train_batch_size = 8
-        self.eval_batch_size = 32
-        self.eval_steps = 100
-        self.log_steps = 10
-        self.gradient_accumulation_steps = 1
-        self.eval_per_epoch = 4
+        self.training_stages = [
+            StageArgs(
+                stage_name='rank',
+                epochs=2,
+                train_batch_size=1,
+                eval_batch_size=1,
+                eval_steps=800,
+                log_steps=40,
+                gradient_accumulation_steps=2,
+                eval_per_epoch=15,
+                weight_decay=0.01,
+                learning_rate=5e-6,
+            ),
+            StageArgs(
+                stage_name='ft',
+                epochs=5,
+                train_batch_size=8,
+                eval_batch_size=32,
+                eval_steps=100,
+                log_steps=10,
+                gradient_accumulation_steps=1,
+                eval_per_epoch=4,
+                weight_decay=0.01,
+                learning_rate=5e-6,
+            ),
+        ]
+        # # epoch, batch, step
+        # self.part5 = 'epoch, batch, step'
+        # self.max_steps = -1
+        # self.epochs = 5
+        # self.train_batch_size = 8
+        # self.eval_batch_size = 32
+        # self.eval_steps = 100
+        # self.log_steps = 10
+        # self.gradient_accumulation_steps = 1
+        # self.eval_per_epoch = 4
 
-        self.rank_epochs = 2
-        self.rank_train_batch_size = 8
-        self.rank_eval_batch_size = 8
-        self.rank_eval_steps = 800
-        self.rank_log_steps = 40
-        self.rank_gradient_accumulation_steps = 1
-        self.rank_eval_per_epoch = 4
+        # self.rank_epochs = 2
+        # self.rank_train_batch_size = 8
+        # self.rank_eval_batch_size = 8
+        # self.rank_eval_steps = 800
+        # self.rank_log_steps = 40
+        # self.rank_gradient_accumulation_steps = 1
+        # self.rank_eval_per_epoch = 4
 
-        self.real_batch_size = -1
-        self.sample_per_eval = -1
+        # self.real_batch_size = -1
+        # self.sample_per_eval = -1
         
-        self.rank_real_batch_size = -1
-        self.rank_sample_per_eval = -1
+        # self.rank_real_batch_size = -1
+        # self.rank_sample_per_eval = -1
         
-        # lr
-        self.part6 = 'lr'
-        self.weight_decay = 0.01
-        self.learning_rate = 5e-6
+        # # lr
+        # self.part6 = 'lr'
+        # self.weight_decay = 0.01
+        # self.learning_rate = 5e-6
         
-        self.rank_learning_rate = 5e-6
+        # self.rank_learning_rate = 5e-6
         
         # additional details
         self.part7 = 'additional details'
@@ -98,10 +162,11 @@ class CustomArgs:
         self.cur_time = ''
         self.server_name = ''
         
-        for p in range(1, 8):
+        for p in range(10):
             attr_name = f'part{p}'
-            init_attr = self.__getattribute__(attr_name)
-            self.__setattr__(attr_name, fill_with_delimiter(init_attr))
+            if hasattr(self, attr_name):
+                init_attr = self.__getattribute__(attr_name)
+                self.__setattr__(attr_name, fill_with_delimiter(init_attr))
         
         if test_setting:
             self.version = 'colab_test'
@@ -114,21 +179,32 @@ class CustomArgs:
             self.rank_fixed_sampling = False
             self.rank_dataset_size_multiplier = 1
             
-            self.epochs = 2
-            self.train_batch_size = 8
-            self.eval_batch_size = 8
-            self.eval_steps = 4
-            self.log_steps = 4
-            self.eval_per_epoch = -1
-            self.gradient_accumulation_steps = 1
-
-            self.rank_epochs = 1
-            self.rank_train_batch_size = 2
-            self.rank_eval_batch_size = 2
-            self.rank_eval_steps = 4
-            self.rank_log_steps = 4
-            self.rank_eval_per_epoch = -1
-            self.rank_gradient_accumulation_steps = 1
+            self.training_stages = [
+                StageArgs(
+                    stage_name='rank',
+                    epochs=1,
+                    train_batch_size=2,
+                    eval_batch_size=2,
+                    eval_steps=4,
+                    log_steps=4,
+                    gradient_accumulation_steps=1,
+                    eval_per_epoch=-15,
+                    weight_decay=0.01,
+                    learning_rate=5e-6,
+                ),
+                StageArgs(
+                    stage_name='ft',
+                    epochs=2,
+                    train_batch_size=8,
+                    eval_batch_size=8,
+                    eval_steps=4,
+                    log_steps=4,
+                    gradient_accumulation_steps=1,
+                    eval_per_epoch=-4,
+                    weight_decay=0.01,
+                    learning_rate=5e-6,
+                ),
+            ]
     
     def complete_path(self,
                       show_cur_time=True,
@@ -161,25 +237,8 @@ class CustomArgs:
             print(f'=== CUDA {free_gpu_ids} ===')
     
     def recalculate_eval_log_steps(self):
-        self.real_batch_size = self.train_batch_size*self.gradient_accumulation_steps*self.cuda_cnt
-        if self.eval_per_epoch > 0:
-            self.eval_steps = max(1, int(
-                self.trainset_size / self.eval_per_epoch / self.real_batch_size
-            ))
-            self.log_steps = max(1, int(
-                self.trainset_size / self.eval_per_epoch / self.real_batch_size / 10
-            ))
-        self.sample_per_eval = self.real_batch_size*self.eval_steps
-            
-        self.rank_real_batch_size = self.rank_train_batch_size*self.rank_gradient_accumulation_steps*self.cuda_cnt
-        if self.rank_eval_per_epoch > 0:
-            self.rank_eval_steps = max(1, int(
-                self.trainset_size / self.rank_eval_per_epoch / self.rank_real_batch_size
-            ))
-            self.rank_log_steps = max(1, int(
-                self.trainset_size / self.rank_eval_per_epoch / self.rank_real_batch_size / 10
-            ))
-        self.rank_sample_per_eval = self.rank_real_batch_size*self.rank_eval_steps
+        for stage in self.training_stages:
+            stage.recalculate_eval_log_steps(self.cuda_cnt, self.trainset_size)
         
     def check_path(self):
         # self.data_path
@@ -213,4 +272,6 @@ if __name__ == '__main__':
     
     sample_args = CustomArgs(test_setting=False)
     # print(list(sample_args))
+    sample_args.trainset_size = 12345
+    sample_args.recalculate_eval_log_steps()
     print(json.dumps(dict(sample_args), ensure_ascii=False, indent=2))

@@ -9,7 +9,7 @@ from typing import *
 from pathlib import Path as path
 from transformers import TrainingArguments, Trainer, DataCollatorWithPadding, set_seed
 
-from arguments import CustomArgs
+from arguments import CustomArgs, StageArgs
 from logger import CustomLogger
 from corpusData import CustomCorpusData
 from rankingData import RankingData
@@ -197,56 +197,56 @@ def main_one_iteration(args:CustomArgs,
         args.log_dir = os.path.join(args.log_dir, train_fold_name)
         args.check_path()
         
-        training_args = TrainingArguments(
-            output_dir=args.output_dir,
+        # training_args = TrainingArguments(
+        #     output_dir=args.output_dir,
             
-            # strategies of evaluation, logging, save
-            evaluation_strategy="steps", 
-            eval_steps=args.eval_steps,
-            logging_strategy='steps',
-            logging_steps=args.log_steps,
-            save_strategy='no',
-            # save_strategy='epoch',
-            # save_total_limit=1,
+        #     # strategies of evaluation, logging, save
+        #     evaluation_strategy="steps", 
+        #     eval_steps=args.eval_steps,
+        #     logging_strategy='steps',
+        #     logging_steps=args.log_steps,
+        #     save_strategy='no',
+        #     # save_strategy='epoch',
+        #     # save_total_limit=1,
             
-            # optimizer and lr_scheduler
-            optim='adamw_torch',
-            learning_rate=args.learning_rate,
-            weight_decay=args.weight_decay,
-            lr_scheduler_type='linear',
-            warmup_ratio=args.warmup_ratio,
+        #     # optimizer and lr_scheduler
+        #     optim='adamw_torch',
+        #     learning_rate=args.learning_rate,
+        #     weight_decay=args.weight_decay,
+        #     lr_scheduler_type='linear',
+        #     warmup_ratio=args.warmup_ratio,
             
-            # epochs and batches 
-            max_steps=args.max_steps,
-            num_train_epochs=args.epochs, 
-            per_device_train_batch_size=args.train_batch_size,
-            per_device_eval_batch_size=args.eval_batch_size,
-            gradient_accumulation_steps=args.gradient_accumulation_steps,
-        )
-        ranking_training_args = TrainingArguments(
-            output_dir=args.output_dir,
+        #     # epochs and batches 
+        #     max_steps=args.max_steps,
+        #     num_train_epochs=args.epochs, 
+        #     per_device_train_batch_size=args.train_batch_size,
+        #     per_device_eval_batch_size=args.eval_batch_size,
+        #     gradient_accumulation_steps=args.gradient_accumulation_steps,
+        # )
+        # ranking_training_args = TrainingArguments(
+        #     output_dir=args.output_dir,
             
-            # strategies of evaluation, logging, save
-            evaluation_strategy="steps", 
-            eval_steps=args.rank_eval_steps,
-            logging_strategy='steps',
-            logging_steps=args.rank_log_steps,
-            save_strategy='no',
+        #     # strategies of evaluation, logging, save
+        #     evaluation_strategy="steps", 
+        #     eval_steps=args.rank_eval_steps,
+        #     logging_strategy='steps',
+        #     logging_steps=args.rank_log_steps,
+        #     save_strategy='no',
             
-            # optimizer and lr_scheduler
-            optim='adamw_torch',
-            learning_rate=args.rank_learning_rate,
-            weight_decay=args.weight_decay,
-            lr_scheduler_type='linear',
-            warmup_ratio=args.warmup_ratio,
+        #     # optimizer and lr_scheduler
+        #     optim='adamw_torch',
+        #     learning_rate=args.rank_learning_rate,
+        #     weight_decay=args.weight_decay,
+        #     lr_scheduler_type='linear',
+        #     warmup_ratio=args.warmup_ratio,
             
-            # epochs and batches 
-            max_steps=args.max_steps,
-            num_train_epochs=args.rank_epochs, 
-            per_device_train_batch_size=args.rank_train_batch_size,
-            per_device_eval_batch_size=args.rank_eval_batch_size,
-            gradient_accumulation_steps=args.rank_gradient_accumulation_steps,
-        )
+        #     # epochs and batches 
+        #     max_steps=args.max_steps,
+        #     num_train_epochs=args.rank_epochs, 
+        #     per_device_train_batch_size=args.rank_train_batch_size,
+        #     per_device_eval_batch_size=args.rank_eval_batch_size,
+        #     gradient_accumulation_steps=args.rank_gradient_accumulation_steps,
+        # )
         
         logger = CustomLogger(
             log_dir=args.log_dir,
@@ -277,7 +277,7 @@ def main_one_iteration(args:CustomArgs,
         
         train_evaluate_kwargs = {
             'args': args,
-            'training_args': training_args,  # switch
+            'training_args': None,  # switch
             'model': model,
             'data': data,  # switch
             'compute_metrics': compute_metrics,  # switch
@@ -288,29 +288,61 @@ def main_one_iteration(args:CustomArgs,
 
     # === train or evaluate ===
     
-    def ranking_stage():
-        train_evaluate_kwargs['training_args'] = ranking_training_args
+    def prepare_training_args(stage_args: StageArgs):
+        return TrainingArguments(
+            output_dir=args.output_dir,
+            
+            # strategies of evaluation, logging, save
+            evaluation_strategy="steps", 
+            eval_steps=stage_args.eval_steps,
+            logging_strategy='steps',
+            logging_steps=stage_args.log_steps,
+            save_strategy='no',
+            # save_strategy='epoch',
+            # save_total_limit=1,
+            
+            # optimizer and lr_scheduler
+            optim='adamw_torch',
+            learning_rate=stage_args.learning_rate,
+            weight_decay=stage_args.weight_decay,
+            lr_scheduler_type='linear',
+            warmup_ratio=args.warmup_ratio,
+            
+            # epochs and batches 
+            num_train_epochs=stage_args.epochs, 
+            per_device_train_batch_size=stage_args.train_batch_size,
+            per_device_eval_batch_size=stage_args.eval_batch_size,
+            gradient_accumulation_steps=stage_args.gradient_accumulation_steps,
+        )
+    
+    def stage_rank(stage_args:StageArgs):
+        train_evaluate_kwargs['training_args'] = prepare_training_args(stage_args)
         train_evaluate_kwargs['data'] = ranking_data
         train_evaluate_kwargs['compute_metrics'] = ranking_metrics
         model.forward_fn = 'rank'
         ranking_func(**train_evaluate_kwargs)
     
-    def fine_tune_stage():
-        train_evaluate_kwargs['training_args'] = training_args
+    def stage_ft(stage_args:StageArgs):
+        train_evaluate_kwargs['training_args'] = prepare_training_args(stage_args)
         train_evaluate_kwargs['data'] = data
         train_evaluate_kwargs['compute_metrics'] = compute_metrics
         model.forward_fn = 'ft'
         train_func(**train_evaluate_kwargs)
     
+    stage_dict = {
+        'rank': stage_rank,
+        'ft': stage_ft,
+    }
+    
     if args.do_train:
-        ranking_stage()
-        fine_tune_stage()
+        for stage in args.training_stages:
+            stage_dict[stage.stage_name](stage)
             
-    elif args.do_eval:
-        model_params_path = os.path.join(args.load_ckpt_dir, 'pytorch_model.bin')
-        model_params = torch.load(model_params_path)
-        logger.info( model.load_state_dict(model_params, strict=True) )
-        evaluate_func(**train_evaluate_kwargs)
+    # elif args.do_eval:
+    #     model_params_path = os.path.join(args.load_ckpt_dir, 'pytorch_model.bin')
+    #     model_params = torch.load(model_params_path)
+    #     logger.info( model.load_state_dict(model_params, strict=True) )
+    #     evaluate_func(**train_evaluate_kwargs)
     
     # # mv tensorboard ckpt to log_dir
     # cnt = 0

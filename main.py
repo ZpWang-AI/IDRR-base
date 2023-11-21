@@ -27,8 +27,6 @@ LOG_FILENAME_DICT = {
     'blind test': 'test_blind_metric_score.json',
     'loss': 'train_loss.jsonl',
     'output': 'train_output.json',
-    
-    'evaluate': 'evaluate_output.json'
 }
 
 
@@ -64,6 +62,7 @@ def train_func(
 
     train_output = trainer.train().metrics
     logger.log_json(train_output, LOG_FILENAME_DICT['output'], log_info=True)
+    trainer.save_model(path(args.output_dir)/'final')
     
     if args.do_eval:
         callback.evaluate_testdata = True
@@ -72,54 +71,23 @@ def train_func(
         for metric_ in compute_metrics.metric_names:
             load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
             if load_ckpt_dir.exists():
+                model.load_state_dict(torch.load(load_ckpt_dir/'pytorch_model.bin'))
                 evaluate_output = trainer.evaluate(eval_dataset=data.test_dataset)
                 test_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
                 
         logger.log_json(test_metrics, LOG_FILENAME_DICT['test'], log_info=True)                
 
-        if args.data_name == 'conll':
-            test_metrics = {}
-            for metric_ in compute_metrics.metric_names:
-                load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
-                if load_ckpt_dir.exists():
-                    evaluate_output = trainer.evaluate(eval_dataset=data.blind_test_dataset)
-                    test_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
+        # if args.data_name == 'conll':
+        #     test_metrics = {}
+        #     for metric_ in compute_metrics.metric_names:
+        #         load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
+        #         if load_ckpt_dir.exists():
+        #             evaluate_output = trainer.evaluate(eval_dataset=data.blind_test_dataset)
+        #             test_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
                     
-            logger.log_json(test_metrics, LOG_FILENAME_DICT['blind test'], log_info=True)    
-                
+        #     logger.log_json(test_metrics, LOG_FILENAME_DICT['blind test'], log_info=True)    
 
     return trainer, callback
-
-
-def evaluate_func(
-    args:CustomArgs,
-    training_args:TrainingArguments,
-    logger:CustomLogger,
-    data:CustomCorpusData,
-    model:CustomModel,
-    compute_metrics:ComputeMetrics,
-):
-    callback = CustomCallback(
-        args=args,
-        logger=logger,
-        metric_names=compute_metrics.metric_names,
-        evaluate_testdata=True,
-    )
-
-    trainer = Trainer(
-        model=model, 
-        args=training_args, 
-        tokenizer=data.tokenizer, 
-        compute_metrics=compute_metrics,
-        callbacks=[callback],
-        data_collator=data.data_collator,
-    )
-    callback.trainer = trainer
-    
-    evaluate_output = trainer.evaluate(data.test_dataset)
-    logger.log_json(evaluate_output, LOG_FILENAME_DICT['evaluate'], log_info=True)
-        
-    return trainer
 
 
 def main_one_iteration(args:CustomArgs, data:CustomCorpusData, training_iter_id=0):
@@ -191,31 +159,9 @@ def main_one_iteration(args:CustomArgs, data:CustomCorpusData, training_iter_id=
     
     logger.log_json(dict(args), LOG_FILENAME_DICT['hyperparams'], log_info=False)
 
-    # === train or evaluate ===
+    # === train ===
     
-    if args.do_train:
-        train_func(**train_evaluate_kwargs)
-            
-    elif args.do_eval:
-        model_params_path = os.path.join(args.load_ckpt_dir, 'pytorch_model.bin')
-        model_params = torch.load(model_params_path)
-        logger.info( model.load_state_dict(model_params, strict=True) )
-
-        evaluate_func(**train_evaluate_kwargs)
-    
-    # # mv tensorboard ckpt to log_dir
-    # cnt = 0
-    # for dirpath, dirnames, filenames in os.walk(args.output_dir):
-    #     if 'checkpoint' in dirpath:
-    #         continue
-    #     if 'runs' in dirpath:
-    #         for filename in filenames:
-    #             if 'events' in filename:
-    #                 cur_file = path(dirpath)/filename
-    #                 tensorboard_dir = path(args.log_dir)/'tensorboard'/str(cnt)
-    #                 tensorboard_dir.mkdir(parents=True, exist_ok=True)
-    #                 shutil.copy(cur_file, tensorboard_dir)
-    #                 cnt += 1
+    train_func(**train_evaluate_kwargs)
 
     if not args.save_ckpt:
         shutil.rmtree(args.output_dir)

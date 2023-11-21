@@ -18,7 +18,6 @@ class CustomArgs:
         self.do_eval = True
         self.save_ckpt = False
         self.seed = 2023
-        self.warmup_ratio = 0.05
         
         self.training_iteration = 5
         self.cuda_cnt = 1
@@ -52,6 +51,7 @@ class CustomArgs:
         # epoch, batch, step
         self.part5 = 'epoch, batch, step'
         self.max_steps = -1
+        self.warmup_ratio = 0.05
         self.epochs = 5
         self.train_batch_size = 8
         self.eval_batch_size = 32

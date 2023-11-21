@@ -17,6 +17,9 @@ class CustomArgs:
         self.do_train = True
         self.do_eval = True
         self.save_ckpt = False
+        self.seed = 2023
+        self.warmup_ratio = 0.05
+        
         self.training_iteration = 5
         self.cuda_cnt = 1
         
@@ -82,10 +85,8 @@ class CustomArgs:
         self.rank_real_batch_size = -1
         self.rank_sample_per_eval = -1
         
-        # seed, lr
-        self.part6 = 'seed, lr'
-        self.seed = 2023
-        self.warmup_ratio = 0.05
+        # lr
+        self.part6 = 'lr'
         self.weight_decay = 0.01
         self.learning_rate = 5e-6
         

@@ -8,7 +8,7 @@ else:
     raise Exception('wrong ROOT_FOLD_IDRR')
 
 import os
-CODE_SPACE = ROOT_FOLD_IDRR+'IDRR-rank/'
+CODE_SPACE = ROOT_FOLD_IDRR+'IDRR-rank-v1_reproduce/'
 if __name__ == '__main__':
     os.chdir(CODE_SPACE)
 

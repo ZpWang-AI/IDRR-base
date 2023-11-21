@@ -235,7 +235,17 @@ def main(args:CustomArgs, training_iter_id=-1):
     args.complete_path()
     args.check_path()
     
-    data = CustomCorpusData(**dict(args))
+    data = CustomCorpusData(
+        data_path=args.data_path,
+        data_name=args.data_name,
+        model_name_or_path=args.model_name_or_path,
+        cache_dir=args.cache_dir,
+        label_level=args.label_level,
+        secondary_label_weight=args.secondary_label_weight,
+        mini_dataset=args.mini_dataset,
+        data_augmentation_secondary_label=args.data_augmentation_secondary_label,
+        data_augmentation_connective_arg2=args.data_augmentation_connective_arg2,
+    )
     args.trainset_size, args.devset_size, args.testset_size = map(len, [
         data.train_dataset, data.dev_dataset, data.test_dataset
     ])

@@ -180,7 +180,7 @@ def evaluate_func(
 
 def main_one_iteration(args:CustomArgs,
                        data:CustomCorpusData, 
-                       ranking_data:RankingData,
+                    #    ranking_data:RankingData,
                        training_iter_id=0):
     if not args.do_train and not args.do_eval:
         raise Exception('neither do_train nor do_eval')
@@ -254,6 +254,16 @@ def main_one_iteration(args:CustomArgs,
             print_output=True,
         )
         
+        ranking_data = RankingData(
+            corpus_data=data,
+            rank_order_file=args.rank_order_file,
+            data_sampler=args.rank_data_sampler,
+            balance_batch=args.rank_balance_batch,
+            balance_class=args.rank_balance_class,
+            fixed_sampling=args.rank_fixed_sampling,
+            dataset_size_multiplier=args.rank_dataset_size_multiplier,
+        )
+        
         model = RankingModel(
             model_name_or_path=args.model_name_or_path,
             label_list=data.label_list,
@@ -300,7 +310,6 @@ def main_one_iteration(args:CustomArgs,
         model_params_path = os.path.join(args.load_ckpt_dir, 'pytorch_model.bin')
         model_params = torch.load(model_params_path)
         logger.info( model.load_state_dict(model_params, strict=True) )
-
         evaluate_func(**train_evaluate_kwargs)
     
     # # mv tensorboard ckpt to log_dir
@@ -350,16 +359,6 @@ def main(args:CustomArgs, training_iter_id=-1):
     args.trainset_size, args.devset_size, args.testset_size = map(len, [
         data.train_dataset, data.dev_dataset, data.test_dataset
     ])
-    ranking_data = RankingData(
-        corpus_data=data,
-        rank_order_file=args.rank_order_file,
-        data_sampler=args.rank_data_sampler,
-        balance_batch=args.rank_balance_batch,
-        balance_class=args.rank_balance_class,
-        fixed_sampling=args.rank_fixed_sampling,
-        dataset_size_multiplier=args.rank_dataset_size_multiplier,
-    )
-    ranking_data = RankingData(corpus_data=data, **dict(args))
     args.recalculate_eval_log_steps()
     
     main_logger = CustomLogger(args.log_dir, logger_name=f'{args.cur_time}_main_logger', print_output=True)
@@ -370,13 +369,13 @@ def main(args:CustomArgs, training_iter_id=-1):
         if training_iter_id < 0:
             for _training_iter_id in range(args.training_iteration):
                 main_one_iteration(deepcopy(args), 
-                                   data=data, ranking_data=ranking_data, 
+                                   data=data, 
                                    training_iter_id=_training_iter_id)
             if not args.save_ckpt:
                 shutil.rmtree(args.output_dir)
         else:
             main_one_iteration(deepcopy(args), 
-                               data=data, ranking_data=ranking_data,
+                               data=data, 
                                training_iter_id=training_iter_id)
     except Exception as e:
         import traceback

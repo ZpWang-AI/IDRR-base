@@ -31,6 +31,7 @@ class CustomArgs:
         
         self.rank_data_sampler = 'shuffle'
         self.rank_balance_class = False
+        self.rank_balance_batch = False
         self.rank_fixed_sampling = False
         self.rank_dataset_size_multiplier = 1
 

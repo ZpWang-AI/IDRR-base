@@ -134,6 +134,7 @@ class RankingData():
         rank_order_file:str,
         
         rank_data_sampler='shuffle',
+        rank_balance_batch=False,
         balance_class=False,
         fixed_sampling=False,
         dataset_size_multiplier=1,
@@ -143,6 +144,7 @@ class RankingData():
         self.label_to_id = corpus_data.label_to_id
         self.tokenizer = corpus_data.tokenizer
         self.rank_data_sampler = rank_data_sampler
+        self.rank_balance_batch = rank_balance_batch
         self.balance_class = balance_class
         self.fixed_sampling = fixed_sampling
         self.dataset_size_multiplier = dataset_size_multiplier
@@ -220,7 +222,7 @@ if __name__ == '__main__':
             # cache_dir='./plm_cache/',
             label_level=label_level,
             mini_dataset=False,
-            data_augmentation_secondary_label=True,
+            data_augmentation_secondary_label=False,
             data_augmentation_connective_arg2=False,
         )
         start_time = time.time()

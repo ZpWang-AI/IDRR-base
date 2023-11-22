@@ -86,7 +86,7 @@ def server_experiment_args(args=None):
         ),
     ]
     
-    args.version = SERVER_NAME+'v1-arg'
+    args.version = 'v1-arg'
     return args
 
 
@@ -94,7 +94,7 @@ def server_long_args(data_name='pdtb2', label_level='level1'):
     args = server_base_args(test_setting=False, data_name=data_name, label_level=label_level)
     args:CustomArgs
     
-    args.version = SERVER_NAME+'long_best'
+    args.version = 'long_best'
     
     args.cuda_cnt = 2
     args.secondary_label_weight = 0.5

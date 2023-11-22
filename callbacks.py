@@ -28,7 +28,10 @@ class CustomCallback(TrainerCallback):
         self.evaluate_testdata = evaluate_testdata
 
         self.metric_names = metric_names
-        self.best_metrics = {'best_'+m:-1 for m in self.metric_names}
+        self.best_metrics = dict(
+            [('best_'+m,-1)for m in metric_names]+
+            [('best_epoch_'+m,-1)for m in metric_names]
+        )
         self.metric_map = {m:p for p, m in enumerate(self.metric_names)}
         
         self.best_metric_file_name = 'best_metric_score.json'
@@ -53,6 +56,7 @@ class CustomCallback(TrainerCallback):
             
             if metric_value > self.best_metrics[best_metric_name]:
                 self.best_metrics[best_metric_name] = metric_value
+                self.best_metrics[metric_name.replace('eval_', 'best_epoch_')] = metrics['epoch']
                 
                 best_model_path = path(args.output_dir)/f'checkpoint_{best_metric_name}'
                 self.trainer.save_model(best_model_path)

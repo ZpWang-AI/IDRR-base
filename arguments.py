@@ -270,7 +270,6 @@ class CustomArgs:
             raise Exception('rank_order_file not exists')  
     
     def __iter__(self):
-        print(self.__dict__)
         return iter(self.__dict__.items())
     
     def __str__(self) -> str:

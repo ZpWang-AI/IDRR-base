@@ -33,11 +33,11 @@ class LogFilenameDict:
             'loss': 'train_loss.jsonl',
             'output': 'train_output.json',
         }
-        self.stage_num = ''
+        self.stage_id = ''
         self.stage_name = ''
     
     def set_stage(self, stage_num, stage_name):
-        self.stage_num = str(stage_num).rjust(2, '0')
+        self.stage_id = 'stage'+str(stage_num).rjust(1, '0')
         self.stage_name = stage_name
     
     def __getitem__(self, key:Literal['hyperparams','best','dev','test',
@@ -45,62 +45,16 @@ class LogFilenameDict:
         if key == 'hyperparams':
             return self.dict[key]
         else:
-            return f'stage{self.stage_num}.{self.stage_name}.{self.dict[key]}'
+            return f'{self.stage_id}.{self.stage_name}.{self.dict[key]}'
 
 LOG_FILENAME_DICT = LogFilenameDict()
 
-
-def ranking_func(
-    args:CustomArgs, 
-    training_args:TrainingArguments, 
-    logger:CustomLogger,
-    data:RankingData, 
-    model:RankingModel, 
-    compute_metrics:RankingMetrics,
-):
-    callback = CustomCallback(
-        args=args, 
-        logger=logger, 
-        metric_names=compute_metrics.metric_names,
-    )
-    callback.best_metric_file_name = LOG_FILENAME_DICT['best']
-    callback.dev_metric_file_name = LOG_FILENAME_DICT['dev']
-    callback.train_loss_file_name = LOG_FILENAME_DICT['loss']
-    
-    trainer = Trainer(
-        model=model, 
-        args=training_args, 
-        tokenizer=data.tokenizer, 
-        compute_metrics=compute_metrics,
-        callbacks=[callback],
-        
-        data_collator=data.data_collator,
-        train_dataset=data.train_dataset,
-        eval_dataset=data.dev_dataset, 
-    )
-    callback.trainer = trainer
-
-    train_output = trainer.train().metrics
-    logger.log_json(train_output, LOG_FILENAME_DICT['output'], log_info=True)
-
-    # do test
-    callback.evaluate_testdata = True
-    
-    eval_metrics = {}
-    for metric_ in compute_metrics.metric_names:
-        load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
-        if load_ckpt_dir.exists():
-            evaluate_output = trainer.evaluate(eval_dataset=data.test_dataset)
-            eval_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
-            
-    logger.log_json(eval_metrics, LOG_FILENAME_DICT['test'], log_info=True) 
-        
         
 def train_func(
     args:CustomArgs, 
     training_args:TrainingArguments, 
     logger:CustomLogger,
-    data:CustomCorpusData, 
+    data:Union[CustomCorpusData, RankingData], 
     model:RankingModel, 
     compute_metrics:ComputeMetrics,
 ):
@@ -128,7 +82,8 @@ def train_func(
 
     train_output = trainer.train().metrics
     logger.log_json(train_output, LOG_FILENAME_DICT['output'], log_info=True)
-    trainer.save_model(path(args.output_dir)/'final')
+    final_state_fold = path(args.output_dir)/'final'
+    trainer.save_model(final_state_fold)
     
     # do test 
     callback.evaluate_testdata = True
@@ -142,16 +97,7 @@ def train_func(
             test_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
             
     logger.log_json(test_metrics, LOG_FILENAME_DICT['test'], log_info=True)                
-
-    # if args.data_name == 'conll':
-    #     test_metrics = {}
-    #     for metric_ in compute_metrics.metric_names:
-    #         load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
-    #         if load_ckpt_dir.exists():
-    #             evaluate_output = trainer.evaluate(eval_dataset=data.blind_test_dataset)
-    #             test_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
-                
-    #     logger.log_json(test_metrics, LOG_FILENAME_DICT['blind test'], log_info=True)    
+    model.load_state_dict(torch.load(final_state_fold/'pytorch_model.bin'))
 
     return trainer, callback
 
@@ -168,9 +114,9 @@ def main_one_iteration(args:CustomArgs, data:CustomCorpusData, training_iter_id=
         args.log_dir = os.path.join(args.log_dir, train_fold_name)
         args.check_path()
         
-        def prepare_training_args(stage_args: StageArgs):
+        def prepare_training_args(output_dir, stage_args: StageArgs):
             return TrainingArguments(
-                output_dir=args.output_dir,
+                output_dir=output_dir,
                 
                 # strategies of evaluation, logging, save
                 evaluation_strategy="steps", 
@@ -240,15 +186,15 @@ def main_one_iteration(args:CustomArgs, data:CustomCorpusData, training_iter_id=
 
     # === train ===
     
-    def stage_rank(stage_args:StageArgs):
-        train_evaluate_kwargs['training_args'] = prepare_training_args(stage_args)
+    def stage_rank(training_args:TrainingArguments):
+        train_evaluate_kwargs['training_args'] = training_args
         train_evaluate_kwargs['data'] = ranking_data
         train_evaluate_kwargs['compute_metrics'] = ranking_metrics
         model.forward_fn = 'rank'
-        ranking_func(**train_evaluate_kwargs)
+        train_func(**train_evaluate_kwargs)
     
-    def stage_ft(stage_args:StageArgs):
-        train_evaluate_kwargs['training_args'] = prepare_training_args(stage_args)
+    def stage_ft(training_args:TrainingArguments):
+        train_evaluate_kwargs['training_args'] = training_args
         train_evaluate_kwargs['data'] = data
         train_evaluate_kwargs['compute_metrics'] = compute_metrics
         model.forward_fn = 'ft'
@@ -260,7 +206,11 @@ def main_one_iteration(args:CustomArgs, data:CustomCorpusData, training_iter_id=
     }
     for stage_num, stage in enumerate(args.training_stages):
         LOG_FILENAME_DICT.set_stage(stage_num, stage.stage_name)
-        stage_dict[stage.stage_name](stage)
+        training_args = prepare_training_args(
+            output_dir=path(args.output_dir)/LOG_FILENAME_DICT.stage_id,
+            stage_args=stage,
+        )
+        stage_dict[stage.stage_name](training_args)
     
     # # mv tensorboard ckpt to log_dir
     # cnt = 0

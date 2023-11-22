@@ -22,7 +22,6 @@ class StageArgs(dict):
                  weight_decay,
                  learning_rate,
                  ) -> None:
-        self.stage_num = 0
         self.stage_name = stage_name
         self.epochs = epochs
         self.train_batch_size = train_batch_size
@@ -72,7 +71,7 @@ class CustomArgs:
         self.mini_dataset = False
         self.label_level = 'level1'
         self.data_name = 'pdtb2'
-        self.secondary_label_weight = 0.5  
+        self.secondary_label_weight = 0.
         self.data_augmentation_secondary_label = False
         self.data_augmentation_connective_arg2 = False
         
@@ -134,8 +133,6 @@ class CustomArgs:
                 learning_rate=5e-6,
             ),
         ]
-        for p in range(len(self.training_stages)):
-            self.training_stages[p].stage_num = p
         
         # ========== additional details ============
         self.part7 = 'additional details'
@@ -212,25 +209,38 @@ class CustomArgs:
             self.log_dir = os.path.join(self.log_dir, specific_fold_name) 
     
     def estimate_cuda_memory(self):
-        if self.train_batch_size > 16:
+        max_batch_size = 1
+        for stage in self.training_stages:
+            if 'rank' in stage.stage_name:
+                if self.label_level == 'level1':
+                    max_batch_size = max(max_batch_size, stage.train_batch_size*4)
+                else:
+                    raise ValueError('wrong label_level when estimating cuda memory')
+            elif 'ft' in stage.stage_name:
+                max_batch_size = max(max_batch_size, stage.train_batch_size)
+        if max_batch_size > 16:
             return 10500
-        elif self.train_batch_size > 8:
+        elif max_batch_size > 8:
             return 7000
         else:
             return 5000
     
-    def prepare_gpu(self, target_mem_mb=10000):
+    def prepare_gpu(self, target_mem_mb=10000, gpu_cnt=None):
         if not self.cuda_id:
             if target_mem_mb < 0:
                 target_mem_mb = self.estimate_cuda_memory()
+            if gpu_cnt is None:
+                gpu_cnt = self.cuda_cnt
+
             from gpuManager import GPUManager
             free_gpu_ids = GPUManager.get_some_free_gpus(
-                gpu_cnt=self.cuda_cnt, 
+                gpu_cnt=gpu_cnt, 
                 target_mem_mb=target_mem_mb,
             )
             os.environ["CUDA_VISIBLE_DEVICES"] = free_gpu_ids
             self.cuda_id = free_gpu_ids
             print(f'=== CUDA {free_gpu_ids} ===')
+        return self.cuda_id
     
     def recalculate_eval_log_steps(self):
         for stage in self.training_stages:
@@ -258,8 +268,9 @@ class CustomArgs:
 
         if not path(self.rank_order_file).exists():
             raise Exception('rank_order_file not exists')  
-
+    
     def __iter__(self):
+        print(self.__dict__)
         return iter(self.__dict__.items())
     
     def __str__(self) -> str:

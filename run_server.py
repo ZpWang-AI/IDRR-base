@@ -46,14 +46,15 @@ def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1'
     return args
 
 
-def server_v1_args():
-    args = server_base_args(test_setting=False,)
+def server_experiment_args(args=None):
+    if args is None:
+        args = server_base_args(test_setting=False)
     
-    args.cuda_cnt = 1
-    args.secondary_label_weight = 0
+    args.cuda_cnt = 2
+    args.secondary_label_weight = 0.5
     args.data_augmentation_secondary_label = False
     args.data_augmentation_connective_arg2 = False
-    args.rank_data_sampler = 'shuffle'
+    args.rank_data_sampler = 'random'
     args.rank_dataset_size_multiplier = 1
     
     args.training_stages = [
@@ -112,35 +113,53 @@ def server_long_args(data_name='pdtb2', label_level='level1'):
     )]
     return args
 
-
-def server_dataAug_args(args=None, data_name='pdtb2'):
-    if not args:
-        args = server_base_args(test_setting=False, data_name=data_name)
-    args.version = SERVER_NAME+'ConnDA'
-    args.data_augmentation_connective_arg2 = True
-    
-    return args
-    
     
 if __name__ == '__main__':
-    # ===== choose args =====
-    todo_args = server_base_args(test_setting=True, data_name='pdtb2')
-    # todo_args = server_base_args(test_setting=True, data_name='pdtb2', label_level='level2')
-    # todo_args = server_base_args(test_setting=True, data_name='pdtb3')
-    # todo_args = server_base_args(test_setting=True, data_name='conll')
-    # todo_args = server_base_args()
-    # todo_args = server_long_args()
-    todo_args = server_v1_args()
-    
-    # todo_args.prepare_gpu(target_mem_mb=10000)  # when gpu usage is low
-    todo_args.prepare_gpu(target_mem_mb=-1)
-    todo_args.complete_path(
-        show_cur_time=True,
-        show_server_name=False,
-        show_data_name=False,
-        show_label_level=False,
-    )
-    
     from main import main
-    main(todo_args)
+    
+    def experiment_once():
+        todo_args = server_base_args(test_setting=True, data_name='pdtb2')
+        # todo_args = server_base_args(test_setting=True, data_name='pdtb2', label_level='level2')
+        # todo_args = server_base_args(test_setting=True, data_name='pdtb3')
+        # todo_args = server_base_args(test_setting=True, data_name='conll')
+        # todo_args = server_experiment_args()
+        # todo_args = server_long_args()
+        todo_args = server_experiment_args()
+    
+        # todo_args.prepare_gpu(target_mem_mb=10000)  # when gpu usage is low
+        todo_args.prepare_gpu(target_mem_mb=-1)
+        todo_args.complete_path(
+            show_cur_time=True,
+            show_server_name=False,
+            show_data_name=False,
+            show_label_level=False,
+        )
+        
+        main(todo_args)
+    
+    def experiment_multi_times():
+        # TODO: prepare gpu
+        cuda_id = CustomArgs().prepare_gpu(target_mem_mb=10000, gpu_cnt=1) 
+         
+        for epoch in [5,10,20,25,30]:
+            for mu in [5,10,20,30]:
+                todo_args = server_experiment_args()
+
+                # TODO: prepare args
+                todo_args.version = f'epoch{epoch}_lr{mu}mu'
+                todo_args.epochs = epoch
+                todo_args.learning_rate = float(f'{mu}e-6')              
+                
+                todo_args.cuda_id = cuda_id
+                todo_args.complete_path(
+                    show_cur_time=True,
+                    show_server_name=False,
+                    show_data_name=False,
+                    show_label_level=False,
+                )
+                
+                main(todo_args)
+
+    experiment_once()
+    # experiment_multi_times()
     pass

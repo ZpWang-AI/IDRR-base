@@ -19,7 +19,7 @@ from arguments import CustomArgs
 def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1') -> CustomArgs:
     args = CustomArgs(test_setting=test_setting)
     
-    args.version = SERVER_NAME+('test' if test_setting else 'base')
+    args.version = 'test' if test_setting else 'base'
     args.server_name = SERVER_NAME
     
     # data
@@ -34,7 +34,6 @@ def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1'
     
     # file path
     args.model_name_or_path = ROOT_FOLD_IDRR+'/plm_cache/models--roberta-base/snapshots/bc2764f8af2e92b6eb5679868df33e224075ca68'
-    args.load_ckpt_dir = ROOT_FOLD_IDRR+'ckpt_fold'
     args.cache_dir = ''
     # args.output_dir = ROOT_FOLD_IDRR+'output_space/'
     args.output_dir = '/home/zpwang/IDRR/output_space/'  # TODO: consume lots of memory
@@ -46,29 +45,28 @@ def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1'
     return args
 
 
-def server_long_args(data_name='pdtb2', label_level='level1'):
-    args = server_base_args(test_setting=False, data_name=data_name, label_level=label_level)
-    args:CustomArgs
+def server_experiment_args(args=None):
+    if args is None:
+        args = server_base_args(test_setting=False)
     
-    args.epochs = 25
-    args.learning_rate = 3e-5
-    args.warmup_ratio = 0.1
+    args.secondary_label_weight = 0
+    args.data_augmentation_secondary_label = False
+    args.data_augmentation_connective_arg2 = False
     
-    args.version = SERVER_NAME+'long_best'
-    args.train_batch_size = 32
-    args.secondary_label_weight = 0.5
-    args.cuda_cnt = 2
-    args.eval_per_epoch = 4
+    args.cuda_cnt = 1
+    args.warmup_ratio = 0.05
+    args.epochs = 5
+    args.train_batch_size = 8
+    args.eval_batch_size = 32
+    args.eval_steps = 100
+    args.log_steps = 10
     args.gradient_accumulation_steps = 1
-    return args
-
-
-def server_dataAug_args(args=None, data_name='pdtb2'):
-    if not args:
-        args = server_base_args(test_setting=False, data_name=data_name)
-    args.version = SERVER_NAME+'ConnDA'
-    args.data_augmentation_connective_arg2 = True
+    args.eval_per_epoch = -1
     
+    args.weight_decay = 0.01
+    args.learning_rate = 5e-6
+    
+    args.version = 'base'
     return args
     
     
@@ -84,6 +82,7 @@ if __name__ == '__main__':
     todo_args.prepare_gpu(target_mem_mb=-1)
     todo_args.complete_path(
         show_cur_time=True,
+        show_server_name=False,
         show_data_name=False,
         show_label_level=False,
     )

@@ -64,38 +64,34 @@ def train_func(
     logger.log_json(train_output, LOG_FILENAME_DICT['output'], log_info=True)
     trainer.save_model(path(args.output_dir)/'final')
     
-    if args.do_eval:
-        callback.evaluate_testdata = True
-        
-        test_metrics = {}
-        for metric_ in compute_metrics.metric_names:
-            load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
-            if load_ckpt_dir.exists():
-                model.load_state_dict(torch.load(load_ckpt_dir/'pytorch_model.bin'))
-                evaluate_output = trainer.evaluate(eval_dataset=data.test_dataset)
-                test_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
-                
-        logger.log_json(test_metrics, LOG_FILENAME_DICT['test'], log_info=True)                
+    # do test 
+    callback.evaluate_testdata = True
+    
+    test_metrics = {}
+    for metric_ in compute_metrics.metric_names:
+        load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
+        if load_ckpt_dir.exists():
+            model.load_state_dict(torch.load(load_ckpt_dir/'pytorch_model.bin'))
+            evaluate_output = trainer.evaluate(eval_dataset=data.test_dataset)
+            test_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
+            
+    logger.log_json(test_metrics, LOG_FILENAME_DICT['test'], log_info=True)                
 
-        # if args.data_name == 'conll':
-        #     test_metrics = {}
-        #     for metric_ in compute_metrics.metric_names:
-        #         load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
-        #         if load_ckpt_dir.exists():
-        #             evaluate_output = trainer.evaluate(eval_dataset=data.blind_test_dataset)
-        #             test_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
-                    
-        #     logger.log_json(test_metrics, LOG_FILENAME_DICT['blind test'], log_info=True)    
+    # if args.data_name == 'conll':
+    #     test_metrics = {}
+    #     for metric_ in compute_metrics.metric_names:
+    #         load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
+    #         if load_ckpt_dir.exists():
+    #             evaluate_output = trainer.evaluate(eval_dataset=data.blind_test_dataset)
+    #             test_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
+                
+    #     logger.log_json(test_metrics, LOG_FILENAME_DICT['blind test'], log_info=True)    
 
     return trainer, callback
 
 
 def main_one_iteration(args:CustomArgs, data:CustomCorpusData, training_iter_id=0):
-    if not args.do_train and not args.do_eval:
-        raise Exception('neither do_train nor do_eval')
-    
     # === prepare === 
-        
     if 1:
         # seed
         args.seed += training_iter_id

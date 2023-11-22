@@ -29,8 +29,8 @@ class CustomCallback(TrainerCallback):
 
         self.metric_names = metric_names
         self.best_metrics = dict(
-            [('best_'+m,-1)for m in metric_names]+
-            [('best_epoch_'+m,-1)for m in metric_names]
+            [('best_epoch_'+m,-1)for m in metric_names]+
+            [('best_'+m,-1)for m in metric_names]
         )
         self.metric_map = {m:p for p, m in enumerate(self.metric_names)}
         

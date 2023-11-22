@@ -74,14 +74,14 @@ def server_dataAug_args(args=None, data_name='pdtb2'):
     
 if __name__ == '__main__':
     # ===== choose args =====
-    # todo_args = server_base_args(test_setting=True, data_name='pdtb2')
+    todo_args = server_base_args(test_setting=True, data_name='pdtb2')
     # todo_args = server_base_args(test_setting=True, data_name='pdtb2', label_level='level2')
     # todo_args = server_base_args(test_setting=True, data_name='pdtb3')
     # todo_args = server_base_args(test_setting=True, data_name='conll')
-    # todo_args = server_base_args()
-    todo_args = server_long_args()
+    todo_args = server_base_args()
     
-    todo_args.prepare_gpu(target_mem_mb=10000)
+    # todo_args.prepare_gpu(target_mem_mb=10000)  # when gpu usage is low
+    todo_args.prepare_gpu(target_mem_mb=-1)
     todo_args.complete_path(
         show_cur_time=True,
         show_data_name=False,

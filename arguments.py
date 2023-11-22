@@ -111,8 +111,18 @@ class CustomArgs:
             self.output_dir = os.path.join(self.output_dir, specific_fold_name)
             self.log_dir = os.path.join(self.log_dir, specific_fold_name) 
     
+    def estimate_cuda_memory(self):
+        if self.train_batch_size > 16:
+            return 10500
+        elif self.train_batch_size > 8:
+            return 7000
+        else:
+            return 5000
+    
     def prepare_gpu(self, target_mem_mb=10000):
         if not self.cuda_id:
+            if target_mem_mb < 0:
+                target_mem_mb = self.estimate_cuda_memory()
             from gpuManager import GPUManager
             free_gpu_ids = GPUManager.get_some_free_gpus(
                 gpu_cnt=self.cuda_cnt, 

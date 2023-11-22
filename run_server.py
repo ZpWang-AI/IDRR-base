@@ -50,7 +50,7 @@ def server_experiment_args(args=None):
     if args is None:
         args = server_base_args(test_setting=False)
     
-    args.secondary_label_weight = 0
+    args.secondary_label_weight = 0.
     args.data_augmentation_secondary_label = False
     args.data_augmentation_connective_arg2 = False
     
@@ -77,7 +77,7 @@ if __name__ == '__main__':
     # todo_args = server_base_args(test_setting=True, data_name='pdtb2', label_level='level2')
     # todo_args = server_base_args(test_setting=True, data_name='pdtb3')
     # todo_args = server_base_args(test_setting=True, data_name='conll')
-    todo_args = server_base_args()
+    todo_args = server_experiment_args()
     
     # todo_args.prepare_gpu(target_mem_mb=10000)  # when gpu usage is low
     todo_args.prepare_gpu(target_mem_mb=-1)

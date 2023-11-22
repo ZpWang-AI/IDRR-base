@@ -28,7 +28,7 @@ class CustomArgs:
         self.mini_dataset = False
         self.label_level = 'level1'
         self.data_name = 'pdtb2'
-        self.secondary_label_weight = 0.5  
+        self.secondary_label_weight = 0.
         self.data_augmentation_secondary_label = False
         self.data_augmentation_connective_arg2 = False
 

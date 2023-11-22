@@ -8,7 +8,8 @@ else:
     raise Exception('wrong ROOT_FOLD_IDRR')
 
 import os
-CODE_SPACE = ROOT_FOLD_IDRR+'IDRR-base/'
+BRANCH = 'main'
+CODE_SPACE = ROOT_FOLD_IDRR+f'IDRR-{BRANCH}/'
 if __name__ == '__main__':
     os.chdir(CODE_SPACE)
 
@@ -38,9 +39,9 @@ def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1'
     # args.output_dir = ROOT_FOLD_IDRR+'output_space/'
     args.output_dir = '/home/zpwang/IDRR/output_space/'  # TODO: consume lots of memory
     if test_setting:
-        args.log_dir = ROOT_FOLD_IDRR+'log_space_test/'
+        args.log_dir = ROOT_FOLD_IDRR+f'log_space_test_{BRANCH}/'
     else:
-        args.log_dir = ROOT_FOLD_IDRR+'log_space/'
+        args.log_dir = ROOT_FOLD_IDRR+f'log_space_{BRANCH}/'
 
     return args
 

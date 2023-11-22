@@ -22,24 +22,32 @@ from analyze import analyze_metrics_json
 
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
-LOG_FILENAME_DICT = {
-    'hyperparams': 'hyperparams.json',
-    'best': 'ft_best_metric_score.json',
-    'dev': 'ft_dev_metric_score.jsonl',
-    'test': 'ft_test_metric_score.json',
-    'blind test': 'ft_test_blind_metric_score.json',
-    'loss': 'ft_train_loss.jsonl',
-    'output': 'ft_train_output.json',
+class LogFilenameDict:
+    def __init__(self) -> None:
+        self.dict = {
+            'hyperparams': 'hyperparams.json',
+            'best': 'best_metric_score.json',
+            'dev': 'dev_metric_score.jsonl',
+            'test': 'test_metric_score.json',
+            'blind test': 'test_blind_metric_score.json',
+            'loss': 'train_loss.jsonl',
+            'output': 'train_output.json',
+        }
+        self.stage_num = ''
+        self.stage_name = ''
     
-    'ranking best': 'ranking_best_metric_score.json',
-    'ranking dev': 'ranking_dev_metric_score.jsonl',
-    'ranking test': 'ranking_test_metric_score.json',
-    'ranking blind test': 'ranking_test_blind_metric_score.json',
-    'ranking loss': 'ranking_train_loss.jsonl',
-    'ranking output': 'ranking_train_output.json',
+    def set_stage(self, stage_num, stage_name):
+        self.stage_num = str(stage_num).rjust(2, '0')
+        self.stage_name = stage_name
     
-    'evaluate': 'evaluate_output.json',
-}
+    def __getitem__(self, key:Literal['hyperparams','best','dev','test',
+                                      'blind test','loss','output']):
+        if key == 'hyperparams':
+            return self.dict[key]
+        else:
+            return f'stage{self.stage_num}.{self.stage_name}.{self.dict[key]}'
+
+LOG_FILENAME_DICT = LogFilenameDict()
 
 
 def ranking_func(
@@ -55,9 +63,9 @@ def ranking_func(
         logger=logger, 
         metric_names=compute_metrics.metric_names,
     )
-    callback.best_metric_file_name = LOG_FILENAME_DICT['ranking best']
-    callback.dev_metric_file_name = LOG_FILENAME_DICT['ranking dev']
-    callback.train_loss_file_name = LOG_FILENAME_DICT['ranking loss']
+    callback.best_metric_file_name = LOG_FILENAME_DICT['best']
+    callback.dev_metric_file_name = LOG_FILENAME_DICT['dev']
+    callback.train_loss_file_name = LOG_FILENAME_DICT['loss']
     
     trainer = Trainer(
         model=model, 
@@ -73,19 +81,19 @@ def ranking_func(
     callback.trainer = trainer
 
     train_output = trainer.train().metrics
-    logger.log_json(train_output, LOG_FILENAME_DICT['ranking output'], log_info=True)
+    logger.log_json(train_output, LOG_FILENAME_DICT['output'], log_info=True)
 
-    if args.do_eval:
-        callback.evaluate_testdata = True
-        
-        eval_metrics = {}
-        for metric_ in compute_metrics.metric_names:
-            load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
-            if load_ckpt_dir.exists():
-                evaluate_output = trainer.evaluate(eval_dataset=data.test_dataset)
-                eval_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
-                
-        logger.log_json(eval_metrics, LOG_FILENAME_DICT['ranking test'], log_info=True) 
+    # do test
+    callback.evaluate_testdata = True
+    
+    eval_metrics = {}
+    for metric_ in compute_metrics.metric_names:
+        load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
+        if load_ckpt_dir.exists():
+            evaluate_output = trainer.evaluate(eval_dataset=data.test_dataset)
+            eval_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
+            
+    logger.log_json(eval_metrics, LOG_FILENAME_DICT['test'], log_info=True) 
         
         
 def train_func(
@@ -120,73 +128,36 @@ def train_func(
 
     train_output = trainer.train().metrics
     logger.log_json(train_output, LOG_FILENAME_DICT['output'], log_info=True)
+    trainer.save_model(path(args.output_dir)/'final')
     
-    if args.do_eval:
-        callback.evaluate_testdata = True
-        
-        test_metrics = {}
-        for metric_ in compute_metrics.metric_names:
-            load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
-            if load_ckpt_dir.exists():
-                evaluate_output = trainer.evaluate(eval_dataset=data.test_dataset)
-                test_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
-                
-        logger.log_json(test_metrics, LOG_FILENAME_DICT['test'], log_info=True)                
+    # do test 
+    callback.evaluate_testdata = True
+    
+    test_metrics = {}
+    for metric_ in compute_metrics.metric_names:
+        load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
+        if load_ckpt_dir.exists():
+            model.load_state_dict(torch.load(load_ckpt_dir/'pytorch_model.bin'))
+            evaluate_output = trainer.evaluate(eval_dataset=data.test_dataset)
+            test_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
+            
+    logger.log_json(test_metrics, LOG_FILENAME_DICT['test'], log_info=True)                
 
-        if args.data_name == 'conll':
-            test_metrics = {}
-            for metric_ in compute_metrics.metric_names:
-                load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
-                if load_ckpt_dir.exists():
-                    evaluate_output = trainer.evaluate(eval_dataset=data.blind_test_dataset)
-                    test_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
-                    
-            logger.log_json(test_metrics, LOG_FILENAME_DICT['blind test'], log_info=True)    
+    # if args.data_name == 'conll':
+    #     test_metrics = {}
+    #     for metric_ in compute_metrics.metric_names:
+    #         load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
+    #         if load_ckpt_dir.exists():
+    #             evaluate_output = trainer.evaluate(eval_dataset=data.blind_test_dataset)
+    #             test_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
                 
+    #     logger.log_json(test_metrics, LOG_FILENAME_DICT['blind test'], log_info=True)    
 
     return trainer, callback
 
 
-def evaluate_func(
-    args:CustomArgs,
-    training_args:TrainingArguments,
-    logger:CustomLogger,
-    data:CustomCorpusData,
-    model:RankingModel,
-    compute_metrics:ComputeMetrics,
-):
-    callback = CustomCallback(
-        args=args,
-        logger=logger,
-        metric_names=compute_metrics.metric_names,
-        evaluate_testdata=True,
-    )
-
-    trainer = Trainer(
-        model=model, 
-        args=training_args, 
-        tokenizer=data.tokenizer, 
-        compute_metrics=compute_metrics,
-        callbacks=[callback],
-        data_collator=data.data_collator,
-    )
-    callback.trainer = trainer
-    
-    evaluate_output = trainer.evaluate(data.test_dataset)
-    logger.log_json(evaluate_output, LOG_FILENAME_DICT['evaluate'], log_info=True)
-        
-    return trainer
-
-
-def main_one_iteration(args:CustomArgs,
-                       data:CustomCorpusData, 
-                    #    ranking_data:RankingData,
-                       training_iter_id=0):
-    if not args.do_train and not args.do_eval:
-        raise Exception('neither do_train nor do_eval')
-    
+def main_one_iteration(args:CustomArgs, data:CustomCorpusData, training_iter_id=0):
     # === prepare === 
-        
     if 1:
         # seed
         args.seed += training_iter_id
@@ -197,6 +168,33 @@ def main_one_iteration(args:CustomArgs,
         args.log_dir = os.path.join(args.log_dir, train_fold_name)
         args.check_path()
         
+        def prepare_training_args(stage_args: StageArgs):
+            return TrainingArguments(
+                output_dir=args.output_dir,
+                
+                # strategies of evaluation, logging, save
+                evaluation_strategy="steps", 
+                eval_steps=stage_args.eval_steps,
+                logging_strategy='steps',
+                logging_steps=stage_args.log_steps,
+                save_strategy='no',
+                # save_strategy='epoch',
+                # save_total_limit=1,
+                
+                # optimizer and lr_scheduler
+                optim='adamw_torch',
+                learning_rate=stage_args.learning_rate,
+                weight_decay=stage_args.weight_decay,
+                lr_scheduler_type='linear',
+                warmup_ratio=stage_args.warmup_ratio,
+                
+                # epochs and batches 
+                num_train_epochs=stage_args.epochs, 
+                per_device_train_batch_size=stage_args.train_batch_size,
+                per_device_eval_batch_size=stage_args.eval_batch_size,
+                gradient_accumulation_steps=stage_args.gradient_accumulation_steps,
+            )
+            
         logger = CustomLogger(
             log_dir=args.log_dir,
             logger_name=f'{args.cur_time}_iter{training_iter_id}_logger',
@@ -240,34 +238,7 @@ def main_one_iteration(args:CustomArgs,
     
     logger.log_json(dict(args), LOG_FILENAME_DICT['hyperparams'], log_info=False)
 
-    # === train or evaluate ===
-    
-    def prepare_training_args(stage_args: StageArgs):
-        return TrainingArguments(
-            output_dir=args.output_dir,
-            
-            # strategies of evaluation, logging, save
-            evaluation_strategy="steps", 
-            eval_steps=stage_args.eval_steps,
-            logging_strategy='steps',
-            logging_steps=stage_args.log_steps,
-            save_strategy='no',
-            # save_strategy='epoch',
-            # save_total_limit=1,
-            
-            # optimizer and lr_scheduler
-            optim='adamw_torch',
-            learning_rate=stage_args.learning_rate,
-            weight_decay=stage_args.weight_decay,
-            lr_scheduler_type='linear',
-            warmup_ratio=stage_args.warmup_ratio,
-            
-            # epochs and batches 
-            num_train_epochs=stage_args.epochs, 
-            per_device_train_batch_size=stage_args.train_batch_size,
-            per_device_eval_batch_size=stage_args.eval_batch_size,
-            gradient_accumulation_steps=stage_args.gradient_accumulation_steps,
-        )
+    # === train ===
     
     def stage_rank(stage_args:StageArgs):
         train_evaluate_kwargs['training_args'] = prepare_training_args(stage_args)
@@ -287,16 +258,9 @@ def main_one_iteration(args:CustomArgs,
         'rank': stage_rank,
         'ft': stage_ft,
     }
-    
-    if args.do_train:
-        for stage in args.training_stages:
-            stage_dict[stage.stage_name](stage)
-            
-    # elif args.do_eval:
-    #     model_params_path = os.path.join(args.load_ckpt_dir, 'pytorch_model.bin')
-    #     model_params = torch.load(model_params_path)
-    #     logger.info( model.load_state_dict(model_params, strict=True) )
-    #     evaluate_func(**train_evaluate_kwargs)
+    for stage_num, stage in enumerate(args.training_stages):
+        LOG_FILENAME_DICT.set_stage(stage_num, stage.stage_name)
+        stage_dict[stage.stage_name](stage)
     
     # # mv tensorboard ckpt to log_dir
     # cnt = 0
@@ -381,11 +345,6 @@ def main(args:CustomArgs, training_iter_id=-1):
             LOG_FILENAME_DICT['test'],
             LOG_FILENAME_DICT['blind test'],
             LOG_FILENAME_DICT['output'],
-            
-            LOG_FILENAME_DICT['ranking best'],
-            LOG_FILENAME_DICT['ranking test'],
-            LOG_FILENAME_DICT['ranking blind test'],
-            LOG_FILENAME_DICT['ranking output'],
         ]:
             metric_analysis = analyze_metrics_json(args.log_dir, json_file_name, just_average=True)
             if metric_analysis:

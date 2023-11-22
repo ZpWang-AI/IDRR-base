@@ -5,7 +5,8 @@ from main import main
 def local_test_args(data_name='pdtb2', label_level='level1'):
     args = CustomArgs(test_setting=True)
     
-    args.version = 'local_test'
+    args.version = 'test'
+    args.server_name = 'local'
     
     args.data_name = data_name
     if data_name == 'pdtb2':
@@ -17,7 +18,6 @@ def local_test_args(data_name='pdtb2', label_level='level1'):
     args.label_level = label_level  
     
     args.model_name_or_path = './plm_cache/models--roberta-base/snapshots/bc2764f8af2e92b6eb5679868df33e224075ca68/'
-    args.load_ckpt_dir = 'ckpt_fold'
     args.cache_dir = './plm_cache/'
     args.output_dir = './output_space/'
     args.log_dir = './log_space/'

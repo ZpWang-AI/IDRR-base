@@ -8,7 +8,8 @@ else:
     raise Exception('wrong ROOT_FOLD_IDRR')
 
 import os
-CODE_SPACE = ROOT_FOLD_IDRR+'IDRR-rank-v3/'
+BRANCH = 'ranking3'
+CODE_SPACE = ROOT_FOLD_IDRR+f'IDRR-{BRANCH}/'
 if __name__ == '__main__':
     os.chdir(CODE_SPACE)
 
@@ -19,7 +20,7 @@ from arguments import CustomArgs, StageArgs
 def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1') -> CustomArgs:
     args = CustomArgs(test_setting=test_setting)
     
-    args.version = SERVER_NAME+('test' if test_setting else 'base')
+    args.version = 'test' if test_setting else 'base'
     args.server_name = SERVER_NAME
     
     # data
@@ -34,14 +35,13 @@ def server_base_args(test_setting=False, data_name='pdtb2', label_level='level1'
     
     # file path
     args.model_name_or_path = ROOT_FOLD_IDRR+'/plm_cache/models--roberta-base/snapshots/bc2764f8af2e92b6eb5679868df33e224075ca68'
-    args.load_ckpt_dir = ROOT_FOLD_IDRR+'ckpt_fold'
     args.cache_dir = ''
     # args.output_dir = ROOT_FOLD_IDRR+'output_space/'
     args.output_dir = '/home/zpwang/IDRR/output_space/'  # TODO: consume lots of memory
     if test_setting:
-        args.log_dir = ROOT_FOLD_IDRR+'log_space_test_rank-v3/'
+        args.log_dir = ROOT_FOLD_IDRR+f'log_space_test_{BRANCH}/'
     else:
-        args.log_dir = ROOT_FOLD_IDRR+'log_space_rank-v3/'
+        args.log_dir = ROOT_FOLD_IDRR+f'log_space_{BRANCH}/'
 
     return args
 
@@ -132,9 +132,11 @@ if __name__ == '__main__':
     # todo_args = server_long_args()
     todo_args = server_v1_args()
     
-    todo_args.prepare_gpu(target_mem_mb=10000)
+    # todo_args.prepare_gpu(target_mem_mb=10000)  # when gpu usage is low
+    todo_args.prepare_gpu(target_mem_mb=-1)
     todo_args.complete_path(
         show_cur_time=True,
+        show_server_name=False,
         show_data_name=False,
         show_label_level=False,
     )

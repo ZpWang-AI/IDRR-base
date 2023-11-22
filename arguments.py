@@ -1,7 +1,9 @@
 import os
+import json
 
 from pathlib import Path as path
 from datetime import datetime
+from typing import Any
 
 
 def fill_with_delimiter(s):
@@ -20,6 +22,7 @@ class StageArgs(dict):
                  weight_decay,
                  learning_rate,
                  ) -> None:
+        self.stage_num = 0
         self.stage_name = stage_name
         self.epochs = epochs
         self.train_batch_size = train_batch_size
@@ -33,9 +36,11 @@ class StageArgs(dict):
         self.learning_rate = learning_rate
         self.real_batch_size = -1
         self.sample_per_eval = -1
-        
+    
+    def __setattr__(self, __name: str, __value: Any) -> None:
+        self.__dict__[__name] = __value
         super().__init__(self.__dict__)
-        
+    
     def recalculate_eval_log_steps(self, cuda_cnt, trainset_size):
         self.real_batch_size = self.train_batch_size*self.gradient_accumulation_steps*cuda_cnt
         if self.eval_per_epoch > 0:
@@ -50,19 +55,19 @@ class StageArgs(dict):
 
 class CustomArgs:
     def __init__(self, test_setting=False) -> None:
-        self.version = 'colab'
+        self.version = 'base'
         
-        # base setting
+        # ========== base setting ==================
         self.part1 = 'base setting'
-        self.do_train = True
-        self.do_eval = True
+        # self.do_train = True
+        # self.do_eval = True
         self.save_ckpt = False
         self.seed = 2023
         
         self.training_iteration = 5
         self.cuda_cnt = 1
         
-        # data
+        # ========== data ==========================
         self.part2 = 'data'
         self.mini_dataset = False
         self.label_level = 'level1'
@@ -82,24 +87,24 @@ class CustomArgs:
         self.testset_size = -1
         self.rank_trainset_size = -1
         
-        # file path
+        # ========== file path =====================
         self.part3 = 'file path'
         self.model_name_or_path = 'roberta-base'
         self.data_path = '/content/drive/MyDrive/IDRR/CorpusData/DRR_corpus/pdtb2.csv'
         self.cache_dir = '/content/drive/MyDrive/IDRR/plm_cache'
         self.output_dir = './output_space/'
         self.log_dir = '/content/drive/MyDrive/IDRR/log_space'
-        self.load_ckpt_dir = './ckpt_fold'
+        # self.load_ckpt_dir = './ckpt_fold'
         
         self.rank_order_file = './rank_order/rank_order1.json'
 
-        # loss
+        # ========== loss ==========================
         self.part4 = 'loss'
         self.loss_type = 'CELoss'
         
         self.rank_loss_type = 'ListMLELoss'
         
-        # stage
+        # ========== stage =========================
         self.part5 = 'stage'
         self.training_stages = [
             StageArgs(
@@ -129,8 +134,10 @@ class CustomArgs:
                 learning_rate=5e-6,
             ),
         ]
+        for p in range(len(self.training_stages)):
+            self.training_stages[p].stage_num = p
         
-        # additional details
+        # ========== additional details ============
         self.part7 = 'additional details'
         self.cuda_id = ''
         self.cur_time = ''
@@ -143,7 +150,7 @@ class CustomArgs:
                 self.__setattr__(attr_name, fill_with_delimiter(init_attr))
         
         if test_setting:
-            self.version = 'colab_test'
+            self.version = 'test'
             self.training_iteration = 2
             
             self.mini_dataset = True
@@ -184,25 +191,38 @@ class CustomArgs:
     
     def complete_path(self,
                       show_cur_time=True,
+                      show_server_name = True,
                       show_data_name=True,
                       show_label_level=True,
                       ):
         if not self.cur_time:
             self.cur_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-            # train_eval_string = '_train'*self.do_train + '_eval'*self.do_eval
-            specific_fold_name = ''
+            specific_fold_name = []
             if show_cur_time:
-                specific_fold_name += self.cur_time+'_'
-            specific_fold_name += self.version+'_'
+                specific_fold_name.append(self.cur_time)
+            if show_server_name:
+                specific_fold_name.append(self.server_name)
+            specific_fold_name.append(self.version)
             if show_data_name:
-                specific_fold_name += '_'+self.data_name
+                specific_fold_name.append(self.data_name)
             if show_label_level:
-                specific_fold_name += '_'+self.label_level
+                specific_fold_name.append(self.label_level)
+            specific_fold_name = '.'.join(map(str, specific_fold_name))
             self.output_dir = os.path.join(self.output_dir, specific_fold_name)
             self.log_dir = os.path.join(self.log_dir, specific_fold_name) 
     
+    def estimate_cuda_memory(self):
+        if self.train_batch_size > 16:
+            return 10500
+        elif self.train_batch_size > 8:
+            return 7000
+        else:
+            return 5000
+    
     def prepare_gpu(self, target_mem_mb=10000):
         if not self.cuda_id:
+            if target_mem_mb < 0:
+                target_mem_mb = self.estimate_cuda_memory()
             from gpuManager import GPUManager
             free_gpu_ids = GPUManager.get_some_free_gpus(
                 gpu_cnt=self.cuda_cnt, 
@@ -233,21 +253,22 @@ class CustomArgs:
         path(self.output_dir).mkdir(parents=True, exist_ok=True)
         path(self.log_dir).mkdir(parents=True, exist_ok=True)
         
-        if not self.do_train and self.do_eval and not path(self.load_ckpt_dir).exists():
-            raise Exception('no do_train and load_ckpt_dir does not exist')  
+        # if not self.do_train and self.do_eval and not path(self.load_ckpt_dir).exists():
+        #     raise Exception('no do_train and load_ckpt_dir does not exist')  
 
         if not path(self.rank_order_file).exists():
             raise Exception('rank_order_file not exists')  
 
     def __iter__(self):
         return iter(self.__dict__.items())
+    
+    def __str__(self) -> str:
+        return json.dumps(dict(self), ensure_ascii=False, indent=2)
         
 
 if __name__ == '__main__':
-    import json
-    
     sample_args = CustomArgs(test_setting=False)
-    # print(list(sample_args))
-    sample_args.trainset_size = 12345
+    sample_args.cuda_cnt = 1
+    sample_args.trainset_size = 1234
     sample_args.recalculate_eval_log_steps()
-    print(json.dumps(dict(sample_args), ensure_ascii=False, indent=2))
+    print(sample_args)

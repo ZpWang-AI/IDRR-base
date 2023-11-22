@@ -94,26 +94,30 @@ if __name__ == '__main__':
     
     def experiment_multi_times():
         # TODO: prepare gpu
-        cuda_id = CustomArgs().prepare_gpu(target_mem_mb=10000, gpu_cnt=1) 
+        cuda_cnt = 2
+        cuda_id = CustomArgs().prepare_gpu(target_mem_mb=10500, gpu_cnt=cuda_cnt) 
          
-        for epoch in [5,10,20,25,30]:
+        for epoch in [5,10,20,30]:
             for mu in [5,10,20,30]:
-                todo_args = server_experiment_args()
+                for batch_size in [32]:
+                    todo_args = server_experiment_args()
 
-                # TODO: prepare args
-                todo_args.version = f'epoch{epoch}_lr{mu}mu'
-                todo_args.epochs = epoch
-                todo_args.learning_rate = float(f'{mu}e-6')              
-                
-                todo_args.cuda_id = cuda_id
-                todo_args.complete_path(
-                    show_cur_time=True,
-                    show_server_name=False,
-                    show_data_name=False,
-                    show_label_level=False,
-                )
-                
-                main(todo_args)
+                    # TODO: prepare args
+                    todo_args.version = f'epoch{epoch}_lr{mu}mu_bs{batch_size}*2'
+                    todo_args.epochs = epoch
+                    todo_args.learning_rate = float(f'{mu}e-6') 
+                    todo_args.train_batch_size = batch_size             
+                    
+                    todo_args.cuda_id = cuda_id
+                    todo_args.cuda_cnt = cuda_cnt
+                    todo_args.complete_path(
+                        show_cur_time=True,
+                        show_server_name=False,
+                        show_data_name=False,
+                        show_label_level=False,
+                    )
+                    
+                    main(todo_args)
 
     experiment_once()
     # experiment_multi_times()

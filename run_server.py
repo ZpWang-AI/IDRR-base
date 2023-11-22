@@ -72,7 +72,6 @@ def server_experiment_args(args=None):
     
     
 if __name__ == '__main__':
-    from main import main
     
     def experiment_once():
         todo_args = server_base_args(test_setting=True, data_name='pdtb2')
@@ -89,13 +88,15 @@ if __name__ == '__main__':
             show_data_name=False,
             show_label_level=False,
         )
-        
+            
+        from main import main
         main(todo_args)
     
     def experiment_multi_times():
         # TODO: prepare gpu
         cuda_cnt = 2
         cuda_id = CustomArgs().prepare_gpu(target_mem_mb=10500, gpu_cnt=cuda_cnt) 
+        from main import main
          
         for epoch in [5,10,20,30]:
             for mu in [5,10,20,30]:

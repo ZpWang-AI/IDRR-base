@@ -9,6 +9,7 @@ from typing import *
 from pathlib import Path as path
 from transformers import TrainingArguments, Trainer, DataCollatorWithPadding, set_seed
 
+from utils import catch_and_record_error
 from arguments import CustomArgs
 from logger import CustomLogger
 from corpusData import CustomCorpusData
@@ -207,14 +208,8 @@ def main(args:CustomArgs, training_iter_id=-1):
         else:
             main_one_iteration(deepcopy(args), data=data, training_iter_id=training_iter_id)
     except Exception as e:
-        import traceback
-        
         error_file = main_logger.log_dir/'error.out'
-        with open(error_file, 'w', encoding='utf8')as f:
-            error_string = traceback.format_exc()
-            f.write(error_string)
-            print('\n', '='*20, '\n')
-            print(error_string)
+        catch_and_record_error(error_file)
         exit(1)
     
     if training_iter_id < 0 or training_iter_id == args.training_iteration:

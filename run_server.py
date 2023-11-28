@@ -115,7 +115,6 @@ def server_long_args(data_name='pdtb2', label_level='level1'):
 
     
 if __name__ == '__main__':
-    
     def experiment_once():
         todo_args = server_base_args(test_setting=True, data_name='pdtb2')
         # todo_args = server_base_args(test_setting=True, data_name='pdtb2', label_level='level2')
@@ -144,12 +143,12 @@ if __name__ == '__main__':
         from main import main
          
         for epoch in [5,10,20,30]:
-            for mu in [5,10,20,30]:
+            for mu in [5,15,30,45]:
                 for batch_size in [32]:
                     todo_args = server_experiment_args()
 
                     # TODO: prepare args
-                    todo_args.version = f'epoch{epoch}_lr{mu}mu_bs{batch_size}*2'
+                    todo_args.version = f'epoch{epoch}_lr{mu}mu_bs{batch_size}^2'
                     todo_args.epochs = epoch
                     todo_args.learning_rate = float(f'{mu}e-6') 
                     todo_args.train_batch_size = batch_size             
@@ -165,6 +164,6 @@ if __name__ == '__main__':
                     
                     main(todo_args)
 
-    experiment_once()
-    # experiment_multi_times()
+    # experiment_once()
+    experiment_multi_times()
     pass

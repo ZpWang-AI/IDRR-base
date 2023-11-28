@@ -21,6 +21,7 @@ CorpusData/*
 plm_cache
 output_space
 log_space
+experiment_results
 label_map
 
 !scripts/*.sh

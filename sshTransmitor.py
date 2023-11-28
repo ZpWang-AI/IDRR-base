@@ -91,12 +91,10 @@ northern_host = '10.10.80.63'
 if __name__ == '__main__':
     def exclude_func(local_path):
         excluded_folders = [
-            '__pycache__',
-            'CorpusData', 
-            'plm_cache', 
-            '.git',
-            'log_space',
-            'output_space',
+            '__pycache__', '.git', 
+            'CorpusData',  'plm_cache', 
+            'log_space', 'output_space', 'experiment_results',
+            'backup', 'tmp',
         ]
         excluded_folders = list(map(path, excluded_folders))
         if path(local_path) in excluded_folders:

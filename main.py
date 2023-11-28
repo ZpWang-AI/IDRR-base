@@ -61,7 +61,8 @@ def train_func(
 
     train_output = trainer.train().metrics
     logger.log_json(train_output, LOG_FILENAME_DICT['output'], log_info=True)
-    trainer.save_model(path(training_args.output_dir)/'final')
+    final_state_fold = path(training_args.output_dir)/'final'
+    trainer.save_model(final_state_fold)
     
     # do test 
     callback.evaluate_testdata = True
@@ -75,7 +76,8 @@ def train_func(
             test_metrics['test_'+metric_] = evaluate_output['eval_'+metric_]
             
     logger.log_json(test_metrics, LOG_FILENAME_DICT['test'], log_info=True)                
-
+    # model.load_state_dict(torch.load(final_state_fold/'pytorch_model.bin'))
+    
     # if args.data_name == 'conll':
     #     test_metrics = {}
     #     for metric_ in compute_metrics.metric_names:

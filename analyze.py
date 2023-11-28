@@ -43,13 +43,23 @@ def analyze_metrics_json(log_dir, file_name, just_average=False):
 
 
 def format_analysis_value(value, format_metric=False, format_runtime=False, decimal_place=2):
+    if not value:
+        if format_metric:
+            return '', ''
+        return ''
     if format_metric:
         mean = '%.2f' % (value['mean']*100)
         error = '%.2f' % (value['error']*100)
-        return f'{mean}+{error}%'
+        return mean, error
     elif format_runtime:
         return str(datetime.timedelta(seconds=int(value['mean'])))
     return f"{value['mean']:.{decimal_place}f}"
+
+
+def dict_to_defaultdict(dic, default_type=dict):
+    new_dic = defaultdict(default_type)
+    new_dic.update(dic)
+    return new_dic
 
 
 def analyze_experiment_results(
@@ -77,18 +87,16 @@ def analyze_experiment_results(
         test_analysis = analyze_metrics_json(log_dir, test_metric_filename)
         best_analysis = analyze_metrics_json(log_dir, best_metric_filename)
         train_output_analysis = analyze_metrics_json(log_dir, train_output_filename)
-        if 'test_Acc' in test_analysis:
-            cur_result['Acc'] = format_analysis_value(test_analysis['test_Acc'], format_metric=True)
-        if 'test_Macro-F1' in test_analysis:
-            cur_result['F1'] = format_analysis_value(test_analysis['test_Macro-F1'], format_metric=True)
-        if 'best_epoch_Acc' in best_analysis:
-            cur_result['epoch Acc'] = format_analysis_value(best_analysis['best_epoch_Acc'])
-        if 'best_epoch_Macro-F1' in best_analysis:
-            cur_result['epoch F1'] = format_analysis_value(best_analysis['best_epoch_Macro-F1'])
-        if 'train_samples_per_second' in train_output_analysis: 
-            cur_result['sample ps'] = format_analysis_value(train_output_analysis['train_samples_per_second'])
-        if 'train_runtime' in train_output_analysis:
-            cur_result['runtime'] = format_analysis_value(train_output_analysis['train_runtime'], format_runtime=True)
+        test_analysis, best_analysis, train_output_analysis = map(dict_to_defaultdict, [
+            test_analysis, best_analysis, train_output_analysis
+        ])
+        
+        cur_result['acc'], cur_result['acc error'] = format_analysis_value(test_analysis['test_Acc'], format_metric=True)
+        cur_result['f1'], cur_result['f1 error'] = format_analysis_value(test_analysis['test_Macro-F1'], format_metric=True)
+        cur_result['epoch acc'] = format_analysis_value(best_analysis['best_epoch_Acc'])
+        cur_result['epoch f1'] = format_analysis_value(best_analysis['best_epoch_Macro-F1'])
+        cur_result['sample ps'] = format_analysis_value(train_output_analysis['train_samples_per_second'])
+        cur_result['runtime'] = format_analysis_value(train_output_analysis['train_runtime'], format_runtime=True)
         
         results.append(cur_result)
     
@@ -101,8 +109,8 @@ def analyze_experiment_results(
 
 if __name__ == '__main__':
     analyze_experiment_results(
-        './tmp/tmp/',
-        './tmp/analysis.csv',
+        './experiment_results/epoch_and_lr',
+        './experiment_results/epoch_and_lr.csv',
         'log_dir version learning_rate epochs'.split(),
         hyperparam_filename='hyperparams.json',
         test_metric_filename='test_metric_score.json',

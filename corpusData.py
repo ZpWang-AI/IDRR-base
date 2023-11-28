@@ -328,18 +328,18 @@ if __name__ == '__main__':
     def sampling_test(data_name, label_level='level1'):
         start_time = time.time()
         if data_name == 'pdtb2':
-            data_path = r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\CorpusData\PDTB2\pdtb2.csv'
+            data_path = r'D:\0--data\projects\04.01-IDRR\IDRR-base\CorpusData\PDTB2\pdtb2.csv'
         elif data_name == 'pdtb3':
-            data_path = r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\CorpusData\PDTB3\pdtb3_implicit.csv'
+            data_path = r'D:\0--data\projects\04.01-IDRR\IDRR-base\CorpusData\PDTB3\pdtb3_implicit.csv'
         elif data_name == 'conll':
-            data_path = r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\CorpusData\CoNLL16'
+            data_path = r'D:\0--data\projects\04.01-IDRR\IDRR-base\CorpusData\CoNLL16'
         else:
             raise Exception('wrong data_name')
             
         sample_dataset = CustomCorpusData(
             data_path=data_path,
             data_name=data_name,
-            model_name_or_path=r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\plm_cache\models--roberta-base\snapshots\bc2764f8af2e92b6eb5679868df33e224075ca68',
+            model_name_or_path=r'D:\0--data\projects\04.01-IDRR\IDRR-base\plm_cache\models--roberta-base\snapshots\bc2764f8af2e92b6eb5679868df33e224075ca68',
             # cache_dir='./plm_cache/',
             label_level=label_level,
             mini_dataset=False,

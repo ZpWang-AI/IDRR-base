@@ -113,7 +113,7 @@ if __name__ == '__main__':
     ssh_transer.exclude_file_func = exclude_func
     ssh_transer.exclude_folder_func = exclude_func
     ssh_transer.ssh_transmit(
-        local_path=r'D:\0--data\projects\04.01-IDRR数据\IDRR-base',
+        local_path=r'D:\0--data\projects\04.01-IDRR\IDRR-base',
         remote_path=CODE_SPACE,
     )
     
@@ -122,13 +122,13 @@ if __name__ == '__main__':
     # data_path = r'CorpusData\PDTB3\pdtb3_implicit.csv'
     # data_path = r'CorpusData\CoNLL16'
     # ssh_transer.ssh_transmit(
-    #     local_path=r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\\'+data_path,
+    #     local_path=r'D:\0--data\projects\04.01-IDRR\IDRR-base\\'+data_path,
     #     remote_path='/data/zpwang/IDRR/'+data_path.replace('\\', '/'),
     # )
     
     # # transmit model
     # ssh_transer.ssh_transmit(
-    #     local_path=r'D:\0--data\projects\04.01-IDRR数据\IDRR-base\plm_cache',
+    #     local_path=r'D:\0--data\projects\04.01-IDRR\IDRR-base\plm_cache',
     #     remote_path='/data/zpwang/IDRR/plm_cache',
     # )
     

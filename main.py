@@ -4,6 +4,7 @@ import shutil
 import torch
 import pandas as pd 
 import numpy as np
+import time
 
 from typing import *
 from pathlib import Path as path
@@ -52,7 +53,7 @@ class LogFilenameDict:
             self.visited.add(res)
             return res
     
-    def keys(self):
+    def values(self):
         return self.visited
 
 LOG_FILENAME_DICT = LogFilenameDict()
@@ -106,7 +107,7 @@ def train_func(
     logger.log_json(test_metrics, LOG_FILENAME_DICT['test'], log_info=True)                
     model.load_state_dict(torch.load(final_state_fold/'pytorch_model.bin'))
 
-    return trainer, callback
+    return trainer, callback, train_output
 
 
 def main_one_iteration(args:CustomArgs, data:CustomCorpusData, training_iter_id=0):
@@ -193,19 +194,22 @@ def main_one_iteration(args:CustomArgs, data:CustomCorpusData, training_iter_id=
 
     # === train ===
     
+    start_time = time.time()
+    sample_ps = []
+    
     def stage_rank(training_args:TrainingArguments):
         train_evaluate_kwargs['training_args'] = training_args
         train_evaluate_kwargs['data'] = ranking_data
         train_evaluate_kwargs['compute_metrics'] = ranking_metrics
         model.forward_fn = 'rank'
-        train_func(**train_evaluate_kwargs)
+        return train_func(**train_evaluate_kwargs)
     
     def stage_ft(training_args:TrainingArguments):
         train_evaluate_kwargs['training_args'] = training_args
         train_evaluate_kwargs['data'] = data
         train_evaluate_kwargs['compute_metrics'] = compute_metrics
         model.forward_fn = 'ft'
-        train_func(**train_evaluate_kwargs)
+        return train_func(**train_evaluate_kwargs)
     
     stage_dict = {
         'rank': stage_rank,
@@ -217,22 +221,13 @@ def main_one_iteration(args:CustomArgs, data:CustomCorpusData, training_iter_id=
             output_dir=path(args.output_dir)/LOG_FILENAME_DICT.stage_id,
             stage_args=stage,
         )
-        stage_dict[stage.stage_name](training_args)
-    
-    # # mv tensorboard ckpt to log_dir
-    # cnt = 0
-    # for dirpath, dirnames, filenames in os.walk(args.output_dir):
-    #     if 'checkpoint' in dirpath:
-    #         continue
-    #     if 'runs' in dirpath:
-    #         for filename in filenames:
-    #             if 'events' in filename:
-    #                 cur_file = path(dirpath)/filename
-    #                 tensorboard_dir = path(args.log_dir)/'tensorboard'/str(cnt)
-    #                 tensorboard_dir.mkdir(parents=True, exist_ok=True)
-    #                 shutil.copy(cur_file, tensorboard_dir)
-    #                 cnt += 1
+        _, _, train_output = stage_dict[stage.stage_name](training_args)
+        sample_ps.append(train_output['train_samples_per_second'])
 
+    total_output = {'total_runtime':time.time()-start_time, 'sample_ps':np.mean(sample_ps)}
+    LOG_FILENAME_DICT.set_stage(9, 'final')
+    logger.log_json(total_output, LOG_FILENAME_DICT['output'])
+    
     if not args.save_ckpt:
         shutil.rmtree(args.output_dir)
 
@@ -291,7 +286,7 @@ def main(args:CustomArgs, training_iter_id=-1):
     
     if training_iter_id < 0 or training_iter_id == args.training_iteration:
         # calculate average
-        for json_file_name in LOG_FILENAME_DICT.keys():
+        for json_file_name in LOG_FILENAME_DICT.values():
             if json_file_name == LOG_FILENAME_DICT['hyperparams']:
                 continue
             metric_analysis = analyze_metrics_json(args.log_dir, json_file_name, just_average=True)

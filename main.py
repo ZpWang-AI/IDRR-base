@@ -9,6 +9,7 @@ from typing import *
 from pathlib import Path as path
 from transformers import TrainingArguments, Trainer, DataCollatorWithPadding, set_seed
 
+from utils import catch_and_record_error
 from arguments import CustomArgs, StageArgs
 from logger import CustomLogger
 from corpusData import CustomCorpusData
@@ -50,6 +51,9 @@ class LogFilenameDict:
             res = f'{self.stage_id}.{self.stage_name}.{self.dict[key]}'
             self.visited.add(res)
             return res
+    
+    def keys(self):
+        return self.visited
 
 LOG_FILENAME_DICT = LogFilenameDict()
 
@@ -281,19 +285,15 @@ def main(args:CustomArgs, training_iter_id=-1):
                                data=data, 
                                training_iter_id=training_iter_id)
     except Exception as e:
-        import traceback
-        
         error_file = main_logger.log_dir/'error.out'
-        with open(error_file, 'w', encoding='utf8')as f:
-            error_string = traceback.format_exc()
-            f.write(error_string)
-            print('\n', '='*20, '\n')
-            print(error_string)
+        catch_and_record_error(error_file)
         exit(1)
     
     if training_iter_id < 0 or training_iter_id == args.training_iteration:
         # calculate average
-        for json_file_name in LOG_FILENAME_DICT.visited:
+        for json_file_name in LOG_FILENAME_DICT.keys():
+            if json_file_name == LOG_FILENAME_DICT['hyperparams']:
+                continue
             metric_analysis = analyze_metrics_json(args.log_dir, json_file_name, just_average=True)
             if metric_analysis:
                 main_logger.log_json(metric_analysis, json_file_name, log_info=True)

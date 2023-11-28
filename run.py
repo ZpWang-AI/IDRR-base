@@ -6,7 +6,7 @@ def local_test_args(data_name='pdtb2', label_level='level1'):
     args = CustomArgs(test_setting=True)
     
     args.version = 'test'
-    args.server_name = 'local'
+    args.server_name = 'local_rank'
     
     args.data_name = data_name
     if data_name == 'pdtb2':

@@ -40,39 +40,56 @@ def analyze_metrics_json(log_dir, file_name, just_average=False):
     return metric_analysis
 
 
-def analyze_experiment_evaluations(target_log_folds, to_json_file=None, to_csv_file=None):
-    versions = []
+def analyze_experiment_results(
+    root_log_fold,
+    target_csv_filename,
+    hyperparam_keywords,
+    hyperparam_filename,
+    best_metric_filename,
+    test_metric_filename,
+    train_output_filename,
+):
     results = []
-    hypers = []
-    for log_dir in target_log_folds:
-        analysis = analyze_metrics_json(log_dir, 'test_metric_score.json', just_average=False)
-        results.append(analysis)
+    for log_dir in os.listdir(root_log_fold):
+        log_dir = path(root_log_fold, log_dir)
+        cur_result = {}
+        for filename in [best_metric_filename, test_metric_filename, train_output_filename]:
+            analysis = analyze_metrics_json(log_dir, filename, just_average=False)
+            for k, v in analysis.items():
+                cur_result[k] = f"{analysis[k]['mean']}+{analysis[k]['error']}"
+            cur_result.update(analysis)
         
-        hyper_path = path(log_dir)/'hyperparams.json'
+        hyper_path = path(log_dir, hyperparam_filename)
         if hyper_path.exists():
             with open(hyper_path, 'r', encoding='utf8')as f:
-                hyper = json.load(f)
-            hypers.append(hyper)
-            versions.append(hyper['version'])
+                hyperparams = json.load(f)
+            for k, v in hyperparams.items():
+                if k in hyperparam_keywords:
+                    cur_result[k] = v
         
-    df_results = pd.DataFrame(results, index=versions)
-    df_hypers = pd.DataFrame(hypers, index=versions)
+        results.append(cur_result)
+    
+    df_results = pd.DataFrame(results)
+    df_results.to_csv(target_csv_filename, encoding='utf-8')
     
     print(df_results)
-    print('='*20)
-    print(df_hypers)
     
-    if to_json_file:
-        pass
-    
-    if to_csv_file:
-        df_results.to_csv(to_csv_file)
     
 
 if __name__ == '__main__':
-    target_log_folds = r'''
-    D:\0--data\projects\04.01-IDRR数据\IDRR-base\log_space\2023-11-07-16-02-44_local_test_pdtb2_level1
-D:\0--data\projects\04.01-IDRR数据\IDRR-base\log_space\2023-11-07-15-59-27_local_test_pdtb2_level1
-D:\0--data\projects\04.01-IDRR数据\IDRR-base\log_space\2023-11-07-15-57-02_local_test_pdtb2_level1
-    '''.split()
-    analyze_experiment_evaluations(target_log_folds, to_csv_file='./tmp/analysis.csv')
+    analyze_experiment_results(
+        './tmp/tmp/',
+        './tmp/analysis.csv',
+        'log_dir version learning_rate epochs'.split(),
+        hyperparam_filename='hyperparams.json',
+        best_metric_filename='best_metric_score.json',
+        test_metric_filename='test_metric_score.json',
+        train_output_filename='train_output.json',
+    )
+#     target_log_folds = r'''
+#     D:\0--data\projects\04.01-IDRR数据\IDRR-base\log_space\2023-11-07-16-02-44_local_test_pdtb2_level1
+# D:\0--data\projects\04.01-IDRR数据\IDRR-base\log_space\2023-11-07-15-59-27_local_test_pdtb2_level1
+# D:\0--data\projects\04.01-IDRR数据\IDRR-base\log_space\2023-11-07-15-57-02_local_test_pdtb2_level1
+#     '''.split()
+#     analyze_experiment_evaluations(target_log_folds, to_csv_file='./tmp/analysis.csv')
+    pass

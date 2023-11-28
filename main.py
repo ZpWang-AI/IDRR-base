@@ -36,7 +36,7 @@ class LogFilenameDict:
         self.stage_id = ''
         self.stage_name = ''
         
-        self.visited = set()
+        self.visited = set() 
     
     def set_stage(self, stage_num, stage_name):
         self.stage_id = 'stage'+str(stage_num).rjust(1, '0')

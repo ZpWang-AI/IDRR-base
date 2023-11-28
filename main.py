@@ -214,12 +214,9 @@ def main(args:CustomArgs, training_iter_id=-1):
     
     if training_iter_id < 0 or training_iter_id == args.training_iteration:
         # calculate average
-        for json_file_name in [
-            LOG_FILENAME_DICT['best'],
-            LOG_FILENAME_DICT['test'],
-            LOG_FILENAME_DICT['blind test'],
-            LOG_FILENAME_DICT['output'],
-        ]:
+        for json_file_name in LOG_FILENAME_DICT.keys():
+            if json_file_name == LOG_FILENAME_DICT['hyperparams']:
+                continue
             metric_analysis = analyze_metrics_json(args.log_dir, json_file_name, just_average=True)
             if metric_analysis:
                 main_logger.log_json(metric_analysis, json_file_name, log_info=True)

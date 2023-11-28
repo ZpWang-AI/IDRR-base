@@ -14,7 +14,6 @@ from corpusData import CustomCorpusData
 class CustomCallback(TrainerCallback):
     def __init__(
         self, 
-        args:CustomArgs, 
         logger:CustomLogger,
         metric_names:list,
         evaluate_testdata=False,
@@ -23,7 +22,6 @@ class CustomCallback(TrainerCallback):
         
         self.trainer:Trainer = None
         self.dataset:CustomCorpusData = None
-        self.args = args
         self.logger = logger
         self.evaluate_testdata = evaluate_testdata
 

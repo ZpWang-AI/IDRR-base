@@ -4,6 +4,7 @@ import shutil
 import torch
 import pandas as pd 
 import numpy as np
+import time
 
 from typing import *
 from pathlib import Path as path
@@ -159,8 +160,16 @@ def main_one_iteration(args:CustomArgs, data:CustomCorpusData, training_iter_id=
 
     # === train ===
     
+    start_time = time.time()
+    
     train_func(**train_evaluate_kwargs)
 
+    total_runtime = time.time()-start_time
+    with open(logger.log_dir/LOG_FILENAME_DICT['output'], 'r', encoding='utf8')as f:
+        train_output = json.load(f)
+        train_output['train_runtime'] = total_runtime
+    logger.log_json(train_output, LOG_FILENAME_DICT['output'], False)
+    
     if not args.save_ckpt:
         shutil.rmtree(args.output_dir)
 
@@ -214,7 +223,7 @@ def main(args:CustomArgs, training_iter_id=-1):
     
     if training_iter_id < 0 or training_iter_id == args.training_iteration:
         # calculate average
-        for json_file_name in LOG_FILENAME_DICT.keys():
+        for json_file_name in LOG_FILENAME_DICT.values():
             if json_file_name == LOG_FILENAME_DICT['hyperparams']:
                 continue
             metric_analysis = analyze_metrics_json(args.log_dir, json_file_name, just_average=True)

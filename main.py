@@ -59,7 +59,6 @@ def train_func(
     compute_metrics:ComputeMetrics,
 ):
     callback = CustomCallback(
-        args=args, 
         logger=logger, 
         metric_names=compute_metrics.metric_names,
     )
@@ -90,7 +89,7 @@ def train_func(
     
     test_metrics = {}
     for metric_ in compute_metrics.metric_names:
-        load_ckpt_dir = path(args.output_dir)/f'checkpoint_best_{metric_}'
+        load_ckpt_dir = path(training_args.output_dir)/f'checkpoint_best_{metric_}'
         if load_ckpt_dir.exists():
             model.load_state_dict(torch.load(load_ckpt_dir/'pytorch_model.bin'))
             evaluate_output = trainer.evaluate(eval_dataset=data.test_dataset)

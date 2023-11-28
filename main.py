@@ -35,6 +35,8 @@ class LogFilenameDict:
         }
         self.stage_id = ''
         self.stage_name = ''
+        
+        self.visited = set()
     
     def set_stage(self, stage_num, stage_name):
         self.stage_id = 'stage'+str(stage_num).rjust(1, '0')
@@ -45,7 +47,9 @@ class LogFilenameDict:
         if key == 'hyperparams':
             return self.dict[key]
         else:
-            return f'{self.stage_id}.{self.stage_name}.{self.dict[key]}'
+            res = f'{self.stage_id}.{self.stage_name}.{self.dict[key]}'
+            self.visited.add(res)
+            return res
 
 LOG_FILENAME_DICT = LogFilenameDict()
 
@@ -81,7 +85,7 @@ def train_func(
 
     train_output = trainer.train().metrics
     logger.log_json(train_output, LOG_FILENAME_DICT['output'], log_info=True)
-    final_state_fold = path(args.output_dir)/'final'
+    final_state_fold = path(training_args.output_dir)/'final'
     trainer.save_model(final_state_fold)
     
     # do test 
@@ -289,12 +293,7 @@ def main(args:CustomArgs, training_iter_id=-1):
     
     if training_iter_id < 0 or training_iter_id == args.training_iteration:
         # calculate average
-        for json_file_name in [
-            LOG_FILENAME_DICT['best'],
-            LOG_FILENAME_DICT['test'],
-            LOG_FILENAME_DICT['blind test'],
-            LOG_FILENAME_DICT['output'],
-        ]:
+        for json_file_name in LOG_FILENAME_DICT.visited:
             metric_analysis = analyze_metrics_json(args.log_dir, json_file_name, just_average=True)
             if metric_analysis:
                 main_logger.log_json(metric_analysis, json_file_name, log_info=True)

@@ -10,8 +10,6 @@ else:
 import os
 BRANCH = 'main'
 CODE_SPACE = ROOT_FOLD_IDRR+f'IDRR-{BRANCH}/'
-if __name__ == '__main__':
-    os.chdir(CODE_SPACE)
 
 # ===== import ===== !!! Don't import torch !!!
 from arguments import CustomArgs
@@ -72,6 +70,8 @@ def server_experiment_args(args=None):
     
     
 if __name__ == '__main__':
+    os.chdir(CODE_SPACE)
+    
     def experiment_once():
         todo_args = server_base_args(test_setting=True, data_name='pdtb2')
         # todo_args = server_base_args(test_setting=True, data_name='pdtb2', label_level='level2')
@@ -92,8 +92,7 @@ if __name__ == '__main__':
         main(todo_args)
     
     def experiment_multi_times():
-        # TODO: prepare gpu
-        cuda_cnt = 2
+        cuda_cnt = 2  # === TODO: prepare gpu ===
         cuda_id = CustomArgs().prepare_gpu(target_mem_mb=10500, gpu_cnt=cuda_cnt) 
         from main import main
          
@@ -102,11 +101,12 @@ if __name__ == '__main__':
                 for batch_size in [32]:
                     todo_args = server_experiment_args()
 
-                    # TODO: prepare args
+                    # === TODO: prepare args ===
                     todo_args.version = f'epoch{epoch}_lr{mu}mu_bs{batch_size}^2'
                     todo_args.epochs = epoch
                     todo_args.learning_rate = float(f'{mu}e-6') 
                     todo_args.train_batch_size = batch_size             
+                    # === TODO: prepare args ===
                     
                     todo_args.cuda_id = cuda_id
                     todo_args.cuda_cnt = cuda_cnt

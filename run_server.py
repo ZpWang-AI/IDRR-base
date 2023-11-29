@@ -143,14 +143,14 @@ if __name__ == '__main__':
          
         for epoch in [5,10,20,30]:
             for mu in [5,15,30,45]:
-                for batch_size in [32]:
+                for batch_size in [4]:
                     todo_args = server_experiment_args()
 
                     # === TODO: prepare args ===
                     todo_args.version = f'epoch{epoch}_lr{mu}mu_bs{batch_size}^2'
-                    todo_args.epochs = epoch
-                    todo_args.learning_rate = float(f'{mu}e-6') 
-                    todo_args.train_batch_size = batch_size             
+                    todo_args.training_stages[0].epochs = epoch
+                    todo_args.training_stages[0].learning_rate = float(f'{mu}e-6') 
+                    todo_args.training_stages[0].train_batch_size = batch_size             
                     # === TODO: prepare args ===
                     
                     todo_args.cuda_id = cuda_id

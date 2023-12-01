@@ -108,10 +108,13 @@ def analyze_experiment_results(
     
 
 if __name__ == '__main__':
+    root_log_fold = './experiment_results/epoch_and_lr'
+    target_csv_file = './experiment_results/epoch_and_lr.csv'
+    hyperparam_keywords = 'log_dir version learning_rate epochs'.split()
     analyze_experiment_results(
-        './experiment_results/epoch_and_lr',
-        './experiment_results/epoch_and_lr.csv',
-        'log_dir version learning_rate epochs'.split(),
+        root_log_fold = root_log_fold,
+        target_csv_filename=target_csv_file,
+        hyperparam_keywords=hyperparam_keywords,
         hyperparam_filename='hyperparams.json',
         test_metric_filename='test_metric_score.json',
         best_metric_filename='best_metric_score.json',

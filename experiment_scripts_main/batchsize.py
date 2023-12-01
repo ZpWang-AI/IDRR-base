@@ -34,7 +34,6 @@ def server_experiment_args(args=None):
     
     
 if __name__ == '__main__':
-    exit()
     os.chdir(CODE_SPACE)
     
     def experiment_batchsize():

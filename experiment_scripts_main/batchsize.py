@@ -2,7 +2,7 @@ import os
 import sys
 from pathlib import Path as path
 
-sys.path.append(path(__file__).parent)
+sys.path.insert(0,str(path(__file__).parent.parent))
 
 from arguments import CustomArgs
 from run_server import server_base_args, CODE_SPACE
@@ -34,6 +34,7 @@ def server_experiment_args(args=None):
     
     
 if __name__ == '__main__':
+    exit()
     os.chdir(CODE_SPACE)
     
     def experiment_batchsize():

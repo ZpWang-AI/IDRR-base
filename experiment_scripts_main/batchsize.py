@@ -18,7 +18,7 @@ def server_experiment_args(args=None):
     
     args.cuda_cnt = 2  
     args.warmup_ratio = 0.05
-    args.epochs = 10  # TODO
+    args.epochs = 20  # TODO
     args.train_batch_size = 32  
     args.eval_batch_size = 32
     args.eval_steps = 100

@@ -94,7 +94,7 @@ if __name__ == '__main__':
                 todo_args = server_experiment_args()
 
                 # === TODO: prepare args ===
-                todo_args.version = f'bs{batch_size}^{cuda_cnt}'
+                todo_args.version = f'bs{batch_size}^{cuda_cnt}^{grad_acc}'
                 todo_args.train_batch_size = batch_size         
                 todo_args.gradient_accumulation_steps = grad_acc    
                 # === TODO: prepare args ===
